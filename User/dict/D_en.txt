@@ -1,0 +1,12 @@
+Tatung fan
+Chimei fan
+CAG LED
+CHT LED
+spotlight
+indirect light
+triangle light
+curtain1
+curtain2
+curtain3
+window
+door

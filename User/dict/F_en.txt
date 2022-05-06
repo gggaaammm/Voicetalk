@@ -1,0 +1,7 @@
+open
+close
+fan speed
+color temperature
+brightness
+turn on 
+turn off

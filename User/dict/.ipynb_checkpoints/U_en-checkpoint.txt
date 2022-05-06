@@ -1,0 +1,6 @@
+degree
+fahrenheit
+celsius
+hour
+minute
+second

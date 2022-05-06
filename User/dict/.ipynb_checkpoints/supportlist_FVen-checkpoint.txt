@@ -1,0 +1,7 @@
+Fiot,F,R,F1,F2,F3,
+Switch1,switch,1,open,turn on,power on
+Switch1,switch,0,close,turn off,power off
+Fanspeed-I,fan speed,0,fan speed,0,0
+Luminance-I,brightness,0,brightness,0,0
+ColorTemperature-I,color temperature,0,colortemperature,0,0
+

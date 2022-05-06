@@ -1,0 +1,11 @@
+feature,rule,
+fan speed,2,
+brightness,2,
+temperature,2,
+rotation,2,
+open,1
+close,1
+turn on,1
+turn off,1
+power on,1
+power off,1

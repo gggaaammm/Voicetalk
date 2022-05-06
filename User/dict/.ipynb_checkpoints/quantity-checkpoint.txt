@@ -1,0 +1,3 @@
+F,F_zh,default,u1
+temperature-I,溫度,度,華氏
+rotation-I,旋轉 ,度,趴 
