@@ -1,6 +1,7 @@
 import spacy
 import DAN
 import pandas as pd
+import sqlite3
 #import the phrase matcher
 from spacy.matcher import PhraseMatcher
 #load a model and create nlp object
@@ -42,6 +43,8 @@ def readDB():
     matcher.add("D", D)
     matcher.add("F", F)
     matcher.add("V", V)
+    #======
+    print("read db?")
 
 def exceptionHandle(word):
     print("need to be handled word",word)
@@ -65,10 +68,15 @@ def textParse(sentence):
             tokenlist[2] = span.text
         elif(rule_id == 'V'):
             tokenlist[3] = span.text
+
+
     # eliminate A if both AD exist
     if(tokenlist[0] != '' and tokenlist[1] != ''):
         tokenlist[0] = ''
         print('tokenlist:', tokenlist)
+
+
+
     # check if sentence contains only one number
     a = list(filter(str.isdigit, sentence))
     if(len(a) > 0):
@@ -102,10 +110,11 @@ def textParse(sentence):
     #now token has correct number, check if A/D support F
     if(token[4] != -1):
         token = supportCheck(token)
+        print("do we need another synomon transform?", token)
     else:
         print("not enough token!")
         
-        
+    # check for synonym and check the return value
     if(token[4] != -1 and rule==1):
         df = pd.read_csv('dict/supportlist_FVen.txt')
         df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]
@@ -120,8 +129,9 @@ def textParse(sentence):
         # change F to iottalk device feature
         tokenlist[2] = df.iloc[0]['Fiot']
 
-    print("last befor send to iottalk", tokenlist)
+    print("last before send to iottalk", tokenlist)
     sendIot(tokenlist)
+    saveLog(sentence, tokenlist)
     return tokenlist[2], tokenlist
         
 
@@ -182,8 +192,7 @@ def supportCheck(tokenlist):
     return tokenlist
 
 def sendIot(tokenlist):
-    
-    if(tokenlist[1]!=""): # D+F
+    if(tokenlist[1]!="" and tokenlist[4]!=-1): # D+F
         df = pd.read_csv('dict/ADF.txt')
         print('df info:', df, "searching", tokenlist[1])
         df = df.loc[df['D_ens']==tokenlist[1]]
@@ -226,3 +235,26 @@ def sendIot(tokenlist):
             DAN.push(deviceFeature, int(returnValue))
 
     print("send to iottalk", tokenlist)
+
+
+
+def saveLog(sentence, tokenlist):
+    print('save log')
+    connection = sqlite3.connect("db/log.db")
+    crsr = connection.cursor()
+    # SQL command to insert the data in the table
+    sql_command = """CREATE TABLE IF NOT EXISTS log ( 
+    sentence TEXT,  
+    result CHAR(1)
+    );"""
+    crsr.execute(sql_command)
+
+    
+    crsr.execute(f'INSERT INTO log VALUES ( "{sentence}", "{tokenlist[4]}")')
+
+    connection.commit()
+    connection.close()
+
+
+    
+    

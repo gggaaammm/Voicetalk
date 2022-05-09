@@ -1,0 +1,6 @@
+fan
+light
+curtain
+window
+air purifier
+door

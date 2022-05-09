@@ -120,7 +120,7 @@ def textParse(sentence):
         # change F to iottalk device feature
         tokenlist[2] = df.iloc[0]['Fiot']
 
-    print("last befor send to iottalk", tokenlist)
+    print("last before send to iottalk", tokenlist)
     sendIot(tokenlist)
     return tokenlist[2], tokenlist
         
