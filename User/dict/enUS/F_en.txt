@@ -3,5 +3,6 @@ close
 fan speed
 color temperature
 brightness
+rotation
 turn on 
 turn off

@@ -4,7 +4,7 @@ Vlight,電燈,light,CHT LED,CHT LED,中華電信燈,"['Switch1','Luminance-I']",
 Vlight,電燈,light,indirect light,indirect light,間接照明,"['Switch1',]",20220501sp3
 Vlight,電燈,light,fluorescent lamp,fluorescent lamp,日光燈,"['Switch1',]",20220501Lightctl
 Vlight,電燈,light,triangle light,triangle light,三角燈,"['Switch1','Luminance-I']",20220501trilight
-Vlight,電燈,light,CAG LED,CAG LED,天花板燈,"['Switch1','Luminance-I']",20220501CAGLED
+Vlight,電燈,light,CAG LED,CAG LED,天花板燈,"['Switch1','Luminance-I','ColorTemperature-I']",20220501CAGLED
 Vfan,電扇,fan,Tatung fan,tatung fan,大同電扇,"['Switch1','Fanspeed-I']",20220501Tatungfan
 Vfan,電扇,fan,Chimei fan,chimei fan,奇美電扇,"['Switch1','Fanspeed-I']",20220501Chimeifan
 Vcurtain,窗簾,curtain,curtain1,curtain1,窗簾一,"['Switch1',]",20220501curtain1
@@ -12,3 +12,4 @@ Vcurtain,窗簾,curtain,curtain2,curtain2,窗簾二,"['Switch1',]",20220501curta
 Vcurtain,窗簾,curtain,curtain3,curtain3,窗簾三,"['Switch1',]",20220501curtain3
 Vwindow,窗戶,window,window,window,窗戶,"['Switch1',]",20220501window
 Vairpurifier,空氣清淨機,airpurifier,Tatung airpurifier,Tatung airpurifier,大同空氣清淨機,"['Switch1',]",20220501airpurifier
+Vdummy,手臂,arm,robotic arm,robotic arm,機械手臂,"['Rotation-I',]",20220501roboticarm

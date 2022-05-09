@@ -50,7 +50,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'en-US'
+        language = 'zh-tw'
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
             enspacy.readDB()
@@ -103,13 +103,13 @@ def ProcessSentence():
     return jsonify({ 'var1': var1, 'var2': var2, 'var3': var3 , 'tokenlist': tokenlist, 'response': response})
 #     return response# response message add here
 
-@app.route('/ChangeLanguage', methods = ['POST','GET'])
-def ChangeLanguage():
-    tokenlist = []
-    if(request.method == 'POST'):
-        input_data = list(request.form.values())
-        print("lang:", input_data)
-    return render_template("index.html", tokenlist=tokenlist)
+# @app.route('/ChangeLanguage', methods = ['POST','GET'])
+# def ChangeLanguage():
+#     tokenlist = []
+#     if(request.method == 'POST'):
+#         input_data = list(request.form.values())
+#         print("lang:", input_data)
+#     return render_template("index.html", tokenlist=tokenlist)
 
     
 def registerIottalk():
@@ -204,6 +204,13 @@ def registerIottalk():
     DAN.profile['d_name']= 'Tatung airpurifier'
     DAN.profile['dm_name']='Vairpurifier'
     DAN.profile['df_list']=['Switch1',]
+    DAN.device_registration_with_retry(ServerURL, Reg_addr)
+    
+    #different device
+    Reg_addr = '20220501roboticarm'
+    DAN.profile['d_name']= 'robotic arm'
+    DAN.profile['dm_name']='Vdummy'
+    DAN.profile['df_list']=['Rotation-I',]
     DAN.device_registration_with_retry(ServerURL, Reg_addr)
     
     
@@ -303,7 +310,7 @@ def supportCheck(tokenlist):
         print("D list:\n", df['D'])
         df = df.loc[df['D']==tokenlist[1]]
         print("= = why not parse", df, tokenlist[1])
-        if(df.iloc[0]['F1']==feature or df.iloc[0]['F2']==feature):
+        if(df.iloc[0]['F1']==feature or df.iloc[0]['F2']==feature or df.iloc[0]['F3']==feature ):
             print('D support F')
         else:
             print('D not support F')

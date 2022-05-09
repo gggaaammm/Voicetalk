@@ -137,8 +137,11 @@
                 data: { entry2_id: val, entry1_id: entry1 , lang_id : language, voice : final_transcript},
                 success: function(data){
                     console.log("AA", data)
-                    if(data.response == "很抱歉，聽不懂請重講"){
+                    if(data.response == "很抱歉，聽不懂請重講"  || data.response == "I\'m sorry, try again."){
                         renderhtml = data.response
+                    }
+                    else if(langvalue == "en-US"){
+                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3] 
                     }
                     else{
                         renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]
@@ -147,7 +150,7 @@
                     $("#textres").val(renderhtml);
                 },
                 error: function(){
-                    alert("fail")
+                    //alert("fail")
                 }
             });
              

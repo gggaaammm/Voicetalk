@@ -3,4 +3,5 @@ Switch1,開關,1,打開,開,開啟
 Switch1,開關,0,關掉,關,關閉
 Fanspeed-I,風速,0,風速,0,0
 Luminance-I,亮度,0,亮度,0,0
-
+Rotation-I,旋轉,0,旋轉,0,0
+ColorTemperature-I,色溫,0,色溫,0,0

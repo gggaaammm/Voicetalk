@@ -10,3 +10,4 @@ curtain2
 curtain3
 window
 door
+robotic arm

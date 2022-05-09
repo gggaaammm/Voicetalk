@@ -10,3 +10,4 @@ switch,open,turn on,power on
 switch,close,turn off,power off
 fan speed,fan speed,
 brightness,brightness,luminance,
+rotation,rotation,

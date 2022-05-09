@@ -1,0 +1,3 @@
+F,F_en,default,u1
+Temperature-I,temperature,degree,Fahrenheit
+Rotation-I,rotation,degree,percent 
