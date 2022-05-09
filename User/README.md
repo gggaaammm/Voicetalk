@@ -1,8 +1,7 @@
 # Voicetalk User guide
 
-## Before start
 
-### 1. download ckiptagger data
+## 1. Setup ckiptagger
 
 ```
 pip install -U ckiptagger[tf,gdown]
@@ -22,4 +21,25 @@ gdown (optional, for downloading model files from google drive)
 
 for more information, visit [ckiptagger official github](https://github.com/ckiplab/ckiptagger)
 
-###
+## 2. Setup enspaCy (en-US)
+
+1. install spaCy
+```
+pip install -U spacy
+```
+
+2. download english model
+
+```
+python -m spacy download en_core_web_sm
+```
+
+for more information, visit [enspaCy official site](https://spacy.io/usage)
+
+
+## 3. Setup server
+
+
+```
+python3 server.py
+```
