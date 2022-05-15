@@ -213,6 +213,13 @@ def registerIottalk():
     DAN.profile['df_list']=['Rotation-I',]
     DAN.device_registration_with_retry(ServerURL, Reg_addr)
     
+    #different device
+    Reg_addr = '20220501door'
+    DAN.profile['d_name']= 'door'
+    DAN.profile['dm_name']='Vdoor'
+    DAN.profile['df_list']=['Switch1',]
+    DAN.device_registration_with_retry(ServerURL, Reg_addr)
+    
     
 
     
@@ -472,11 +479,19 @@ def textParse(text,ws,pos,ner):
     
     
     # 用讀CSV的方式讀取前面匯出的txt
+    path_A_dict = r"dict/A.txt"
+    df_ner_dictA = pd.read_csv(path_A_dict, sep="\n", header=None)
+    # 存到list
+    df_ner_dictA.columns = ['NER']
+    list_ner_dictA = list(df_ner_dictA['NER'])
+    
+    
+    # 用讀CSV的方式讀取前面匯出的txt
     path_D_dict = r"dict/D.txt"
     df_ner_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
     # 存到list
     df_ner_dict.columns = ['NER']
-    list_ner_dict = list(df_ner_dict['NER'])
+    list_ner_dict = list_ner_dictA+list(df_ner_dict['NER'])
     # 將list轉成dict型態，這邊每個權重都設為1
     dict_for_CKIP = dict((el,1) for el in list_ner_dict)
     # Create custom dictionary(for D)

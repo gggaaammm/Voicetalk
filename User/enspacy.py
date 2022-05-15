@@ -62,7 +62,7 @@ def readDB():
 
 def exceptionHandle(word):
     print("need to be handled word",word)
-    df = pd.read_csv(r"dict/num_en.txt")
+    df = pd.read_csv(r"dict/enUS/num_en.txt")
     df = df.loc[df['text'] == word]
     value = df.iloc[0]['value']
     return value
@@ -100,6 +100,20 @@ def textParse(sentence):
             unit = span.text
 
     # check the synonym, redirect to iottalk ver
+    # check D synonym
+    df = pd.read_csv('dict/enUS/D_sys_en.txt')
+    df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1])]
+    if(len(df.index)>0):
+        tokenlist[1] = df.iloc[0]['D_abs']
+        print('device update: ', tokenlist[2])
+        
+    # check F synonym
+    df = pd.read_csv('dict/enUS/F_sys_en.txt')
+    df = df.loc[(df['F_abs']==tokenlist[2]) | (df['F_sys1'] == tokenlist[2])]
+    if(len(df.index)>0):
+        tokenlist[2] = df.iloc[0]['F_abs']
+        print('feature update: ', tokenlist[2])
+    
 
 
     # eliminate A if both AD exist
@@ -177,7 +191,7 @@ def textParse(sentence):
 
     
 def ruleLookup(feature):
-    print("token list check rule")
+    print("token list check rule: ", feature)
     df = pd.read_csv('dict/enUS/rule_en.txt')
     df = df.loc[df['feature']==feature]
     rule = df.iloc[0]['rule']

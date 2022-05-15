@@ -11,3 +11,8 @@ curtain3
 window
 door
 robotic arm
+CAGLED
+CHTLED
+curtain one
+curtain two
+curtain three

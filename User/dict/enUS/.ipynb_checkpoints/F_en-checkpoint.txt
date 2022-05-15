@@ -6,3 +6,7 @@ brightness
 rotation
 turn on 
 turn off
+Turn on
+Turn off
+Open
+Close

@@ -83,6 +83,12 @@
         var recognition = new webkitSpeechRecognition(); // 建立語音辨識物件 webkitSpeechRecognition
         recognition.continuous = true; // 設定連續辨識模式
         recognition.interimResults = true; // 設定輸出中先結果。
+        /// 新的規則
+          var grammar = '#JSGF V1.0; grammar brands; public <brand> = Tatung | Chimei | CHT ;'
+          var speechRecognitionList = new webkitSpeechGrammarList();
+            speechRecognitionList.addFromString(grammar, 1);
+             recognition.grammars = speechRecognitionList;
+          
 
         recognition.onstart = function() { // 開始辨識
           recognizing = true; // 設定為辨識中
@@ -179,10 +185,10 @@
           <input id="textBox" class="form-control" type="text" size="60" value=""/>
             <br>
             <br>
-          <form method="post">
+          <!--form method="post">
             <input type="text" name="user">
             <input type="submit" name="send" value="文字送出">
-          </form>
+          </form-->
         </div>
         <div class="col-sm">
             <!--span>{{response}}
