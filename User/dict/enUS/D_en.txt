@@ -16,3 +16,11 @@ CHTLED
 curtain one
 curtain two
 curtain three
+curtain number one
+curtain number two
+curtain number three
+fan number one
+fan number two
+light number one
+light number two
+light number three
