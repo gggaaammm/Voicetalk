@@ -6,7 +6,8 @@
 1. Domain name
 2. SSL Authentication
 
-For applying domain name, please contact your organization administrator
+For applying domain name, please contact your organization administrator.
+
 For applying SSL auth, check out [certbot official](https://certbot.eff.org/)
 
 
