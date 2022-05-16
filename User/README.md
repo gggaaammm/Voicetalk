@@ -1,7 +1,16 @@
 # Voicetalk User guide
 
 
-## 1. Setup ckiptagger
+## Requirement
+
+1. Domain name
+2. SSL Authentication
+
+For applying domain name, please contact your organization administrator
+For applying SSL auth, check out [certbot official](https://certbot.eff.org/)
+
+
+## 1. Setup ckiptagger(zh-TW)
 
 ```
 pip install -U ckiptagger[tf,gdown]
