@@ -2,6 +2,8 @@ import spacy
 import DAN
 import pandas as pd
 import sqlite3
+import time
+import threading
 import re
 #import the phrase matcher
 from spacy.matcher import PhraseMatcher
@@ -102,7 +104,7 @@ def textParse(sentence):
     # check the synonym, redirect to iottalk ver
     # check D synonym
     df = pd.read_csv('dict/enUS/D_sys_en.txt')
-    df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1])]
+    df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1]) | (df['D_sys2'] == tokenlist[1])]
     if(len(df.index)>0):
         tokenlist[1] = df.iloc[0]['D_abs']
         print('device update: ', tokenlist[2])
@@ -125,8 +127,8 @@ def textParse(sentence):
     # check if sentence contains only one number
     pattern = '[0-9]+'
     numlist = re.findall(pattern, sentence)
-    if(len(numlist) == 1):
-        tokenlist[3] = numlist[0]
+    if(len(numlist) >= 1):
+        tokenlist[3] = numlist[len(numlist)-1]
 
     # default : set 1st num as return value V
     
@@ -183,7 +185,7 @@ def textParse(sentence):
         tokenlist[2] = df.iloc[0]['Fiot']
 
     print("last before send to iottalk", tokenlist)
-    sendIot(tokenlist)
+#     sendIot(tokenlist)
     saveLog(sentence, tokenlist)
     print("voice input feature: ", feature)
     return feature, tokenlist
@@ -245,50 +247,10 @@ def supportCheck(tokenlist):
             
     return tokenlist
 
-def sendIot(tokenlist):
-    if(tokenlist[1]!="" and tokenlist[4]!=-1): # D+F
-        df = pd.read_csv('dict/ADF.txt')
-        print('df info:', df, "searching", tokenlist[1])
-        df = df.loc[df['D_ens']==tokenlist[1]]
-        print("remain df", df)
-        deviceName = df.iloc[0]['D_en']
-        deviceModel = df.iloc[0]['A_en']
-        dfList = df.iloc[0]['DFlist']
-        Regaddr = df.iloc[0]['Regaddr']
-        dfList = eval(dfList)
-        print(type(dfList))
-        returnValue = tokenlist[3]
-        deviceFeature = tokenlist[2]
-        print("device name: ",deviceName,"device model: ", deviceModel)
-        Reg_addr = Regaddr
-        DAN.profile['d_name']= deviceName # search for device name 
-        DAN.profile['dm_name']=deviceModel # use specific device model 
-        DAN.profile['df_list']=dfList
-        DAN.device_registration_with_retry(ServerURL, Reg_addr)
-        DAN.push(deviceFeature, int(returnValue))
-    
-    if(tokenlist[0]!="" and tokenlist[4]!=-1): #  A+F
-        df = pd.read_csv('dict/ADF.txt')
-        df = df.loc[df['A_ens']==tokenlist[0]]
-        print('df info:',df)
-        for ind in df.index:
-            print(df['D_en'][ind], df['A_en'][ind], df['DFlist'][ind], df['Regaddr'][ind])
-            deviceName = df['D_en'][ind]
-            deviceModel = df['A_en'][ind]
-            dfList = df['DFlist'][ind]
-            Regaddr = df['Regaddr'][ind]
-            dfList = eval(dfList)
-            returnValue = tokenlist[3]
-            deviceFeature = tokenlist[2]
-            print("device name: ",deviceName,"device model: ", deviceModel )
-            Reg_addr = Regaddr
-            DAN.profile['d_name']= deviceName # search for device name 
-            DAN.profile['dm_name']=deviceModel # use specific device model 
-            DAN.profile['df_list']=dfList
-            DAN.device_registration_with_retry(ServerURL, Reg_addr)
-            DAN.push(deviceFeature, int(returnValue))
 
-    print("send to iottalk", tokenlist)
+
+    
+    
 
 
 

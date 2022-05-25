@@ -12,7 +12,7 @@ import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 from ckiptagger import data_utils, construct_dictionary, WS, POS, NER
-
+ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
 #=========read ckiptagger model========
 start = time.time()
 ws = WS("./data", disable_cuda=False)
@@ -22,55 +22,8 @@ end = time.time()
 print("loading time: ", end-start)
 
 
-    
-def sendiot(tokenlist):
-    #tokenlist contains: 1.device model   2.device name 3. device feature 4.device return value 5. rule/valid 
-    print("ready to send to iottalk")
-    rule = tokenlist[4]
-    
-    if(tokenlist[1]!=""): # D+F
-        #search for real iottalk device name
-        df = pd.read_csv('dict/ADF.txt')
-        print('df info:', df)
-        df = df.loc[df['D']==tokenlist[1]]
-        deviceName = df.iloc[0]['D_en']
-        deviceModel = df.iloc[0]['A_en']
-        dfList = df.iloc[0]['DFlist']
-        Regaddr = df.iloc[0]['Regaddr']
-        dfList = eval(dfList)
-        print(type(dfList))
-        returnValue = tokenlist[3]
-        deviceFeature = tokenlist[2]
-        print("device name: ",deviceName,"device model: ", deviceModel )
-        Reg_addr = Regaddr
-        DAN.profile['d_name']= deviceName # search for device name 
-        DAN.profile['dm_name']=deviceModel # use specific device model 
-        DAN.profile['df_list']=dfList
-        DAN.device_registration_with_retry(ServerURL, Reg_addr)
-        DAN.push(deviceFeature, int(returnValue))
-        
-    if(tokenlist[0]!="" and tokenlist[4]!=-1): #  A+F
-        df = pd.read_csv('dict/ADF.txt')
-        df = df.loc[df['A']==tokenlist[0]]
-        print('df info:',df)
-        for ind in df.index:
-            print(df['D_en'][ind], df['A_en'][ind], df['DFlist'][ind], df['Regaddr'][ind])
-            deviceName = df['D_en'][ind]
-            deviceModel = df['A_en'][ind]
-            dfList = df['DFlist'][ind]
-            Regaddr = df['Regaddr'][ind]
-            dfList = eval(dfList)
-            returnValue = tokenlist[3]
-            deviceFeature = tokenlist[2]
-            print("device name: ",deviceName,"device model: ", deviceModel )
-            Reg_addr = Regaddr
-            DAN.profile['d_name']= deviceName # search for device name 
-            DAN.profile['dm_name']=deviceModel # use specific device model 
-            DAN.profile['df_list']=dfList
-            DAN.device_registration_with_retry(ServerURL, Reg_addr)
-            DAN.push(deviceFeature, int(returnValue))
-            
 
+   
 
     
     
@@ -90,7 +43,7 @@ def num_there(s): # check if any digit exist in any word
     return any(i.isdigit() for i in s)
 
 def ruleLookup(feature):
-    df = pd.read_csv('dict/rule.txt')
+    df = pd.read_csv('dict/zhTW/rule.txt')
     df = df.loc[df['feature']==feature]
     rule = df.iloc[0]['rule']
     if(rule == 1):
@@ -111,7 +64,7 @@ def supportCheck(tokenlist):
     
     #check if D supports F
     if(tokenlist[1]!=''):
-        df = pd.read_csv('dict/supportlist_ADF.txt')
+        df = pd.read_csv('dict/zhTW/supportlist_ADF.txt')
         print("why no D", tokenlist[1])
         print("D list:\n", df['D'])
         df = df.loc[df['D']==tokenlist[1]]
@@ -125,7 +78,7 @@ def supportCheck(tokenlist):
     #check if A support F
     if(tokenlist[0]!=''):
         allsupport = 1
-        df = pd.read_csv('dict/supportlist_ADF.txt')
+        df = pd.read_csv('dict/zhTW/supportlist_ADF.txt')
         df = df.loc[df['A']==tokenlist[0]]
         print("all belongs to A:", df)
         d_id = 0
@@ -149,25 +102,25 @@ def supportCheck(tokenlist):
 def mappingToken(wordset): #mapping token should return an array of A/D/F/V
     token = ["","","","",0]
     j=0
-    path_A_dict = r"dict/A.txt"
+    path_A_dict = r"dict/zhTW/A.txt"
     A_dict = pd.read_csv(path_A_dict, sep="\n", header=None)
     # 存到list
     A_dict.columns = ['A']
     A_list = list(A_dict['A'])
     
-    path_D_dict = r"dict/D.txt"
+    path_D_dict = r"dict/zhTW/D.txt"
     D_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
     # 存到list
     D_dict.columns = ['D']
     D_list = list(D_dict['D'])
     
-    path_F_dict = r"dict/F.txt"
+    path_F_dict = r"dict/zhTW/F.txt"
     F_dict = pd.read_csv(path_F_dict, sep="\n", header=None)
     # 存到list
     F_dict.columns = ['F']
     F_list = list(F_dict['F'])
     
-    path_V_dict = r"dict/V.txt"
+    path_V_dict = r"dict/zhTW/V.txt"
     V_dict = pd.read_csv(path_V_dict, sep="\n", header=None)
     # 存到list
     V_dict.columns = ['V']
@@ -288,7 +241,7 @@ def textParse(text,ws,pos,ner):
     
     
     # 用讀CSV的方式讀取前面匯出的txt
-    path_A_dict = r"dict/A.txt"
+    path_A_dict = r"dict/zhTW/A.txt"
     df_ner_dictA = pd.read_csv(path_A_dict, sep="\n", header=None)
     # 存到list
     df_ner_dictA.columns = ['NER']
@@ -296,7 +249,7 @@ def textParse(text,ws,pos,ner):
     
     
     # 用讀CSV的方式讀取前面匯出的txt
-    path_D_dict = r"dict/D.txt"
+    path_D_dict = r"dict/zhTW/D.txt"
     df_ner_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
     # 存到list
     df_ner_dict.columns = ['NER']
@@ -342,7 +295,7 @@ def textParse(text,ws,pos,ner):
         deviceFeature = tokenlist[2]
         # match F to Return value(only for Rule1)
         if(rule == 1):
-            df = pd.read_csv('dict/supportlist_FV.txt')
+            df = pd.read_csv('dict/zhTW/supportlist_FV.txt')
             df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]
             return_value = df.iloc[0]['R']
             tokenlist[3] = return_value
@@ -371,7 +324,7 @@ def textParse(text,ws,pos,ner):
                 print("conversion requied!")
                 value = unitConversion(feature, entity, entityType, word_sentence)
             
-            df = pd.read_csv('dict/supportlist_FV.txt')
+            df = pd.read_csv('dict/zhTW/supportlist_FV.txt')
             df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]
             tokenlist[2] = df.iloc[0]['Fiot']
             
@@ -387,8 +340,6 @@ def textParse(text,ws,pos,ner):
         print(f"'{sentence}'")
         F,iotinfo = print_word_pos_sentence(word_sentence_list[i],  pos_sentence_list[i], entity_sentence_list[i])
         print("send iotinfo: ", iotinfo)
-        if(iotinfo[4] != -1):
-            sendiot(iotinfo)
         for entity in sorted(entity_sentence_list[i]):
             print(entity)
             

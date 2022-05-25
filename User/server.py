@@ -2,7 +2,7 @@ import os
 import sys
 import pandas as pd
 import json
-
+from threading import Thread
 import time, random, requests
 import DAN
 import unitconversion, enspacy, zhckip, register
@@ -25,6 +25,7 @@ app = Flask(__name__)
 
 @app.route('/',methods=['POST','GET']) 
 def index():
+    returnlist = []
     tokenlist = ['','','','',-1]
     response = ''
     if(request.method == 'POST'):
@@ -38,21 +39,35 @@ def index():
             feature, tokenlist = enspacy.textParse(text) #spacy function
         else:  # chinese
             feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-
+        
+        
+        A = tokenlist[0]
+        D = tokenlist[1]
+        F = tokenlist[2]
+        V = tokenlist[3]
+        valid = tokenlist[4]
+        
+        thread = Thread(target=sendIot, args=(A,D,F,V,valid))
+        thread.daemon = True
+        thread.start()
+        
+        returnlist = tokenlist
+        
         response = ''
-        if(tokenlist[4] == -1):
+        if(returnlist[4] == -1):
             response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
-            tokenlist = []
+            returnlist = []
         else:
             response = 'OK, ' if language == 'en-US' else '收到，'
-            tokenlist[2] = feature
-            if(tokenlist[4] == 1): tokenlist[3] = ''
+            returnlist[2] = feature
+            if(returnlist[4] == 1): returnlist[3] = ''
 
-    return render_template("index.html",tokenlist=tokenlist, response = response)# response message add here
+    return render_template("index.html",returnlist=returnlist, response = response)# response message add here
 
 
 @app.route('/ProcessSentence', methods = ['POST','GET'])
 def ProcessSentence():
+    returnlist = []
     voice = request.args.get('voice')
     sentence = voice
     language = request.args.get('lang_id')
@@ -64,37 +79,80 @@ def ProcessSentence():
         feature, tokenlist = enspacy.textParse(sentence) #spacy function
     else:  # chinese
         feature,tokenlist = zhckip.textParse(sentence,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+        
+    A = tokenlist[0]
+    D = tokenlist[1]
+    F = tokenlist[2]
+    V = tokenlist[3]
+    valid = tokenlist[4]
+
+    thread = Thread(target=sendIot, args=(A,D,F,V,valid))
+    thread.daemon = True
+    thread.start()
+
+    returnlist = tokenlist
     
     response = ''
-    if(tokenlist[4] == -1):
+    if(returnlist[4] == -1):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
-        tokenlist = []
+        returnlist = []
     else:
         response = 'OK, ' if language == 'en-US' else '收到，'
-        tokenlist[2] = feature
-        if(tokenlist[4] == 1): tokenlist[3] = ''
-    print("source from voice", response, tokenlist)
+        returnlist[2] = feature
+        if(returnlist[4] == 1): returnlist[3] = ''
+    print("source from voice", response, returnlist)
     
     entry2Value = request.args.get('entry2_id')
     entry1Value = request.args.get('entry1_id')
 
     var1 = int(entry2Value) + int(entry1Value)
-    var2 = 10
-    var3 = 15
-    return jsonify({ 'var1': var1, 'var2': var2, 'var3': var3 , 'tokenlist': tokenlist, 'response': response})
-#     return response# response message add here
+    return jsonify({ 'var1': var1 , 'tokenlist': returnlist, 'response': response})
 
 
 
+def sendIot(A,D,F,V,valid):
+    if(D !="" and valid !=-1): # D+F
+        df = pd.read_csv('dict/ADF.txt')
+        print('df info:', df, "searching", D)
+        df = df.loc[df['D_ens']==D]
+        print("remain df", df)
+        deviceName = df.iloc[0]['D_en']
+        deviceModel = df.iloc[0]['A_en']
+        dfList = df.iloc[0]['DFlist']
+        Regaddr = df.iloc[0]['Regaddr']
+        dfList = eval(dfList)
+        print(type(dfList))
+        returnValue = V
+        deviceFeature = F
+        print("device name: ",deviceName,"device model: ", deviceModel)
+        Reg_addr = Regaddr
+        DAN.profile['d_name']= deviceName # search for device name 
+        DAN.profile['dm_name']=deviceModel # use specific device model 
+        DAN.profile['df_list']=dfList
+        DAN.device_registration_with_retry(ServerURL, Reg_addr)
+        DAN.push(deviceFeature, int(returnValue))
     
-# def registerIottalk():
-    
-
-    
-
-
-
-
+    if(A !="" and valid !=-1): #  A+F
+        print("tokenlist outer loop change1?:", A,D,F,V)
+        df = pd.read_csv('dict/ADF.txt')
+        df = df.loc[df['A_ens']==A]
+        print('df info:',df)
+        for ind in df.index:     
+            print(df['D_en'][ind], df['A_en'][ind], df['DFlist'][ind], df['Regaddr'][ind])
+            deviceName = df['D_en'][ind]
+            deviceModel = df['A_en'][ind]
+            dfList = df['DFlist'][ind]
+            Regaddr = df['Regaddr'][ind]
+            dfList = eval(dfList)
+            returnValue = V
+            deviceFeature = F
+            print("device name: ",deviceName,"device model: ", deviceModel )
+            Reg_addr = Regaddr
+            DAN.profile['d_name']= deviceName # search for device name 
+            DAN.profile['dm_name']=deviceModel # use specific device model 
+            DAN.profile['df_list']=dfList
+            DAN.device_registration_with_retry(ServerURL, Reg_addr)
+            DAN.push(deviceFeature, int(returnValue))
 
     
 
