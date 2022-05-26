@@ -41,3 +41,11 @@ light number 3
 light 1
 light 2
 light 3
+curtain #1
+curtain #2
+curtain #3
+fan #1
+fan #2
+light #1
+light #2
+light #3

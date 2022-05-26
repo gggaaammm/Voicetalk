@@ -3,8 +3,7 @@ import DAN
 import pandas as pd
 import sqlite3
 import time
-import threading
-import re
+import re # for number finding
 #import the phrase matcher
 from spacy.matcher import PhraseMatcher
 #load a model and create nlp object
@@ -104,7 +103,8 @@ def textParse(sentence):
     # check the synonym, redirect to iottalk ver
     # check D synonym
     df = pd.read_csv('dict/enUS/D_sys_en.txt')
-    df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1]) | (df['D_sys2'] == tokenlist[1])]
+    df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1])\
+                | (df['D_sys2'] == tokenlist[1]) | (df['D_sys3'] == tokenlist[1])]
     if(len(df.index)>0):
         tokenlist[1] = df.iloc[0]['D_abs']
         print('device update: ', tokenlist[2])
@@ -130,7 +130,7 @@ def textParse(sentence):
     if(len(numlist) >= 1):
         tokenlist[3] = numlist[len(numlist)-1]
 
-    # default : set 1st num as return value V
+    # default : set last num as return value V(in case that device name contains number)
     
     token = tokenlist
     #1 check if enoght token A/D+F
