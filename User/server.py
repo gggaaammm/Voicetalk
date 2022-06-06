@@ -134,7 +134,8 @@ def sendIot(A,D,F,V,valid,lang):
         DAN.profile['df_list']=dfList
         DAN.device_registration_with_retry(ServerURL, Reg_addr)
         if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
-            DAN.push(deviceFeature, int(returnValue)*10)
+            iotvalue = int(returnValue)*10 if int(returnValue)<=10 else 100
+            DAN.push(deviceFeature, iotvalue)
         else:
             DAN.push(deviceFeature, int(returnValue))
     
