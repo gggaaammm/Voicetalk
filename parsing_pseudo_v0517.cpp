@@ -18,8 +18,8 @@ int main()
     languageList = ["en-US","zh-TW"]
         
     //webpage default value
-    language = "zh-TW"             // If user does not choose language, set zh-TW as default language
-    micbutton.state = "start";     // ["start", "end"]
+    language = "zh-TW"             // set zh-TW as default language
+    micbutton.state = "start";     // ["start", "end"], set start as default state
     recognitionResult = "";
     systemResponse = ""
    
@@ -39,10 +39,10 @@ int main()
     
     
     if(micbutton.onclick()){
-        if(micbutton.state = "start"){                  // step 2: user press start button
+        if(micbutton.state == "start"){                  // step 2: user press start button
             recognition.onstart()
             }
-        if(micbutton.state = "end"){
+        if(micbutton.state == "end"){
             recognitionResult = recognition.onresult()    // user press stop button, system stop manually
         }
     }
@@ -70,29 +70,29 @@ int main()
                 D = wordset[j];
             case 2:
                 F = wordset[j];
-            case 3:                           // step 7: if token classified as V, do unit converion if need
-                while(tokenClassifier(wordset[j]==3)){  
+            case 3:                           // step 7: if token classified as V, do unit converion if need V
+                while(tokenClassifier(wordset[j] == 3)){  
                     if(check_number(wordset[j]) == false){// no number in word set, 
-                        V = wrodset[j];                   // V is type string and break the loop. ex: [set, light, color, to, red]
+                        V = wrodset[j];                   // V is type string and break the loop. ex: [set, light, color, to, 'red']
                         break;
                     }
                     else{
                         v = float(wordset[j]);             // save word as v(number)
                         j = j+1;                           // select next word
                         
-                        if(check_unit(wordset[j])== true){ // if next word is unit
+                        
+                        if(check_unit(wordset[j]) == false){
+                            V = v;                        // next word is not unit. ex: [Set, light, brightness, to, 8]
+                            break;                        // use default value v and break the loop
+                        }
+                        else if(check_unit(wordset[j]) == true){ // if next word is unit ex: [Set, timer, 3, minutes]
                             u = wordset[j]                 // save word as u(unit)
                             V = V+unitConversion(v,u)      // add unit conversion result to V. ex: unitConversion(3, minutes) = 180 secs
                                 
                             if(check_number(wordset[j+1]) == false){
                                 break;                     // if next loop is no longer number, break the loop. ex: [3, minutes, in, timer]
                             }
-                            else j = j+1;                  // go to next loop, ex:[3,minutes,10,seconds]
-                        }
-                        
-                        else{                              // next word is not unit. ex: [Set, light, brightness, to, 8]
-                            V = v;                         // use default value v and break the loop
-                            break;
+                            else j = j+1;                  // go to next loop, ex:[3,minutes,'10',seconds]
                         }
                     }
                 }
@@ -121,7 +121,7 @@ int main()
     else return error
         
     //SA    
-    if(rule1_success||rule2_success)                      // step 13: Send Device(s), IDF, value via SA
+    if(rule1_success||rule2_success)                      // step 13: Send Device(s), IDF, value via Devicetalk
         sendIoT(A,D,F,V)
         
         

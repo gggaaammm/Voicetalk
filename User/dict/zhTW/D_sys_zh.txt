@@ -1,0 +1,9 @@
+D_abs,D_sys1,D_sys2,D_sys3
+電燈一,日光燈,light 1,light #1
+電燈二,中華電信電燈,light 2,light #2
+電燈三,天花板電燈,light 3,light #3
+電扇一,大同電扇,fan 1,fan #1
+電扇二,奇美電扇,fan 2,fan #2
+窗簾一,curtain number 1,curtain 1,curtain #1
+窗簾二,curtain number 2,curtain 2,curtain #2
+窗簾三,curtain number 3,curtain 3,curtain #3

@@ -32,6 +32,9 @@ fan number 2
 fan 1
 fan 2
 fan 3
+fan one
+fan two
+fan three
 light number one
 light number two
 light number three
@@ -41,6 +44,9 @@ light number 3
 light 1
 light 2
 light 3
+light one
+light two
+light three
 curtain #1
 curtain #2
 curtain #3

@@ -55,6 +55,16 @@ def ruleLookup(feature):
     
 def supportCheck(tokenlist):
     print("tokenlist before support check: ", tokenlist)
+    #unified synonym
+    # check the synonym, redirect to iottalk ver
+    # check D synonym
+    df = pd.read_csv('dict/zhTW/D_sys_zh.txt')
+    df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1])\
+                | (df['D_sys2'] == tokenlist[1]) | (df['D_sys3'] == tokenlist[1])]
+    if(len(df.index)>0):
+        tokenlist[1] = df.iloc[0]['D_abs']
+        print('device update: ', tokenlist[1])
+    
     # unified synonym
     df = pd.read_csv('dict/synonym.txt')
     df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]
@@ -68,7 +78,7 @@ def supportCheck(tokenlist):
         print("why no D", tokenlist[1])
         print("D list:\n", df['D'])
         df = df.loc[df['D']==tokenlist[1]]
-        print("= = why not parse", df, tokenlist[1])
+        print("= = why not parse", df, tokenlist[1], feature)
         if(df.iloc[0]['F1']==feature or df.iloc[0]['F2']==feature or df.iloc[0]['F3']==feature ):
             print('D support F')
         else:
@@ -130,6 +140,14 @@ def mappingToken(wordset): #mapping token should return an array of A/D/F/V
         print(wordset[j])
         if(num_there(wordset[j])): #check if this word is number
             token[3] = wordset[j]
+            print('real num:', type(token[3]))
+        else: #second chance, a word contains in number
+            df = pd.read_csv(r"dict/zhTW/num_zh.txt")
+            df = df.loc[df['text'] == wordset[j]]
+            if(len(df.index)>0):
+                token[3] = int(df.iloc[0]['value'])
+                print('chinese num:', type(token[3]))
+        # look up from dictionary    
         get_token = dictionaryLookup(wordset[j],A_list,D_list, F_list,V_list)
         print("token: ",get_token)
         #if A/D/F/V already exist another value, break
@@ -309,20 +327,21 @@ def textParse(text,ws,pos,ner):
             
         #after getting token list, use entity recog result to do unit conversion
         #if more than 2 entity in one sentence, filter it for CARDINAL, TIME, QUANTITY, PERCENT
-        print("entity:", entity_sentence)
+        print("entity:", entity_sentence, len(entity_sentence))
         if(rule == 2):
             feature = tokenlist[2]
-            entitylist = list(entity_sentence)
-            entity = entitylist[0][3]
-            entityType = entitylist[0][2]
-            print("entity category and context:", entitylist[0][2], entitylist[0][3])
-        
-            
-            if(len(entity_sentence)==0 or entitylist[0][2] == 'CARDINAL'):
-                print("no unit conversion required...")
-            elif(entitylist[0][2] == 'TIME' or entitylist[0][2] == 'QUANTITY' or entitylist[0][2] == 'PERCENT'):
-                print("conversion requied!")
-                value = unitConversion(feature, entity, entityType, word_sentence)
+            if(len(entity_sentence)>0):
+                entitylist = list(entity_sentence)
+                entity = entitylist[0][3]
+                entityType = entitylist[0][2]
+                print("entity category and context:", entitylist[0][2], entitylist[0][3])
+
+
+                if(len(entity_sentence)==0 or entitylist[0][2] == 'CARDINAL'):
+                    print("no unit conversion required...")
+                elif(entitylist[0][2] == 'TIME' or entitylist[0][2] == 'QUANTITY' or entitylist[0][2] == 'PERCENT'):
+                    print("conversion requied!")
+                    value = unitConversion(feature, entity, entityType, word_sentence)
             
             df = pd.read_csv('dict/zhTW/supportlist_FV.txt')
             df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]

@@ -1,6 +1,7 @@
 feature,rule,
 fan speed,2,
 brightness,2,
+color temperature,2,
 temperature,2,
 rotation,2,
 open,1

@@ -31,7 +31,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'en-US'
+        language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -133,7 +133,10 @@ def sendIot(A,D,F,V,valid,lang):
         DAN.profile['dm_name']=deviceModel # use specific device model 
         DAN.profile['df_list']=dfList
         DAN.device_registration_with_retry(ServerURL, Reg_addr)
-        DAN.push(deviceFeature, int(returnValue))
+        if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
+            DAN.push(deviceFeature, int(returnValue)*10)
+        else:
+            DAN.push(deviceFeature, int(returnValue))
     
     if(A !="" and valid !=-1): #  A+F
         print("tokenlist outer loop change1?:", A,D,F,V)
@@ -158,7 +161,10 @@ def sendIot(A,D,F,V,valid,lang):
             DAN.profile['dm_name']=deviceModel # use specific device model 
             DAN.profile['df_list']=dfList
             DAN.device_registration_with_retry(ServerURL, Reg_addr)
-            DAN.push(deviceFeature, int(returnValue))
+            if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
+                DAN.push(deviceFeature, int(returnValue)*10)
+            else:
+                DAN.push(deviceFeature, int(returnValue))
 
     
 

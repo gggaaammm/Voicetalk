@@ -73,6 +73,7 @@ def exceptionHandle(word):
 
 def textParse(sentence):
     #process some text
+    sentence = sentence.lower()
     tokenlist = ['','','','','']
     unit = ''
     feature = ''
@@ -104,10 +105,11 @@ def textParse(sentence):
     # check D synonym
     df = pd.read_csv('dict/enUS/D_sys_en.txt')
     df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1])\
-                | (df['D_sys2'] == tokenlist[1]) | (df['D_sys3'] == tokenlist[1])]
+                | (df['D_sys2'] == tokenlist[1]) | (df['D_sys3'] == tokenlist[1]) \
+               | (df['D_sys4'] == tokenlist[1])]
     if(len(df.index)>0):
         tokenlist[1] = df.iloc[0]['D_abs']
-        print('device update: ', tokenlist[2])
+        print('device update: ', tokenlist[1])
         
     # check F synonym
     df = pd.read_csv('dict/enUS/F_sys_en.txt')
@@ -221,7 +223,7 @@ def supportCheck(tokenlist):
         print("D list:\n", df['D'])
         df = df.loc[df['D']==tokenlist[1]]
         print("= = why not parse", df, tokenlist[1])
-        if(df.iloc[0]['F1']==feature or df.iloc[0]['F2']==feature):
+        if(df.iloc[0]['F1']==feature or df.iloc[0]['F2']==feature or df.iloc[0]['F3']==feature):
             print('D support F')
         else:
             print('D not support F')
@@ -235,7 +237,7 @@ def supportCheck(tokenlist):
         print("all belongs to A:", df)
         d_id = 0
         while (d_id < len(df.index)):
-            if(df.iloc[d_id]['F1']!= feature and df.iloc[d_id]['F2']!=feature):
+            if(df.iloc[d_id]['F1']!= feature and df.iloc[d_id]['F2']!=feature or df.iloc[0]['F3']==feature):
                 print('one of D unsupport')
                 allsupport = 0
                 break

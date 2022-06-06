@@ -11,3 +11,4 @@ switch,close,turn off,power off
 fan speed,fan speed,
 brightness,brightness,luminance,
 rotation,rotation,
+color temperature,color temperature
