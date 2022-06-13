@@ -7,6 +7,13 @@ import time, random, requests
 import DAN
 import unitconversion, enspacy, zhckip, register
 
+# define error message format:
+# 1: rule1, 2: rule2, <0: error
+# -2 error: no device in sentence
+# -3 error: no device feature in sentence
+# -4 error: device feature need value
+# -5 error: D not support F
+
 # ========iottalk================
 ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
 #ServerURL = 'https://DomainName' #with SSL connection
@@ -31,7 +38,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'zh-TW'
+        language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -53,6 +60,7 @@ def index():
         
         returnlist = tokenlist
         
+        print("message bit:", valid)
         response = ''
         if(returnlist[4] == -1):
             response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
@@ -91,7 +99,7 @@ def ProcessSentence():
     thread.start()
 
     returnlist = tokenlist
-    
+    print("message bit:", valid)
     response = ''
     if(returnlist[4] == -1):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
@@ -106,12 +114,12 @@ def ProcessSentence():
     entry1Value = request.args.get('entry1_id')
 
     var1 = int(entry2Value) + int(entry1Value)
-    return jsonify({ 'var1': var1 , 'tokenlist': returnlist, 'response': response})
+    return jsonify({ 'var1': var1 , 'tokenlist': returnlist, 'response': response, 'valid':valid})
 
 
 
 def sendIot(A,D,F,V,valid,lang):
-    if(D !="" and valid !=-1): # D+F
+    if(D !="" and valid >0 ): # D+F
         df = pd.read_csv('dict/ADF.txt')
         print('df info:', df, "searching", D)
         if(lang == "en-US"):
@@ -133,13 +141,14 @@ def sendIot(A,D,F,V,valid,lang):
         DAN.profile['dm_name']=deviceModel # use specific device model 
         DAN.profile['df_list']=dfList
         DAN.device_registration_with_retry(ServerURL, Reg_addr)
+        DAN.push('Switch1', 1)
         if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
             iotvalue = int(returnValue)*10 if int(returnValue)<=10 else 100
             DAN.push(deviceFeature, iotvalue)
         else:
             DAN.push(deviceFeature, int(returnValue))
     
-    if(A !="" and valid !=-1): #  A+F
+    if(A !="" and valid >0): #  A+F
         print("tokenlist outer loop change1?:", A,D,F,V)
         df = pd.read_csv('dict/ADF.txt')
         if(lang == 'en-US'):
@@ -161,6 +170,7 @@ def sendIot(A,D,F,V,valid,lang):
             DAN.profile['d_name']= deviceName # search for device name 
             DAN.profile['dm_name']=deviceModel # use specific device model 
             DAN.profile['df_list']=dfList
+            
             DAN.device_registration_with_retry(ServerURL, Reg_addr)
             if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
                 DAN.push(deviceFeature, int(returnValue)*10)

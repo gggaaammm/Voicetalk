@@ -10,7 +10,6 @@ int main()
     int token[4] = {0};                               // token[] is a counter of tokenset
 
     
-    
     // Voicetalk frontend
     // input: User select language by clicking on select 
     // webpage GUI: languagelist, recordbutton, recognition result, system response
@@ -38,11 +37,11 @@ int main()
     recognition.lang = language;                     //  set recognition object language
     
     
-    if(micbutton.onclick()){
-        if(micbutton.state == "start"){                  // step 2: user press start button
+    if(recordbutton.onclick()){
+        if(recordbutton.state == "start"){                  // step 2: user press start button
             recognition.onstart()
             }
-        if(micbutton.state == "end"){
+        if(recordbutton.state == "end"){
             recognitionResult = recognition.onresult()    // user press stop button, system stop manually
         }
     }
@@ -55,10 +54,9 @@ int main()
     
     // Voicetalk backend
     // Tokenize subsystem.Tokenize tool
-    string wordset[] = parsingSentence(recognitionResult, language); // step 4: tools tokenize sentence to set of words by language
+    string wordset[] = ProcessSentence(recognitionResult, language); // step 4: tools tokenize sentence to set of words by language
                                                                      // Tokenize tools: ckiptagger(zh-TW), spaCy(en-US)
-    
-                                            
+                                           
     while(j< wordset.size())                  // stpe 5: for each loop, select 1 word
     { 
         i = tokenClassifier(wordset[j]);      // stpe 6: classify word to token
@@ -71,28 +69,28 @@ int main()
             case 2:
                 F = wordset[j];
             case 3:                           // step 7: if token classified as V, do unit converion if need V
+                V = 0;                                    // init V, value=0
                 while(tokenClassifier(wordset[j] == 3)){  
                     if(check_number(wordset[j]) == false){// no number in word set, 
-                        V = wrodset[j];                   // V is type string and break the loop. ex: [set, light, color, to, 'red']
+                        V = wrodset[j];                   // V is type string, break the loop. ex: [set, light, color, to, 'red']
                         break;
                     }
                     else{
                         v = float(wordset[j]);             // save word as v(number)
                         j = j+1;                           // select next word
-                        
-                        
+                   
                         if(check_unit(wordset[j]) == false){
-                            V = v;                        // next word is not unit. ex: [Set, light, brightness, to, 8]
-                            break;                        // use default value v and break the loop
+                            V = v;                               // next word is not unit. ex: [Set, time, for, '3']
+                            break;                               // set V as default value v and break the loop
                         }
-                        else if(check_unit(wordset[j]) == true){ // if next word is unit ex: [Set, timer, 3, minutes]
-                            u = wordset[j]                 // save word as u(unit)
-                            V = V+unitConversion(v,u)      // add unit conversion result to V. ex: unitConversion(3, minutes) = 180 secs
+                        else if(check_unit(wordset[j]) == true){ // next word is unit. ex: [Set, timer,for, 3, 'minutes']
+                            u = wordset[j]                       // save word as u(unit)
+                            V = V + unitConversion(v,u)          // add unit conversion result to V. ex: unitConversion(3, minutes) = 180 secs
                                 
                             if(check_number(wordset[j+1]) == false){
-                                break;                     // if next loop is no longer number, break the loop. ex: [3, minutes, in, timer]
+                                break;                     // if next loop is no longer number, break the loop. ex: [Set, timer,for, 3, minutes]
                             }
-                            else j = j+1;                  // go to next loop, ex:[3,minutes,'10',seconds]
+                            else j = j+1;                  // go to next loop, ex:[Set, timer, for, 3, minutes, '10', seconds]
                         }
                     }
                 }

@@ -12,6 +12,13 @@ nlp = spacy.load("en_core_web_sm")
 matcher = PhraseMatcher(nlp.vocab)
 ServerURL = 'http://140.113.199.246:9999'      
 
+# define error message format:
+# 1: rule1, 2: rule2, -1: error
+# -2 error: no device in sentence
+# -3 error: no device feature in sentence
+# -4 error: device feature need value
+# -5 error: D not support F
+
 def readDB():
     #create the list of words to match
     path_A_dict = r"dict/enUS/A_en.txt"
@@ -148,16 +155,16 @@ def textParse(sentence):
             #check if V(for rule2) exist
             if(token[3]=="" and rule==2):
                 print("need value")
-                token[4]=-1
+                token[4]=-4 # error message #4: device feature need value
             elif(token[3]!="" and rule==2):
                 print("V exist for rule 2")
         else:
-            token[4]=-1
+            token[4]=-3     # error message #3: no feature found in sentence 
     else:
-        token[4]=-1
+        token[4]=-2         # error message #2: no device found in sentence
         
     #now token has correct number, check if A/D support F
-    if(token[4] != -1):
+    if(token[4] > 0):
         token = supportCheck(token)
         print("do we need another synomon transform?", token)
     else:
@@ -171,7 +178,7 @@ def textParse(sentence):
 
 
     # check for synonym and check the return value
-    if(token[4] != -1 and rule==1):
+    if(token[4] >0 and rule==1):
         df = pd.read_csv('dict/enUS/supportlist_FVen.txt')
         df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]
         return_value = df.iloc[0]['R']
@@ -180,7 +187,7 @@ def textParse(sentence):
         feature = tokenlist[2]
         tokenlist[2] = df.iloc[0]['Fiot']
         print("token list for return value(iottalk):", tokenlist)
-    elif(token[4] != -1 and rule==2):
+    elif(token[4] >0 and rule==2):
         df = pd.read_csv('dict/enUS/supportlist_FVen.txt')
         df = df.loc[(df['F1']==tokenlist[2]) | (df['F2'] == tokenlist[2]) | (df['F3'] == tokenlist[2])]
         # change F to iottalk device feature
@@ -227,7 +234,7 @@ def supportCheck(tokenlist):
             print('D support F')
         else:
             print('D not support F')
-            tokenlist[4] = -1
+            tokenlist[4] = -5  # error message #5: Device not support such feature
     
     #check if A support F
     if(tokenlist[0]!=''):
@@ -245,7 +252,7 @@ def supportCheck(tokenlist):
     
         if(allsupport == 1):
             print('A all support F')
-        else: tokenlist[4] = -1
+        else: tokenlist[4] = -5 #error message #5: Device not support such feature
             
     return tokenlist
 

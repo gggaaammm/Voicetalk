@@ -2,6 +2,15 @@ import os
 import pandas as pd
 import time
 import DAN
+
+
+# define error message format:
+# 1: rule1, 2: rule2, -1: error
+# -2 error: no device in sentence
+# -3 error: no device feature in sentence
+# -4 error: device feature need value
+# -5 error: D not support F
+
 #===========ckiptagger(tensorflow)==========
 # Suppress as many warnings as possible
 # this code hide the warning meesage
@@ -82,8 +91,8 @@ def supportCheck(tokenlist):
         if(df.iloc[0]['F1']==feature or df.iloc[0]['F2']==feature or df.iloc[0]['F3']==feature ):
             print('D support F')
         else:
-            print('D not support F')
-            tokenlist[4] = -1
+            print('D not support F')  # error message #5: D not support F
+            tokenlist[4] = -5
     
     #check if A support F
     if(tokenlist[0]!=''):
@@ -100,8 +109,8 @@ def supportCheck(tokenlist):
             d_id = d_id+1
     
         if(allsupport == 1):
-            print('A all support F')
-        else: tokenlist[4] = -1
+            print('A all support F')   # error message #5: D not support F
+        else: tokenlist[4] = -5
             
     return tokenlist
     # check if F support V(only for Rule2)   
@@ -173,17 +182,17 @@ def mappingToken(wordset): #mapping token should return an array of A/D/F/V
             token[4] = rule
             #check if V(for rule2) exist
             if(token[3]=="" and rule==2):
-                print("need value")
-                token[4]=-1
+                print("need value")            # error message #4: device feature need value
+                token[4]=-4
             elif(token[3]!="" and rule==2):
                 print("V exist for rule 2")
         else:
-            token[4]=-1
+            token[4]=-3                        # error message #3: no feature found in device 
     else:
-        token[4]=-1
+        token[4]=-2                            # error message #2: no device found in device
         
     #now token has correct number, check if A/D support F
-    if(token[4] != -1):
+    if(token[4]  > 0):                        #=================need change to: <0
         token = supportCheck(token)
         
     return token

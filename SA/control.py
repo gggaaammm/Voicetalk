@@ -1,3 +1,6 @@
+import random
+
+from iottalkpy.dan import NoData
 import sa
 
 device_addr = sa.device_addr
@@ -11,5 +14,7 @@ DummySensor_I_object = sa.DummySensor_I_object
 DummyControl_O_object = sa.DummyControl_O_object
 
 
-sa.DummyControl_O(162)
-
+def on_register(dan):
+    DummySensor_I_object.setup()
+    DummyControl_O_object.setup()  
+    print('register successfully')

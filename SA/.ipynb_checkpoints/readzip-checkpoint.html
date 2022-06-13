@@ -1,0 +1,16 @@
+<input type="file" class="upload-input">
+<p class="context"> A </p>
+<script>$('.upload-input').on('change', function($event) {
+ var $file = $event.target.files[0];
+ console.log("file upload: ", $file )
+ console.log("size: ", $file.size)
+ JSZip.loadAsync($file).then(function($content) {
+  // if you return a promise in a "then", you will chain the two promises
+  return $content.files["V1/sa.py"].async('text');
+ }).then(function (txt) {
+   console.log("txt: ", txt)
+   $('context').
+   
+   /* alert(txt) */;
+ });
+});</script>

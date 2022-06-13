@@ -147,10 +147,10 @@
                         renderhtml = data.response
                     }
                     else if(langvalue == "en-US"){
-                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3] 
+                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]+data.valid
                     }
                     else{
-                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]
+                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]+data.valid
                     }
                     console.log(renderhtml)
                     $("#textres").val(renderhtml);

@@ -25,16 +25,13 @@ odf_list = ['DummyControl-O']
 ### Set the push interval, default = 1 (sec)
 ### Or you can set to 0, and control in your feature input function.
 push_interval = 10  # global interval
-
-value=0
+value = 0
 
 DummySensor_I_object = safuncs.DummySensor_I()
-
 DummyControl_O_object = safuncs.DummyControl_O()
 
 def on_register(dan):
     DummySensor_I_object.setup()
-    
     DummyControl_O_object.setup()
     
     print('register successfully')

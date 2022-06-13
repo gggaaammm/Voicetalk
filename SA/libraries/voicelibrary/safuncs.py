@@ -38,7 +38,7 @@ class DummySensor_I(IdfFunction):
 
     def runs(self)-> List[float, ]:
         value = [0, ]
-		
+        print("-I A")
         return value
 
 '''
@@ -59,6 +59,6 @@ class DummyControl_O(OdfFunction):
         return
 
     def runs(self, value: List[float, ])-> None:
-        print("A",value)
+        print("-O A",value)
         return
 
