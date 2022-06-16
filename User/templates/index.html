@@ -6,15 +6,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Voice Control</title>
     <script src="{{ url_for('static', filename='js/jquery.js') }}" type="text/javascript"></script>
-    <script src="{{ url_for('static', filename='js/csmapi.js') }}" type="text/javascript"></script>
+    <!--script src="{{ url_for('static', filename='js/csmapi.js') }}" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/dan.js') }}" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/dai.js') }}" type="text/javascript"></script>
-    <script src="{{ url_for('static', filename='js/ida.js') }}" type="text/javascript"></script>
-    <!--cript src="js/jquery.js" type="text/javascript"></script>
-    <script src="js/csmapi.js"></script>
-    <script src="js/dan.js"></script>
-    <script src="js/dai.js"></script>
-    <script src="js/ida.js"></script-->
+    <script src="{{ url_for('static', filename='js/ida.js') }}" type="text/javascript"></script-->
+    
   </head>
   <body>
     <script type="text/javascript">
@@ -81,14 +77,9 @@
         infoBox.innerText = "本瀏覽器不支援語音辨識，請更換瀏覽器！(Chrome 25 版以上才支援語音辨識)";
       } else {
         var recognition = new webkitSpeechRecognition(); // 建立語音辨識物件 webkitSpeechRecognition
-        recognition.continuous = true; // 設定連續辨識模式
-        recognition.interimResults = true; // 設定輸出中先結果。
-        /// 新的規則
-          var grammar = '#JSGF V1.0; grammar brands; public <brand> = Tatung | Chimei | CHT ;'
-          var speechRecognitionList = new webkitSpeechGrammarList();
-            speechRecognitionList.addFromString(grammar, 1);
-             recognition.grammars = speechRecognitionList;
-          
+        recognition.continuous = true;                   // 設定連續辨識模式
+        recognition.interimResults = true;               // 設定輸出中先結果。
+        
 
         recognition.onstart = function() { // 開始辨識
           recognizing = true; // 設定為辨識中
@@ -143,15 +134,36 @@
                 data: { entry2_id: val, entry1_id: entry1 , lang_id : language, voice : final_transcript},
                 success: function(data){
                     console.log("AA", data)
-                    if(data.response == "很抱歉，聽不懂請重講"  || data.response == "I\'m sorry, try again."){
-                        renderhtml = data.response
+                    if(langvalue == "en-US"){
+                        if(data.valid<0){
+                            renderhtml = data.response+data.valid
+                            switch(data.valid){
+                                case -2: renderhtml = "No Device in sentence"
+                                case -3: renderhtml = "No device feature in sentence"
+                                case -4: renderhtml = "Device feature need value"
+                                case -5: renderhtml = "Device not support device feature"
+                            }
+                        }
+                        else{
+                            renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]
+                        }
                     }
-                    else if(langvalue == "en-US"){
-                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]+data.valid
+                    else if(langvalue == "zh-TW"){
+                        if(data.valid<0){
+                            renderhtml = data.response+data.valid
+                            switch(data.valid){
+                                case -2: renderhtml = "句子中未包含電器"
+                                case -3: renderhtml = "句子中未包含電器功能"
+                                case -4: renderhtml = "電器功能需要給予值"
+                                case -5: renderhtml = "電器不支援此功能"
+                            }
+                        }
+                        else{
+                            renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]
+                        }
                     }
-                    else{
-                        renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]+data.valid
-                    }
+                    
+
                     console.log(renderhtml)
                     $("#textres").val(renderhtml);
                 },
@@ -162,13 +174,7 @@
              
             //
             
-              if(final_transcript.match("我愛你")!=null){
-                console.log("OPEN");
-                dan.push('Dummy_Sensor',[1]);
-              }else if(final_transcript.match("不愛你")!=null){
-                console.log("CLOSE");
-                dan.push('Dummy_Sensor',[0]);
-              }
+              
         };
       }
         
@@ -179,16 +185,16 @@
     <div class="container text-center">
       <div class="form-group">
         <br>
-        <h1 class="h3 mb-3 font-weight-normal">VoiceTalk Voice Control</h1>
+        <h1 class="h3 mb-3 font-weight-normal">VoiceTalk</h1>
         <div class="col-sm">
-          <label id = "recoglabel" for="textBox">辨識結果:</label>
+          <label id ="recoglabel" for="textBox">辨識結果:</label>
           <input id="textBox" class="form-control" type="text" size="60" value=""/>
             <br>
             <br>
-          <form method="post">
+          <!--form method="post">
             <input type="text" name="user">
             <input type="submit" name="send" value="文字送出">
-          </form>
+          </form-->
         </div>
         <div class="col-sm">
             <!--span>{{response}}

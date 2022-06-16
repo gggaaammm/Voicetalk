@@ -70,10 +70,11 @@ def index():
             returnlist[2] = feature
             if(returnlist[4] == 1): returnlist[3] = ''
 
-    return render_template("index.html",returnlist=returnlist, response = response)# response message add here
+    return render_template("index.html",returnlist=returnlist, response = response) # response message add here
 
 
 @app.route('/ProcessSentence', methods = ['POST','GET'])
+# prcoess setence
 def ProcessSentence():
     returnlist = []
     voice = request.args.get('voice')
@@ -101,7 +102,7 @@ def ProcessSentence():
     returnlist = tokenlist
     print("message bit:", valid)
     response = ''
-    if(returnlist[4] == -1):
+    if(returnlist[4] < 0):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
         returnlist = []
     else:

@@ -101,7 +101,7 @@ def ProcessSentence():
     returnlist = tokenlist
     print("message bit:", valid)
     response = ''
-    if(returnlist[4] == -1):
+    if(returnlist[4] < 0):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
         returnlist = []
     else:
