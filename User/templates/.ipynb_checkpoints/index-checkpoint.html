@@ -7,7 +7,6 @@
     <title>Voice Control</title>
     <script src="{{ url_for('static', filename='js/jquery.js') }}" type="text/javascript"></script>
     
-      <!--script src="{{ url_for('static', filename='js/csmapi.js') }}" type="text/javascript"></script-->
     
     
   </head>
@@ -15,27 +14,27 @@
     <script type="text/javascript">
       var recognitionTitle = {"en-US":"Recognition Result","cmn-Hant-TW":"辨識結果"} 
       var recognitionBox = document.getElementById("recognitionBox"); // 最終的辨識訊息  "HTML元件"
-      var final_transcript = ''; // 最終的辨識訊息 "JS變數"
+      var final_transcript = '';                                      // 最終的辨識訊息 "JS變數"
         
       var responseTitle = {"en-US":"System Response","cmn-Hant-TW":"系統回覆"}  
       var responseBox =   document.getElementById("responseBox");  //系統回覆
         
       
       var startStopButton; // 「辨識/停止」按鈕
-      var infoBox = document.getElementById("infoBox");; // 提示使用者的訊息
+      var infoBox = document.getElementById("infoBox"); // 提示使用者的訊息
       
       var selectlangBox = document.getElementById("selectlangBox"); // 語言選擇的下拉式選單
       
 
       
-      var recognizing = false; // 是否辨識中 API專用
+      var recognizing = false; // 是否辨識中 
       
       
 
     
         
       function selectLanguage(event){
-          recognition.stop(); //停止目前的辨識
+          if(recognizing){recognition.stop();} //如果正在辨識, 就停止
           
           language = selectlangBox.options[selectlangBox.selectedIndex].value; // 取得被選擇的語言
           
@@ -118,17 +117,15 @@
           }
           if (final_transcript.trim().length > 0) // 如果有最終辨識文字
               recognitionBox.value = final_transcript; // 顯示最終辨識文字
-            // go to backend
+        
             
             
-            var val = 1;
-            var entry1 = 3;
+            // portocol: send input to backend and get the input
 
             $.getJSON({
                 url: "/ProcessSentence",
-                data: { entry2_id: val, entry1_id: entry1 , lang_id : language, voice : final_transcript},
+                data: {  lang_id : language, voice : final_transcript},
                 success: function(data){
-                    console.log("AA", data)
                     if(language == "en-US"){
                         if(data.valid<0){
                             renderhtml = data.response+data.valid
@@ -238,7 +235,6 @@
     
       
       
-    <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
     <script src="{{ url_for('static', filename='js/langswitch.js') }}" type="text/javascript"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

@@ -111,11 +111,8 @@ def ProcessSentence():
         if(returnlist[4] == 1): returnlist[3] = ''
     print("source from voice", response, returnlist)
     
-    entry2Value = request.args.get('entry2_id')
-    entry1Value = request.args.get('entry1_id')
-
-    var1 = int(entry2Value) + int(entry1Value)
-    return jsonify({ 'var1': var1 , 'tokenlist': returnlist, 'response': response, 'valid':valid})
+    
+    return jsonify({ 'tokenlist': returnlist, 'response': response, 'valid':valid})
 
 
 

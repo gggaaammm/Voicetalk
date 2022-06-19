@@ -70,10 +70,11 @@ def index():
             returnlist[2] = feature
             if(returnlist[4] == 1): returnlist[3] = ''
 
-    return render_template("index.html",returnlist=returnlist, response = response)# response message add here
+    return render_template("index.html",returnlist=returnlist, response = response) # response message add here
 
 
 @app.route('/ProcessSentence', methods = ['POST','GET'])
+# prcoess setence
 def ProcessSentence():
     returnlist = []
     voice = request.args.get('voice')
@@ -110,11 +111,8 @@ def ProcessSentence():
         if(returnlist[4] == 1): returnlist[3] = ''
     print("source from voice", response, returnlist)
     
-    entry2Value = request.args.get('entry2_id')
-    entry1Value = request.args.get('entry1_id')
-
-    var1 = int(entry2Value) + int(entry1Value)
-    return jsonify({ 'var1': var1 , 'tokenlist': returnlist, 'response': response, 'valid':valid})
+    
+    return jsonify({ 'tokenlist': returnlist, 'response': response, 'valid':valid})
 
 
 
