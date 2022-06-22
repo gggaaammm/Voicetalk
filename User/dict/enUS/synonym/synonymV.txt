@@ -1,2 +1,10 @@
-largest
-smallest
+V_abs,V_syn1
+largest,
+smallest,
+brightest,
+highest,
+lowest,
+middle,
+red,
+blue,
+yellow

@@ -1,5 +1,16 @@
-Regaddr,device_model,A,device_name,D,Device_feature_list,F_list
-20220501sp2,Vlight,電燈,spot light,投射燈,"['Switch1',]","['開關',]"
-20220501sp3,Vlight,電燈,indirect light,間接照明,"['Switch1',]","['開關',]"
-20220501trilight,Vlight,電燈,triangle light,三角燈,"['Switch1','Luminance-I']","['開關','亮度']",
-
+Regaddr,device_model,device_name,device_feature_list
+20220501sp2,Vlight,spot light,"['Switch1',]"
+20220501sp3,Vlight,indirect light,"['Switch1',]"
+20220501trilight,Vlight,triangle light,"['Switch1','Luminance-I']"
+20220501CHTLED,Vlight,CHT LED,"['Switch1','Luminance-I']"
+20220501Lightctl,Vlight,fluorescent lamp,"['Switch1',]"
+20220501CAGLED,Vlight,CAG LED,"['Switch1','Luminance-I','ColorTemperature-I']"
+20220501Tatungfan,Vfan,tatung fan,"['Switch1','Fanspeed-I']"
+20220501Chimeifan,Vfan,chimei fan,"['Switch1','Fanspeed-I']"
+20220501curtain1,Vcurtain,curtain1,"['Switch1',]"
+20220501curtain2,Vcurtain,curtain2,"['Switch1',]"
+20220501curtain3,Vcurtain,curtain3,"['Switch1',]"
+20220501window,Vwindow,window,"['Switch1',]"
+20220501airpurifier,Vairpurifier,Tatung airpurifier,"['Switch1',]"
+20220501roboticarm,Vdummy,robotic arm,"['Rotation-I',]"
+20220501door,Vdoor,door,"['Switch1',]"

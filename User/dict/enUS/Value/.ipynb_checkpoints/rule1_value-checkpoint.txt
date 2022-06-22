@@ -1,0 +1,4 @@
+Value,Fsyn1,Fsyn2,Fsyn3
+1,open,turn on,power on
+0,close,turn off,power off
+

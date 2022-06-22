@@ -1,9 +1,17 @@
-D_abs,D_sys1,D_sys2,D_sys3,D_sys4
-light number one,light number 1,light 1,light one,light #1
-light number two,light number 2,light 2,light two,light #2
-light number three,light number 3,light 3,light three,light #3
-fan number one,fan number 1,fan 1,fan one,fan #1
-fan number two,fan number 2,fan 2,fan two,fan #2
-curtain number one,curtain number 1,curtain 1,curtain one,curtain #1
-curtain number two,curtain number 2,curtain 2,curtain two,curtain #2
-curtain number three,curtain number 3,curtain 3,curtain three,curtain #3
+D,D_abs,D_syn1,D_syn2,D_syn3,D_syn4
+fluorescent lamp,light number one,light number 1,light 1,light one,light #1
+CHT LED,light number two,light number 2,light 2,light two,light #2
+CAG LED,light number three,light number 3,light 3,light three,light #3
+spotlight,spotlight
+triangle light,triangle light
+indirect light,indirect light
+tatung fan,fan number one,fan number 1,fan 1,fan one,fan #1
+chimei fan,fan number two,fan number 2,fan 2,fan two,fan #2
+curtain1,curtain number one,curtain number 1,curtain 1,curtain one,curtain #1
+curtain2,curtain number two,curtain number 2,curtain 2,curtain two,curtain #2
+curtain3,curtain number three,curtain number 3,curtain 3,curtain three,curtain #3
+Tatung airpurifier,Tatung airpurifier
+robotic arm,robotic arm
+window,window
+door,door
+dummy,dummy

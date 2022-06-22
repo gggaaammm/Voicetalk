@@ -1,5 +1,10 @@
-F_abs,F_sys1
-open,Open
-close,Close
-turn on,Turn on
-turn off,Turn off
+F,F_abs,F_syn1
+Switch1,open,Open
+Switch1,close,Close
+Switch1,turn on,Turn on
+Switch1,turn off,Turn off
+Fanspeed-I,fan speed,fan speed
+Luminance-I,brightness,brightness
+Rotation-I,rotation
+Temperature-I,temperature
+Timer-I,timer
