@@ -291,11 +291,12 @@ def textParse(text,ws,pos,ner):
     sentence_list = [
         text
     ]
-    # word_sentence_list = ws(sentence_list)
+    
     #word_sentence_list = ws(sentence_list, sentence_segmentation=True)
     start = time.time()
 #     word_sentence_list = ws(sentence_list, recommend_dictionary=dictionary)
     word_sentence_list = ws(sentence_list, coerce_dictionary=dictionary)
+    #segement sentence into list of words
     pos_sentence_list = pos(word_sentence_list)
     entity_sentence_list = ner(word_sentence_list, pos_sentence_list)
     end  = time.time()
@@ -311,6 +312,7 @@ def textParse(text,ws,pos,ner):
     def print_word_pos_sentence(word_sentence, pos_sentence, entity_sentence):
         assert len(word_sentence) == len(pos_sentence)
         
+        #mapping token will do token classifier
         tokenlist = mappingToken(word_sentence)
         #support check
         

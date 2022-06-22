@@ -1,0 +1,3 @@
+A_abs,A_syn1
+fan,fan
+light,light

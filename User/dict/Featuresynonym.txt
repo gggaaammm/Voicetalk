@@ -1,14 +1,14 @@
-F,F1,F2,F3
+F,syn1,syn2,syn3
+開關,開啟,打開,開
+開關,關閉,關掉,關
+風速,風速,,
+亮度,亮度,,
+溫度,溫度,,
+旋轉,旋轉,,
+色溫,色溫,,
 switch,open,turn on,power on
 switch,close,turn off,power off
 fan speed,fan speed,
 brightness,brightness,luminance,
 rotation,rotation,
 color temperature,color temperature
-開關,開啟,打開,開
-開關,關閉,關掉,關
-風速,風速
-亮度,亮度
-溫度,溫度
-旋轉,旋轉
-色溫,色溫

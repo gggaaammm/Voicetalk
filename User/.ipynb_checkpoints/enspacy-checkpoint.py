@@ -20,6 +20,10 @@ ServerURL = 'http://140.113.199.246:9999'
 # -5 error: D not support F
 
 def readDB():
+    # ver. 0620: update database
+    # we shoud read all the synonym in to dictionary for tokenize words
+    
+    
     #create the list of words to match
     path_A_dict = r"dict/enUS/A_en.txt"
     A_dict = pd.read_csv(path_A_dict, sep="\n", header=None)
@@ -79,9 +83,11 @@ def exceptionHandle(word):
     
 
 def textParse(sentence):
-    #process some text
-    sentence = sentence.lower()
-    tokenlist = ['','','','','']
+    # read database
+    readDB()
+    
+    sentence = sentence.lower() # lower all the chracter in sentence
+    tokenlist = ['','','','',''] # init token as empty
     unit = ''
     feature = ''
     doc = nlp(sentence)
@@ -194,14 +200,14 @@ def textParse(sentence):
         tokenlist[2] = df.iloc[0]['Fiot']
 
     print("last before send to iottalk", tokenlist)
-#     sendIot(tokenlist)
+    
     saveLog(sentence, tokenlist)
     print("voice input feature: ", feature)
     return feature, tokenlist
         
 
     
-def ruleLookup(feature):
+def ruleLookup(feature): #check rule by feature
     print("token list check rule: ", feature)
     df = pd.read_csv('dict/enUS/rule_en.txt')
     df = df.loc[df['feature']==feature]
@@ -211,7 +217,10 @@ def ruleLookup(feature):
     else:
         return 2
     return 0
-    
+
+def valueCheck(tokenlist):
+    print("rule 2 valueCheck")
+
 def supportCheck(tokenlist):
     print("tokenlist before support check: ", tokenlist)
     # unified synonym

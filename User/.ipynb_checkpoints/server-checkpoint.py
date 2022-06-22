@@ -29,7 +29,7 @@ from flask import Flask, render_template, request, jsonify, url_for
 app = Flask(__name__)
 
 
-
+#======== fast test method by sending text input=============
 @app.route('/',methods=['POST','GET']) 
 def index():
     returnlist = []
@@ -46,6 +46,7 @@ def index():
             feature, tokenlist = enspacy.textParse(text) #spacy function
         else:  # chinese
             feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+        
         
         
         A = tokenlist[0]
@@ -74,41 +75,40 @@ def index():
 
 
 @app.route('/ProcessSentence', methods = ['POST','GET'])
-# prcoess setence
+# prcoess setence from the frontend
+# input is {voice, lang_id}
 def ProcessSentence():
     returnlist = []
-    voice = request.args.get('voice')
-    sentence = voice
-    language = request.args.get('lang_id')
+    sentence = request.args.get('sentence')
+    language = request.args.get('language')
     print("voice sentence: ", sentence) #data should be decoded from bytestrem to utf-8
-    # add rule to check if chinese or english
     
     if(language == 'en-US'): #English
-        enspacy.readDB()
         feature, tokenlist = enspacy.textParse(sentence) #spacy function
     else:  # chinese
         feature,tokenlist = zhckip.textParse(sentence,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-        
+    
+    #get all token from the tokenlist
     A = tokenlist[0]
     D = tokenlist[1]
     F = tokenlist[2]
     V = tokenlist[3]
-    valid = tokenlist[4]
+    valid = tokenlist[4] # valid bit: rule1: 1, rule2: 2, error 1: -1, error2: -2, etc.
 
-    thread = Thread(target=sendIot, args=(A,D,F,V,valid,language))
+    thread = Thread(target=sendIot, args=(A,D,F,V,valid,language)) # open thread to send signal to iottalk
     thread.daemon = True
     thread.start()
 
     returnlist = tokenlist
-    print("message bit:", valid)
-    response = ''
+    response = '' # init response
+    # complete the response context
     if(returnlist[4] < 0):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
         returnlist = []
     else:
         response = 'OK, ' if language == 'en-US' else '收到，'
-        returnlist[2] = feature
-        if(returnlist[4] == 1): returnlist[3] = ''
+        returnlist[2] = feature  # feature is different from F
+        if(returnlist[4] == 1): returnlist[3] = ''      # rule 1: no value(token 3) need
     print("source from voice", response, returnlist)
     
     

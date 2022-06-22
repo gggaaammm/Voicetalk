@@ -116,7 +116,7 @@
             }
           }
           if (final_transcript.trim().length > 0) // 如果有最終辨識文字
-              recognitionBox.value = final_transcript; // 顯示最終辨識文字
+              recognitionBox.value = final_transcript; // 顯示最終辨識文字到HTML
         
             
             
@@ -124,7 +124,7 @@
 
             $.getJSON({
                 url: "/ProcessSentence",
-                data: {  lang_id : language, voice : final_transcript},
+                data: {  language : language, sentence : final_transcript},
                 success: function(data){
                     if(language == "en-US"){
                         if(data.valid<0){

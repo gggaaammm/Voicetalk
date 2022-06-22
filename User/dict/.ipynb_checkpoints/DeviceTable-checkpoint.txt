@@ -1,0 +1,5 @@
+Regaddr,device_model,A,device_name,D,Device_feature_list,F_list
+20220501sp2,Vlight,電燈,spot light,投射燈,"['Switch1',]","['開關',]"
+20220501sp3,Vlight,電燈,indirect light,間接照明,"['Switch1',]","['開關',]"
+20220501trilight,Vlight,電燈,triangle light,三角燈,"['Switch1','Luminance-I']","['開關','亮度']",
+
