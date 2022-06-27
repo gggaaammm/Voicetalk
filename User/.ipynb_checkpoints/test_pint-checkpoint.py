@@ -19,3 +19,7 @@ print(value1.to_base_units())
 print(value2.to_base_units())
 print(value3.to_base_units())
 
+
+rows, cols = (10, 4)
+arr = [[0]*cols]*rows
+print(arr)
