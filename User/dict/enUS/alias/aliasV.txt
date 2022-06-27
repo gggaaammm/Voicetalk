@@ -2,6 +2,7 @@ V_abs,V_syn1
 largest,
 smallest,
 brightest,
+darkest,
 highest,
 lowest,
 middle,

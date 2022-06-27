@@ -1,0 +1,20 @@
+
+### Define new UNITS based on iottalk###
+
+# Angle(Rotation-I)
+percent = degree * 3.6
+
+#### new SYSTEMS OF BASE UNITS: iottalk ####
+
+
+#### based on international system, change base unit of temperature and angle
+#### Temperature:  kalvin -> celsius
+#### Angle:  radian -> degree
+
+
+@system iottalk using international
+    celsius
+    degree
+@end
+
+

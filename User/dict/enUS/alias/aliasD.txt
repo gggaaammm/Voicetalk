@@ -14,4 +14,4 @@ Tatung airpurifier,Tatung airpurifier
 robotic arm,robotic arm
 window,window
 door,door
-dummy,dummy
+dummy1,dummy1

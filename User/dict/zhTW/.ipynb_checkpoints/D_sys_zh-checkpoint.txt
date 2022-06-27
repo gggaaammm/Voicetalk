@@ -1,9 +1,9 @@
 D_abs,D_sys1,D_sys2,D_sys3
-light number one,light number 1,light 1,light #1
-light number two,light number 2,light 2,light #2
-light number three,light number 3,light 3,light #3
-fan number one,fan number 1,fan 1,fan #1
-fan number two,fan number 2,fan 2,fan #2
-curtain number one,curtain number 1,curtain 1,curtain #1
-curtain number two,curtain number 2,curtain 2,curtain #2
-curtain number three,curtain number 3,curtain 3,curtain #3
+電燈一,日光燈,light 1,1號電燈
+電燈二,中華電信電燈,light 2,2號電燈
+電燈三,天花板電燈,light 3,3號電燈
+電扇一,大同電扇,fan 1,1號電扇
+電扇二,奇美電扇,fan 2,2號電扇
+窗簾一,一號窗簾,1號窗簾,curtain #1
+窗簾二,二號窗簾,2號窗簾,curtain #2
+窗簾三,三號窗簾,3號窗簾,curtain #3

@@ -1,8 +1,0 @@
-A,A_abs,A_syn1
-Vfan,fan,fans
-Vlight,light,light
-Vcurtain,curtain,curtain
-Vdoor,door,door
-Vairpurifier,air purifier,air purifier
-Vwindow,window,window
-Vdummy,dummy

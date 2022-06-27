@@ -31,7 +31,7 @@ def readDB():
     #create the list of synonyms to match
     
     
-    path = r"dict/enUS/synonym/" #  path for synonym
+    path = r"dict/enUS/alias/" #  path for synonym
     all_files = glob.glob(os.path.join(path , "*.txt"))
     synonymlist={}
 
@@ -42,7 +42,8 @@ def readDB():
         for column in df.columns:
             sublist = sublist+list(df[column])
         sublist = [x for x in sublist if str(x) != 'nan']  # filter all NAN element
-        synonymlist[filename[25]] = sublist
+        synonymlist[filename[21]] = sublist
+
     
 
     #number synonym is special, read individually
@@ -84,6 +85,7 @@ def textParse(sentence):
     readDB()
     
     sentence = sentence.lower() # lower all the chracter in sentence
+    
     tokenlist = ['','','','',''] # init token as empty
     tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':'',}
     unit = ''
@@ -118,7 +120,7 @@ def textParse(sentence):
     
     # check if sentence contains number, before sentence redirecting
     # (issue)first check other token contains number(especially D: fan 1)
-    # remove ADF
+    # remove ADF keyword which might contain digit
     sentence = sentence.replace(tokendict['D'], "")
     
     pattern = '[0-9]+'
@@ -126,11 +128,12 @@ def textParse(sentence):
     if(len(numlist) >= 1): # default : set last num as return value V(in case that device name contains number)
         tokenlist[3] = int(numlist[len(numlist)-1])
         
-    value_doc = nlp(sentence)    
+    
     print("debug now after number finding token list", tokenlist,"token dict",tokendict, "value pair", quantity)
     if(tokendict['V'] != ''):
         pass
     else:
+        value_doc = nlp(sentence)    
         print(value_doc._.numerize()) # for number and unit conversion , use  numberize and pint module
         if(len(value_doc._.numerize())== 1):
             quantity = list(value_doc._.numerize())
@@ -150,7 +153,7 @@ def textParse(sentence):
     
     #check the synonym, redirect to iottalk ver================================
     # A,D,F,V synonym should be redirect
-    path = r"dict/enUS/synonym/" #  path for synonym
+    path = r"dict/enUS/alias/" #  path for synonym
     all_files = glob.glob(os.path.join(path , "*.txt"))
     # read all file at once or read indvidually?
     for filename in all_files:
@@ -160,9 +163,9 @@ def textParse(sentence):
 #         print("df now:\n", df)
         #redirect A,D,F to device model, device name, device feature individually
         for column in df.columns:
-            df_abs = df.loc[(df[column] == tokendict[filename[25]])]
+            df_abs = df.loc[(df[column] == tokendict[filename[21]])]
             if(len(df_abs.index)>0):
-                tokendict[filename[25]] = df_abs.iloc[0][0]
+                tokendict[filename[21]] = df_abs.iloc[0][0]
 
     # new a list: token
     token = ['','','','',''] #token[4] store rule and valid bits
@@ -180,7 +183,7 @@ def textParse(sentence):
     # eliminate A if both AD exist
     if(token[0] != '' and token[1] != ''):
         token[0] = ''
-        print('tokenlist after A/D elimination:', token)
+        print('list of token after A/D elimination:', token)
 
 
     
@@ -212,7 +215,8 @@ def textParse(sentence):
     
     saveLog(sentence, tokenlist)
     print("voice input feature: ", sentence_feature)
-    return sentence_feature, tokenlist
+    return sentence_feature, token
+#     return sentence_feature, tokenlist
         
 
     
@@ -228,43 +232,6 @@ def ruleLookup(feature): #check rule by feature
         return 2
     return 0
 
-def valueCheck(tokenlist, rule, feature): #issue give value
-    print("valueCheck", tokenlist,  feature)
-    A = tokenlist[0]
-    D = tokenlist[1]
-    F = tokenlist[2]
-    V = tokenlist[3]
-    
-    if(rule == 1):
-        print("rule 1") #give a value for rule 1
-        df = pd.read_csv('dict/enUS/Value/rule1_value.txt') # rule 1 value store in here
-        df = df.loc[(df['Fsyn1']==feature) | (df['Fsyn2'] == feature) | (df['Fsyn3'] == feature)]
-        tokenlist[3] = df.iloc[0]['Value'] # give the value fitted with feature(open/turn on = 1, close/turn off = 0)
-        
-        
-    elif(rule ==2):
-        print("rule 2") # check value in range
-        
-        df = pd.read_csv('dict/DevicefeatureTable.txt')
-        if(D != ''):  #access the device info(which D and F are fitted)
-            df_D = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-            if( (int(V) > int(df_D.iloc[0]['max'])) | ( int(V) < int(df_D.iloc[0]['min'])) ): #if value exceed range
-                tokenlist[4] = -6 # error #6: value exceed range
-            
-            
-        elif(A != ''):
-            print("A is ", A)
-            df_A = pd.read_csv('dict/DeviceTable.txt')   # read DeviceTable.txt
-            df_A = df_A.loc[(df_A['device_model'] == A)] # access all the dataframe which device_model equals to A
-            device_list =  list(df_A['device_name'])     # get the device name list which device_model is A
-            d_id = 0
-            while(d_id < len(device_list)):    #in loop, access the device info(wihich D and F are fitted)
-                df_D = df.loc[(df['device_name'] == device_list[d_id]) & (df['device_feature'] == F)] 
-                if( ( int(V) > int(df_D.iloc[0]['max'])) | ( int(V) < int(df_D.iloc[0]['min'])) ): #error if exceed range
-                    tokenlist[4] = -6 # error #6: value exceed range
-                d_id = d_id+1
-        
-    return tokenlist
 
 def supportCheck(tokenlist):
     print("support check", tokenlist)
@@ -278,10 +245,6 @@ def supportCheck(tokenlist):
         df = pd.read_csv('dict/DeviceTable.txt')
         df = df.loc[df['device_name']== D]
         feature_list = ast.literal_eval(df.iloc[0]['device_feature_list'])
-#         feature_list_raw = list(df['device_feature_list'])
-#         feature_list = []
-#         for feature in range(len(feature_list_raw)):
-#             feature_list = feature_list+ast.literal_eval(feature_list_raw[feature])
         
         if(F not in feature_list):
             print('D not support F')
@@ -311,6 +274,134 @@ def supportCheck(tokenlist):
             
     return tokenlist
 
+def valueCheck(tokenlist, rule, feature): #issue give value
+    print("valueCheck", tokenlist,  feature)
+    A = tokenlist[0]
+    D = tokenlist[1]
+    F = tokenlist[2]
+    V = tokenlist[3]
+    
+
+    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    
+
+    if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
+        print("rule 1") #give a value for rule 1 in value_keyword list
+        #read from alias F to get list
+        df2 = pd.read_csv('dict/enUS/alias/aliasF.txt')
+        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) ]
+        feature = df2.iloc[0]['alias1']
+        #feature change to absolte device feature('open'/'close')
+        
+        #require table of dictionary, rule 1 dont care if A or D(if they pass the support check, they have same valu_dict)
+        df = df.loc[(df['device_feature'] == F)]
+        print("value check rule 1 df", df)
+        tokenlist[3] = ast.literal_eval(df.iloc[0]['value_dict'])[feature]
+        print("value check rule 1", tokenlist[3])
+        
+        
+        
+    elif(rule ==2):
+        print("rule 2") # check value in range
+        # 3 case to check
+        # 1. a string(do nothing and pass)
+        # 2. a number(check if exceed min/max)
+        # 3. a quantity(check if unit support and check exceed min/max)
+        
+        if(D != ''):  #access the device info(which D and F are fitted)
+            if(isinstance(V, int)):
+                print('a number')
+                tokenlist[4] = checkMinMax(D,F,V)
+                # a value, check number min/max
+            elif(isinstance(V,str)):
+                print('a string')
+                #find if string exist in value_dict
+                df = findinfo(D,F)
+                print("value check rule 2 df check", df)
+                if(V in df.iloc[0]['value_dict']):
+                    tokenlist[3] =  ast.literal_eval(df.iloc[0]['value_dict'])[V]
+                    print("value check rule 2 string to int success: ", V)
+                else:
+                    print("value check rule 2 string bypass")
+                           
+                #give a value to string or bypass string
+            else:
+                print('a quantity')
+                U = str(V).split(' ')[1] # check if unit in unit list
+                if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
+                    print("value check rule 2 unit verified")
+                else:
+                    tokenlist[4] = -8 # unsupport unit
+                    print("value check rule 2 quantity unit error!")
+                
+                
+                
+                tokenlist[3] = str(V).split(' ')[0] # split a string into list, extract 1 element                
+                tokenlist[4] = checkMinMax(D,F,tokenlist[3])
+                
+
+                # already set to base unit, just extract the value 
+            print("value check valid bit: ", tokenlist[4])
+            
+            
+        elif(A != ''):
+            print("A is ", A)
+            df_A = pd.read_csv('dict/DeviceTable.txt')   # read DeviceTable.txt
+            df_A = df_A.loc[(df_A['device_model'] == A)] # access all the dataframe which device_model equals to A
+            device_list =  list(df_A['device_name'])     # get the device name list which device_model is A
+            
+            
+            #(issue) list 3 cases
+            if(isinstance(V, int)):
+                print('a number')
+                # in while loop check min max
+                for device in device_list:
+                    tokenlist[4] = checkMinMax(device, F, V)
+                print('device model value check number:', tokenlist)
+
+                # a value, check number min/max
+            elif(isinstance(V,str)):
+                print('a string')
+                for device in device_list:
+                    df = findinfo(device, F)
+                    if(V in df.iloc[0]['value_dict']):
+                        tokenlist[3] =  ast.literal_eval(df.iloc[0]['value_dict'])[V]
+                print('device model value check string:', tokenlist)
+
+                           
+                #give a value to string or bypass string
+            else:
+                print('a quantity')
+                for device in device_list:                    
+                    U = str(V).split(' ')[1] # check if unit in unit list
+                    if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
+                        print("value check rule 2 unit verified")
+                    else:
+                        tokenlist[4] = -8 # unsupport unit
+                        print("value check rule 2 quantity unit error!")
+                        
+                    tokenlist[3] = str(V).split(' ')[0] # split a string into list, extract 1 element                
+                    tokenlist[4] = checkMinMax(device,F,tokenlist[3])
+                print('device model value check quantity:', tokenlist)
+
+        
+    return tokenlist
+
+
+#follwings are sub functions of value cheeck
+def findinfo(D,F):
+    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+    return df
+
+def checkMinMax(D,F, V): #check min max only for rule 2, 
+    print(D,F,V)
+    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    df_D= df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+    if( (int(V) > int(df_D.iloc[0]['max'])) | ( int(V) < int(df_D.iloc[0]['min'])) ): #if value exceed range
+        return -6    # return -6 as error code
+    else:
+        return 2     # return 2 as rule 2
 
 
     
@@ -324,36 +415,47 @@ def handleValue(quantity):
     else:
         return handleUnit(quantitylist)
 
-def handleUnit(quantitylist):
+def handleUnit(quantitylist): # use Pint package for unit hanlding 
     ureg = UnitRegistry() # new a unit module
-    Q_ = ureg.Quantity
+    Q_ = ureg.Quantity    # define a quantity element quantity = (value, unit)
+    
+    #(issue)get base unit from iottalk define
+    ureg.load_definitions('my_def.txt')
+    ureg.default_system = 'iottalk'
+    
     value = 0 #init value
-    #(issue)get base unit from devicefeaturetable
-    df = pd.read_csv('dict/DeviceTable.txt')
-    
-    
-    
-    
-    if(len(quantitylist) == 2):
-        print("only one value and one unit")
-        print(Q_(int(quantitylist[0]), quantitylist[1]))
-        value = Q_(int(quantitylist[0]), quantitylist[1])
-        value = value.to_base_units()
-        print("base unit value:", value)
-        return str(value)
-    elif(len(quantitylist) > 2): #multiple pairs of number+units
-        print("more pairs of number+unit")
+    #(issue) When exception, catch the error message(wrong unit cannot be calculated. ex: 3 minute + 20 cm)
+    if(len(quantitylist)%2 == 0):
+        print("is by 2")
         for q_id in range(0, len(quantitylist),2):
             value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
         print("base unit value changed:", value)
+        print(type(value))
         print(type(str(value)))
-        return str(value)
+        return value
+    else:
+        print("error: is not by 2")
+        return -7  # quantity error
+
+
+    
+    # if(len(quantitylist) == 2):
+    #     print("only one value and one unit")
+    #     print(Q_(int(quantitylist[0]), quantitylist[1]))
+    #     value = Q_(int(quantitylist[0]), quantitylist[1])
+    #     value = value.to_base_units()
+    #     print("base unit value:", value)
+    #     return str(value)
+    # elif(len(quantitylist) > 2): #multiple pairs of number+units
+    #     print("more pairs of number+unit")
+    #     for q_id in range(0, len(quantitylist),2):
+    #         value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
+    #     print("base unit value changed:", value)
+    #     print(type(str(value)))
+    #     return str(value)
     
             
 
-
-#     dst = 'second'
-#     print("unit conversion",Q_(quantitylist).to(dst))
     
     return 0
     
@@ -378,15 +480,4 @@ def saveLog(sentence, tokenlist):
     connection.commit()
     connection.close()
     
-
-def unitConversion(feature, numeral, unit):
-    print('unit conversion', feature, 'for', numeral, 'and', unit)
-    df = pd.read_csv('dict/enUS/quantityen.txt')
-    df = df.loc[df['F_en'] == feature]
-
-    if(feature == 'rotation'):
-        if(unit == 'percent'):
-            return int(numeral)*3.6
-        else:
-            return int(numeral)
 

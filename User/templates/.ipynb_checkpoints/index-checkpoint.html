@@ -12,26 +12,22 @@
   </head>
   <body>
     <script type="text/javascript">
+      //****************************************************************************************
+      // 宣告變數
+      //****************************************************************************************  
       var recognitionTitle = {"en-US":"Recognition Result","cmn-Hant-TW":"辨識結果"} 
-      var recognitionBox = document.getElementById("recognitionBox"); // 最終的辨識訊息  "HTML元件"
-      var final_transcript = '';                                      // 最終的辨識訊息 "JS變數"
-        
+      var recognitionBox = document.getElementById("recognitionBox"); // 辨識結果  "HTML元件"
+      var final_transcript = '';                                      // 最終的辨識訊息 "JS變數"        
       var responseTitle = {"en-US":"System Response","cmn-Hant-TW":"系統回覆"}  
-      var responseBox =   document.getElementById("responseBox");  //系統回覆
-        
-      
-      var startStopButton; // 「辨識/停止」按鈕
+      var responseBox =   document.getElementById("responseBox");     //系統回覆
+      var startStopButton; // 「開始/停止」按鈕
       var infoBox = document.getElementById("infoBox"); // 提示使用者的訊息
-      
       var selectlangBox = document.getElementById("selectlangBox"); // 語言選擇的下拉式選單
       
 
       
       var recognizing = false; // 是否辨識中 
-      
-      
 
-    
         
       function selectLanguage(event){
           if(recognizing){recognition.stop();} //如果正在辨識, 就停止
@@ -200,10 +196,10 @@
         </div>    
         <br>
         <br>
+        <!--br>
         <br>
         <br>
-        <br>
-        <br>
+        <br-->
         <div class="col-sm">
         
           <img id="startStopButton" style="width:110px; height:110px;" onclick="startButton(event)" src="{{ url_for('static', filename='images/start.gif') }}"/>

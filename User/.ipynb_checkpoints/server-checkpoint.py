@@ -5,7 +5,8 @@ import json
 from threading import Thread
 import time, random, requests
 import DAN
-import unitconversion, enspacy, zhckip, register
+import unitconversion, enspacy, register
+#import zhckip
 
 # define error message format:
 # 1: rule1, 2: rule2, <0: error
@@ -45,7 +46,8 @@ def index():
             enspacy.readDB()
             feature, tokenlist = enspacy.textParse(text) #spacy function
         else:  # chinese
-            feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+            #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+            print("chinese not yet")
         
         
         
@@ -86,7 +88,8 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         feature, tokenlist = enspacy.textParse(sentence) #spacy function
     else:  # chinese
-        feature,tokenlist = zhckip.textParse(sentence,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+        #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+        print("chinese not yet")
     
     #get all token from the tokenlist
     A = tokenlist[0]
@@ -121,7 +124,7 @@ def sendIot(A,D,F,V,valid,lang):
         df = pd.read_csv('dict/ADF.txt')
         print('df info:', df, "searching", D)
         if(lang == "en-US"):
-            df = df.loc[df['D_ens']==D]
+            df = df.loc[df['D_en']==D]
         else:
             df = df.loc[df['D'] == D]
         print("remain df", df)
@@ -139,7 +142,7 @@ def sendIot(A,D,F,V,valid,lang):
         DAN.profile['dm_name']=deviceModel # use specific device model 
         DAN.profile['df_list']=dfList
         DAN.device_registration_with_retry(ServerURL, Reg_addr)
-        DAN.push('Switch1', 1)
+#         DAN.push('Switch1', 1)
         if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
             iotvalue = int(returnValue)*10 if int(returnValue)<=10 else 100
             DAN.push(deviceFeature, iotvalue)
@@ -178,6 +181,7 @@ def sendIot(A,D,F,V,valid,lang):
     
 
 if __name__ == "__main__":
-    register.registerIottalk()
+    #register.registerIottalk()
+    #register will be close for debug
     app.run(host='0.0.0.0',debug=True, port=19453)
     
