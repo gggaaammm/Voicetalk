@@ -255,17 +255,28 @@ def supportCheck(tokenlist):
     if(A!=''):
         allsupport = 1
         df = pd.read_csv('dict/DeviceTable.txt')
-        df = df.loc[df['device_model'] == A]
+        df_A = df.loc[df['device_model'] == A]
         print("df in support check:", df)
-        d_id = 0
-        while (d_id < len(df.index)):
-            feature_list = ast.literal_eval(df.iloc[d_id]['device_feature_list'])
-            print("feature list for",d_id, feature_list)
+        # d_id = 0
+        # while (d_id < len(df.index)):
+        #     feature_list = ast.literal_eval(df.iloc[d_id]['device_feature_list'])
+        #     print("feature list for",d_id, feature_list)
+        #     if(F not in feature_list):
+        #         allsupport = 0
+        #         break
+        #     d_id = d_id+1
+        device_list =  list(df_A['device_name'])     # get the device name list which device_model is A
+        for device in device_list:
+            feature_list = ast.literal_eval(df.loc[(df['device_name'] == device)]['device_feature_list'])
+            print("feature list for",device, feature_list)
             if(F not in feature_list):
                 allsupport = 0
                 break
-            d_id = d_id+1
-        
+
+
+
+
+
         if(allsupport == 0):
             print("some device not support")
             tokenlist[4] = -5 #error message #5: Device not support such feature

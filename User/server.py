@@ -6,7 +6,7 @@ from threading import Thread
 import time, random, requests
 import DAN
 import unitconversion, enspacy, register
-#import zhckip
+#import zhckip #uncomment later
 
 # define error message format:
 # 1: rule1, 2: rule2, <0: error
