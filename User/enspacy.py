@@ -210,19 +210,20 @@ def supportCheck(tokenlist):
     F = tokenlist[2]
     # read device info in DeviceTable.txt
     df = pd.read_csv('dict/DeviceTable.txt')
+    DeviceTable = readDeviceTable(A,D,F)
     
     if(D!=''):  #check if D supports F
-        df_D = df.loc[df['device_name']== D]
-        feature_list = ast.literal_eval(df_D.iloc[0]['device_feature_list'])
+        #df_D = df.loc[df['device_name']== D]
+        feature_list = ast.literal_eval(DeviceTable.iloc[0]['device_feature_list'])
         if(F not in feature_list):
             print('D not support F')
             tokenlist[4] = -5   #error #5: Device not support such feature
             
     if(A!=''): #check if A all support F
         allsupport,d_id = 1,0
-        df_A = df.loc[df['device_model'] == A]
-        while (d_id < len(df_A.index)):
-            feature_list = ast.literal_eval(df_A.iloc[d_id]['device_feature_list'])
+        #df_A = df.loc[df['device_model'] == A]
+        while (d_id < len(DeviceTable.index)):
+            feature_list = ast.literal_eval(DeviceTable.iloc[d_id]['device_feature_list'])
             print("feature list for",d_id, feature_list)
             if(F not in feature_list):
                 allsupport = 0
@@ -372,22 +373,6 @@ def valueCheck(tokenlist, rule, feature): #issue give value
     return device_queries
 
 
-#follwings are sub functions of value cheeck
-def findinfo(D,F):
-    df = pd.read_csv('dict/DevicefeatureTable.txt')
-    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    return df
-
-def checkMinMax(D,F, V): #check min max only for rule 2, 
-    print(D,F,V)
-    df = pd.read_csv('dict/DevicefeatureTable.txt')
-    df_D= df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    if( (float(V) > float(df_D.iloc[0]['max'])) | ( float(V) < float(df_D.iloc[0]['min'])) ): #if value exceed range
-        return -7    # return -6 as error code
-    else:
-        return 2     # return 2 as rule 2
-
-
     
 def handleValue(quantity):
     print("quantity: ",quantity)
@@ -420,6 +405,29 @@ def handleUnit(quantitylist): # use Pint package for unit hanlding
         return -5  # quantity error, number of value and unit mismatch
     
     
+#followings are sub functions of value check
+def checkMinMax(D,F, V): #check min max only for rule 2, 
+    print(D,F,V)
+    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    df_D= df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+    if( (float(V) > float(df_D.iloc[0]['max'])) | ( float(V) < float(df_D.iloc[0]['min'])) ): #if value exceed range
+        return -7    # return -6 as error code
+    else:
+        return 2     # return 2 as rule 2
+
+#followings are sub functions of support check
+def findinfo(D,F):
+    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+    return df
+
+def readDeviceTable(A,D,F):
+    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    if(D != ""):
+        df.loc[df['device_name']== D]
+    elif(A != ""):
+        df.loc[df['device_model']== A]
+    return df
 
 
 
