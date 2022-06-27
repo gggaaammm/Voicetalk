@@ -267,7 +267,7 @@ def supportCheck(tokenlist):
         #     d_id = d_id+1
         device_list =  list(df_A['device_name'])     # get the device name list which device_model is A
         for device in device_list:
-            feature_list = ast.literal_eval(df.loc[(df['device_name'] == device)]['device_feature_list'])
+            feature_list = ast.literal_eval(df[df['device_name'] == device]['device_feature_list'])
             print("feature list for",device, feature_list)
             if(F not in feature_list):
                 allsupport = 0
