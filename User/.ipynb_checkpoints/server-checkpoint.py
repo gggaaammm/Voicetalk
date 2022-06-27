@@ -6,7 +6,7 @@ from threading import Thread
 import time, random, requests
 import DAN
 import unitconversion, enspacy, register
-#import zhckip
+#import zhckip #uncomment later
 
 # define error message format:
 # 1: rule1, 2: rule2, <0: error
@@ -44,26 +44,23 @@ def index():
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
             enspacy.readDB()
-            feature, tokenlist = enspacy.textParse(text) #spacy function
+            feature, device_queries = enspacy.textParse(text) #spacy function
         else:  # chinese
             #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
             print("chinese not yet")
         
         
+        #get all device query(ies) from the tokenlist
+        print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-        A = tokenlist[0]
-        D = tokenlist[1]
-        F = tokenlist[2]
-        V = tokenlist[3]
-        valid = tokenlist[4]
-        
-        thread = Thread(target=sendIot, args=(A,D,F,V,valid,language))
+        print("[ProcessSentence] how long:",len(device_queries))
+        thread = Thread(target=sendIot, args=(device_queries,))
         thread.daemon = True
         thread.start()
         
         returnlist = tokenlist
         
-        print("message bit:", valid)
+#         print("message bit:", valid)
         response = ''
         if(returnlist[4] == -1):
             response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
@@ -86,26 +83,31 @@ def ProcessSentence():
     print("voice sentence: ", sentence) #data should be decoded from bytestrem to utf-8
     
     if(language == 'en-US'): #English
-        feature, tokenlist = enspacy.textParse(sentence) #spacy function
+        feature, device_queries = enspacy.textParse(sentence) #spacy function
     else:  # chinese
         #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
         print("chinese not yet")
     
-    #get all token from the tokenlist
-    A = tokenlist[0]
-    D = tokenlist[1]
-    F = tokenlist[2]
-    V = tokenlist[3]
-    valid = tokenlist[4] # valid bit: rule1: 1, rule2: 2, error 1: -1, error2: -2, etc.
+    #get all device query(ies) from the tokenlist
+    #get all device query(ies) from the tokenlist
+    print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))    
+    print("[ProcessSentence] how long:",len(device_queries,))
+    
 
-    thread = Thread(target=sendIot, args=(A,D,F,V,valid,language)) # open thread to send signal to iottalk
-    thread.daemon = True
-    thread.start()
-
-    returnlist = tokenlist
+    if(isinstance(device_queries[0], list) == false):
+        valid = device_queries[4]
+    else:
+        for device_query in device_queries:
+            if(device_query[4] < 0):
+                valid = device_query[4]
+                break
+            else
+                valid = device_query[4]
+            
+    
     response = '' # init response
     # complete the response context
-    if(returnlist[4] < 0):
+    if(valid < 0):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
         returnlist = []
     else:
@@ -119,64 +121,115 @@ def ProcessSentence():
 
 
 
-def sendIot(A,D,F,V,valid,lang):
-    if(D !="" and valid >0 ): # D+F
-        df = pd.read_csv('dict/ADF.txt')
-        print('df info:', df, "searching", D)
-        if(lang == "en-US"):
-            df = df.loc[df['D_en']==D]
-        else:
-            df = df.loc[df['D'] == D]
-        print("remain df", df)
-        deviceName = df.iloc[0]['D_en']
-        deviceModel = df.iloc[0]['A_en']
-        dfList = df.iloc[0]['DFlist']
-        Regaddr = df.iloc[0]['Regaddr']
-        dfList = eval(dfList)
-        print(type(dfList))
-        returnValue = V
-        deviceFeature = F
-        print("device name: ",deviceName,"device model: ", deviceModel)
-        Reg_addr = Regaddr
-        DAN.profile['d_name']= deviceName # search for device name 
-        DAN.profile['dm_name']=deviceModel # use specific device model 
-        DAN.profile['df_list']=dfList
-        DAN.device_registration_with_retry(ServerURL, Reg_addr)
-#         DAN.push('Switch1', 1)
-        if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
-            iotvalue = int(returnValue)*10 if int(returnValue)<=10 else 100
-            DAN.push(deviceFeature, iotvalue)
-        else:
-            DAN.push(deviceFeature, int(returnValue))
-    
-    if(A !="" and valid >0): #  A+F
-        print("tokenlist outer loop change1?:", A,D,F,V)
-        df = pd.read_csv('dict/ADF.txt')
-        if(lang == 'en-US'):
-            df = df.loc[df['A_ens']==A]
-        else:
-            df = df.loc[df['A'] == A]
-        print('df info:',df)
-        for ind in df.index:     
-            print(df['D_en'][ind], df['A_en'][ind], df['DFlist'][ind], df['Regaddr'][ind])
-            deviceName = df['D_en'][ind]
-            deviceModel = df['A_en'][ind]
-            dfList = df['DFlist'][ind]
-            Regaddr = df['Regaddr'][ind]
-            dfList = eval(dfList)
-            returnValue = V
-            deviceFeature = F
-            print("device name: ",deviceName,"device model: ", deviceModel )
-            Reg_addr = Regaddr
-            DAN.profile['d_name']= deviceName # search for device name 
-            DAN.profile['dm_name']=deviceModel # use specific device model 
-            DAN.profile['df_list']=dfList
+
+def sendIot(device_queries):
+    print("sendIot rework")
+    if(isinstance(device_queries[0], list)):
+        for device_query in device_queries:
+            print("each query:", device_query)
+            D = device_query[1]
+            F = device_query[2]
+            V = device_query[3]
+            valid = device_query[4]
+            if(valid>0):
+                df = pd.read_csv('dict/DeviceTable.txt')
+                df = df.loc[df['device_name'] == D]
+                Regaddr = df.iloc[0]['Regaddr']
+                DAN.profile['d_name']= D
+                DAN.profile['dm_name'] = df.iloc[0]['device_model']
+                DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
+                DAN.device_registration_with_retry(ServerURL, Regaddr)
+
+                print("device name: ",D,"device model: ", df.iloc[0]['device_model'])
+                if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
+                    iotvalue = int(V)*10 if int(V)<=10 else 100
+                    DAN.push(F, iotvalue)
+                else:
+                    DAN.push(F, float(V))
             
-            DAN.device_registration_with_retry(ServerURL, Reg_addr)
-            if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
-                DAN.push(deviceFeature, int(returnValue)*10)
+    else:
+        print("only 1 query", device_queries)
+        device_query = device_queries
+        D = device_query[1]
+        F = device_query[2]
+        V = device_query[3]
+        valid = device_query[4]
+        if(valid>0):         
+            df = pd.read_csv('dict/DeviceTable.txt')
+            df = df.loc[df['device_name'] == D]
+            Regaddr = df.iloc[0]['Regaddr']
+            DAN.profile['d_name']= D
+            DAN.profile['dm_name'] = df.iloc[0]['device_model']
+            DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
+            DAN.device_registration_with_retry(ServerURL, Regaddr)
+            
+            print("device name: ",D,"device model: ", df.iloc[0]['device_model'])
+            if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
+                iotvalue = int(V)*10 if int(V)<=10 else 100
+                DAN.push(F, iotvalue)
             else:
-                DAN.push(deviceFeature, int(returnValue))
+                DAN.push(F, float(V))
+    
+    
+
+# def sendIot_old(A,D,F,V,valid,lang):
+#     if(D !="" and valid >0 ): # D+F
+#         df = pd.read_csv('dict/ADF.txt')
+#         print('df info:', df, "searching", D)
+#         if(lang == "en-US"):
+#             df = df.loc[df['D_en']==D]
+#         else:
+#             df = df.loc[df['D'] == D]
+#         print("remain df", df)
+#         deviceName = df.iloc[0]['D_en']
+#         deviceModel = df.iloc[0]['A_en']
+#         dfList = df.iloc[0]['DFlist']
+#         Regaddr = df.iloc[0]['Regaddr']
+#         dfList = eval(dfList)
+#         print(type(dfList))
+#         returnValue = V
+#         deviceFeature = F
+#         print("device name: ",deviceName,"device model: ", deviceModel)
+#         Reg_addr = Regaddr
+#         DAN.profile['d_name']= deviceName # search for device name 
+#         DAN.profile['dm_name']=deviceModel # use specific device model 
+#         DAN.profile['df_list']=dfList
+#         DAN.device_registration_with_retry(ServerURL, Reg_addr)
+# #         DAN.push('Switch1', 1)
+#         if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
+#             iotvalue = int(returnValue)*10 if int(returnValue)<=10 else 100
+#             DAN.push(deviceFeature, iotvalue)
+#         else:
+#             DAN.push(deviceFeature, int(returnValue))
+    
+#     if(A !="" and valid >0): #  A+F
+#         print("tokenlist outer loop change1?:", A,D,F,V)
+#         df = pd.read_csv('dict/ADF.txt')
+#         if(lang == 'en-US'):
+#             df = df.loc[df['A_en']==A]
+#         else:
+#             df = df.loc[df['A'] == A]
+#         print('df info:',df)
+#         for ind in df.index:     
+#             print(df['D_en'][ind], df['A_en'][ind], df['DFlist'][ind], df['Regaddr'][ind])
+#             deviceName = df['D_en'][ind]
+#             deviceModel = df['A_en'][ind]
+#             dfList = df['DFlist'][ind]
+#             Regaddr = df['Regaddr'][ind]
+#             dfList = eval(dfList)
+#             returnValue = V
+#             deviceFeature = F
+#             print("device name: ",deviceName,"device model: ", deviceModel )
+#             Reg_addr = Regaddr
+#             DAN.profile['d_name']= deviceName # search for device name 
+#             DAN.profile['dm_name']=deviceModel # use specific device model 
+#             DAN.profile['df_list']=dfList
+            
+#             DAN.device_registration_with_retry(ServerURL, Reg_addr)
+#             if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
+#                 DAN.push(deviceFeature, int(returnValue)*10)
+#             else:
+#                 DAN.push(deviceFeature, int(returnValue))
 
     
 
