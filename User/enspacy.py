@@ -102,7 +102,7 @@ def textParse(sentence):
     sentence = sentence.replace(tokendict['D'], "")
         
     
-    print("debug now after number finding token list", tokenlist,"token dict",tokendict)
+    print("debug now after number finding token dict",tokendict)
     
     
     # ===========================  value handling =================================
@@ -184,7 +184,7 @@ def textParse(sentence):
 
     print("[final]last before send to iottalk,", " \ntoken:", token, "\ndevice query", device_queries)
     
-    saveLog(sentence, tokenlist)
+    saveLog(sentence, token)
     print("voice input feature: ", sentence_feature)
     return sentence_feature, token
 #     return sentence_feature, tokenlist
@@ -266,7 +266,7 @@ def valueCheck(tokenlist, rule, feature): #issue give value
         print("value check rule 1", tokenlist[3])
         
         if(D != ""):
-            device_queries = [A,D,F,tokenlist[3]]
+            device_queries = [A,D,F,tokenlist[3], rule]
         if(A != ""):
             df_A = pd.read_csv('dict/DeviceTable.txt')   # read DeviceTable.txt
             df_A = df_A.loc[(df_A['device_model'] == A)] # access all the dataframe which device_model equals to A
@@ -274,7 +274,7 @@ def valueCheck(tokenlist, rule, feature): #issue give value
             device_queries = [[0]*5]*len(device_list)    # create a query for each device in 1 device model
             
             for idx, device in enumerate(device_list):
-                device_queries[idx] = [A,device,F,tokenlist[3]]
+                device_queries[idx] = [A,device,F,tokenlist[3], rule]
         
         
         
@@ -307,8 +307,7 @@ def valueCheck(tokenlist, rule, feature): #issue give value
                 U = str(V).split(' ')[1] # check if unit in unit list
                 if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
                     print("value check rule 2 unit verified")
-                    tokenlist[3] = str(V).split(' ')[0] #extract value from quantity type
-                    tokenlist[4] = checkMinMax(D,F,tokenlist[3])# already set to base unit, just extract the value 
+                    tokenlist[4] = checkMinMax(D,F,str(V).split(' ')[0])# already set to base unit, just extract the value 
                 else:
                     tokenlist[4] = -8 # unsupport unit
                     print("value check rule 2 quantity unit error!")
