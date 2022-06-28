@@ -2,7 +2,7 @@ D,D_abs,D_syn1,D_syn2,D_syn3,D_syn4
 fluorescent lamp,light number one,light number 1,light 1,light one,light #1
 CHT LED,light number two,light number 2,light 2,light two,light #2
 CAG LED,light number three,light number 3,light 3,light three,light #3
-spotlight,spotlight
+spot light,spotlight,
 triangle light,triangle light
 indirect light,indirect light
 tatung fan,fan number one,fan number 1,fan 1,fan one,fan #1

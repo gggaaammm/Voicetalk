@@ -15,35 +15,38 @@ from pint import UnitRegistry
 nlp = spacy.load("en_core_web_sm")
 #initilize the matcher with a shared vocab
 matcher = PhraseMatcher(nlp.vocab)
-ServerURL = 'http://140.113.199.246:9999'      
 
-# define error message format:
-# 1: rule1, 2: rule2, -1~-8: error
-# error log id and message stored in errorlog.txt
+
+
+#======= function readDB() ========
+# in this function, program read files at the path "./dict/enUS/alias/"
+# files data will be stored in dictionary: aliasDict
+# aliasDict can be parsed by spaCy nlp()
+# matcher() add the nlp() object, and give each key the match id
+# no parameter, no return value is needed
 
 def readDB():
     #create the list of alias to match
-    path = r"dict/enUS/alias/" #  path for alias
+    path = r"dict/enUS/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
-    aliasList={} # create a dictionary of alias
+    aliasDict={}                                        # create a dictionary of alias A/D/F/V/U
 
     # read all file at once
     for filename in all_files:
         sublist = []
         df = pd.read_csv(filename)
         for column in df.columns:
-            sublist = sublist+list(df[column])
-        sublist = [x for x in sublist if str(x) != 'nan']  # filter all NAN element
-        aliasList[filename[21]] = sublist
+            sublist = sublist+list(df[column])             # read all elements in one file, stored as list
+        sublist = [x for x in sublist if str(x) != 'nan']  # filter all NAN element in the list
+        aliasDict[filename[21]] = sublist                  # key: filename[21] means A/D/F/V in "dict/enUS/alias/*.txt"
 
 
     #obtain doc object for each word in the list and store it in a list
-    # alias(A),  alias(D),  alias(F),  alias(V),
-    A = [nlp(a) for a in aliasList['A']]
-    D = [nlp(d) for d in aliasList['D']]
-    F = [nlp(f) for f in aliasList['F']]
-    V = [nlp(v) for v in aliasList['V']]
-    U = [nlp(u) for u in aliasList['U']]
+    A = [nlp(a) for a in aliasDict['A']]
+    D = [nlp(d) for d in aliasDict['D']]
+    F = [nlp(f) for f in aliasDict['F']]
+    V = [nlp(v) for v in aliasDict['V']]
+    U = [nlp(u) for u in aliasDict['U']]
 
 
     #add the pattern to the matcher
@@ -52,123 +55,142 @@ def readDB():
     matcher.add("F", F)
     matcher.add("V", V)
     matcher.add("U", U)
-    #======
+
+    
+# ============  function textParse(sentence) ============
+# main function of the spaCy, do the following:
+# 1. read Database
+# 2. match the token(tokenclassifier)
+# 3. handle value
+# 4. alias redirection
+# 5. token counter validation(contain rule lookup)
+# 6. token support check
+# 7. token value check
+# sentence(string) as input parameter, return value is device_queries
     
 
 def textParse(sentence):
     sentence = sentence.lower() # lower all the chracters in sentence
     
     readDB() # read database
-
-    # new a dict: token dict
-    tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}
-    # new a list: token
-    token = ['','','','',''] #token[4] store rule and valid bits
+    tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
     
-    device_queries = [[0]*5]*1 # init query:a device query(ies) ['A','D','F','V','error/rule'] which will send to devicetalk at the end of function
+    # new a list: token
+    token = ['','','','',''] #token[4] store rule/error bits, 
+    
+    device_queries = [[0]*5]*1 # init a device query(ies) which will send to devicetalk at the end of function
     
     
     # ====================   tokenclassifier start===================================
+    # user matcher(doc) to classify words to tokens
+    # unclassified word will be thrown away
+    
     doc = nlp(sentence)  
     matches = matcher(doc)
     for match_id, start, end in matches:
-        token_id = nlp.vocab.strings[match_id]  # get the unicode ID, i.e. 'COLOR'
-        span = doc[start:end]
-        print("==========================before classifying:", token_id, span.text)
-        # stored as sorted token list
-        # if duplicate, mark tokenlist[4] as -1(invalid)
-        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):
-            tokendict[token_id] = span.text
+        token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
+        span = doc[start:end]                   # get the object of word insentence
+    
+        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
+            tokendict[token_id] = span.text     # insert key and value in tokendict
         else:
-            print("too much element in one token!") #error 1: wrong number of token
-            token[4] = -1
+            print("too much element in one token!") # error message #1: too much token
+            token[4] = -1                           # store error bit in token[4](rule/error bit)
     # ====================   tokenclassifier end ===================================
     
     
     # ===========================  value handling start=================================
-    
     # check if sentence contains number, before sentence redirecting
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
+#     sentence = sentence.replace(tokendict['A'], "")
     sentence = sentence.replace(tokendict['D'], "")
+#     sentence = sentence.replace(tokendict['F'], "")
     
+    sentence_value = tokendict['V']
     
-    if(tokendict['V'] != ''):     # if token V has a string matched, pass
+    if(tokendict['V'] != ''):     # if token V has a string already matched, pass
+        sentence_value = tokendict['V']  # save device name before alias redirect
         pass
     else:
-        value_doc = nlp(sentence)     # use spacy's sid extension: numerizer, converts numerical and quantitative words into numeric strings.
+        value_doc = nlp(sentence) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
+        print("value detect", value_doc._.numerize())
         if(len(value_doc._.numerize())== 1): # if V is recognized as numeric strings, save it as a string of quantity 
             quantity = list(value_doc._.numerize().values())
-            tokendict['V'] = handleValue(str(quantity[0]))
-    
+            sentence_value = quantity
+            tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue() 
     # ===========================  value handling end =================================
 
-    sentence_feature = tokendict['F'] # save before alias redirect
-    sentence_device_name = tokendict['D'] 
+    sentence_feature = tokendict['F']     # save feature name before alias redirect
+    sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
     
-    # ============================  check the alias, redirect================================
-    # A,D,F alias should be redirect to device_model, device_name, device_feature individually
+    
+    
+    # ============================ alias redirection ================================
+    # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
     path = r"dict/enUS/alias/" #  path for synonym
     all_files = glob.glob(os.path.join(path , "*.txt"))
     for filename in all_files:
         sublist = []
         df = pd.read_csv(filename)
         #redirect A,D,F to device_model, device_name, device_feature individually
+        #redirect V,U to default_value_name, unit_name
         for column in df.columns:
             df_abs = df.loc[(df[column] == tokendict[filename[21]])]
             if(len(df_abs.index)>0):
                 tokendict[filename[21]] = df_abs.iloc[0][0]
                 
     token = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], token[4]]
-    #============================================== redirect end =================================
+    #============================ alias redirection end =================================
 
     # eliminate A if both AD exist
     if(token[0] != '' and token[1] != ''):
         token[0] = ''
         print('[elimination] list of token after A/D elimination:', token)
 
-
-    
-
-    
     # =========================== number of token validation  =======================================
     # check if number of tokens is enough.
+    # if not enough, token[4] will record error id
+    
     if(bool(token[0]!="") ^ bool(token[1]!="")): #check either A or D exist
-        if(token[2]!=""): #check if F exist
-            rule = ruleLookup(token[2])
-            token[4] = rule # token[4] is rule
-            if(token[3]=="" and rule==2): #check if V(for rule2) exist
-                token[4]=-4 # error message #4: device feature need value
+        if(token[2]!=""):                        #check if F exist
+            rule = ruleLookup(token[2])          # lookup rule by F
+            token[4] = rule                      # token[4] record rule
+            if(token[3]=="" and rule==2):        # check if V(for rule2) exist
+                token[4]=-4                   # error message #4: device feature need value
         else:
-            token[4]=-3     # error message #3: no feature found in sentence 
+            token[4]=-3                       # error message #3: no feature found in sentence 
     else:
-        token[4]=-2         # error message #2: no device found in sentence    
+        token[4]=-2                           # error message #2: no device found in sentence    
     
     # =========================== number of token validation end =======================================    
     
     
     
-    
-    #now token has correct number, check if A/D support F
-    if(token[4] > 0):
-        token = supportCheck(token) #support check
-    else:
+    #============================ support check =================================
+    # if token has correct number, check if A/D support F
+    if(token[4] > 0):                  # if error/rule bit records rules
+        token[4] = supportCheck(token) # support check
+    else:                              # if error/rule bit records errors
         print("[error]not enough token!") # break
     
-    if(token[4] > 0): # <0 because not support
-        device_queries = valueCheck(token, sentence_feature) # value check
-    else:
+    
+    #============================ Value check =================================
+    # if token has correct number and A/D support F, check if V is valid
+    if(token[4] > 0): 
+        device_queries = valueCheck(token, sentence_feature) # value check and get device queries
+    else: # <0 because not support
         device_queries = token
-        
-    
 
-    print("[final] before send to iottalk,", " \ntoken:", token, "\ndevice query", device_queries)
-    
-    saveLog(sentence, token)
-    print("voice input feature: ", sentence_feature)
-    return sentence_feature, device_queries
-#     return sentence_feature, tokenlist
+    saveLog(sentence, token)   # save logs
+    print("[final] before send to iottalk,", "\ndevice query", device_queries)
+    return sentence_value, sentence_device_name, sentence_feature, device_queries
         
 
+# ======= ruleLookup(feature) =======
+# read the Table: DevicefeatureTable.txt
+# look up the rule of the device feature and return rule number
+# input parameter: feature(device_feature_name)
+# return value: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
     
 def ruleLookup(feature): #check rule by feature
     # rulelookup will read DevicefeatureTable.txt
@@ -178,10 +200,16 @@ def ruleLookup(feature): #check rule by feature
     rule = df.iloc[0]['rule']
     if(rule == 1):
         return 1
-    else:
+    elif(rule == 2):
         return 2
-    return 0
 
+# ======== supportCheck(tokenlist) =====
+# read DeviceTable.txt, check if F exist in device_feature_list if 
+# A/D match device_model/device_name
+# if support, pass
+# if not support, record the error bit(tokenlist[4])
+# input parameter: tokenlist
+# return value: tokenlist[4](error/value bit)
 
 def supportCheck(tokenlist):
     A = tokenlist[0]
@@ -192,9 +220,10 @@ def supportCheck(tokenlist):
     DeviceTable = readDeviceTable(A,D,F)
     
     if(D!=''):  #check if D supports F
+        print("spotlight Device table check",DeviceTable )
         feature_list = ast.literal_eval(DeviceTable.iloc[0]['device_feature_list'])
         if(F not in feature_list):
-            tokenlist[4] = -6   #error #6: Device not support such feature
+            tokenlist[4] = -6   #error message#6: Device not support such feature
             
     if(A!=''): #check if A all support F
         allsupport,d_id = 1,0
@@ -206,9 +235,12 @@ def supportCheck(tokenlist):
             d_id = d_id+1
 
         if(allsupport == 0):
-            tokenlist[4] = -6 #error message #5: Device not support such feature
+            tokenlist[4] = -6 #error message #6: Device not support such feature
             
-    return tokenlist
+    return tokenlist[4]
+
+
+# ======== valueCheck(tokenlist, feature) ============
 
 def valueCheck(tokenlist, feature): #issue give value
     A = tokenlist[0]
@@ -229,7 +261,7 @@ def valueCheck(tokenlist, feature): #issue give value
         feature = df2.iloc[0]['alias1']
         #feature change to absolute device feature('open'/'close')
         
-        #require table of dictionary, rule 1 dont care if A or D(if they pass the support check, they have same value_dict)
+        #require table of dictionary
         df = df.loc[(df['device_feature'] == F)]
         tokenlist[3] = ast.literal_eval(df.iloc[0]['value_dict'])[feature]
         
@@ -331,7 +363,13 @@ def valueCheck(tokenlist, feature): #issue give value
     return device_queries
 
 
-    
+# ====== handleValue(quantity) ========
+# check if quantity contains value and number
+# if quantity contains only number, return number
+# if quantity contains number and value, return the result of handleUnit(quantitylist)
+# input parameter: quantity(a string contains numeric values)
+# return value: quantitylist[0] or handleUnit(quantitylist)
+
 def handleValue(quantity):
     print("quantity: ",quantity)
     quantitylist = quantity.split(' ') # split a string into list
@@ -342,9 +380,15 @@ def handleValue(quantity):
     else:
         return handleUnit(quantitylist)
 
+# ===== handleUnit(quantitylist) =======
+# calculate the unit conversion of quantitylist
+# read predefined base unit
+# if number of quantitylist is even, calculate the result of unit conversion
+# if number of quantitylist is 
+
 def handleUnit(quantitylist): # use Pint package for unit hanlding 
-    ureg = UnitRegistry() # new a unit module
-    Q_ = ureg.Quantity    # define a quantity element quantity = (value, unit)
+    ureg = UnitRegistry()     # new a unit module
+    Q_ = ureg.Quantity        # define a quantity element quantity = (value, unit)
     
     #(issue)get base unit from iottalk define
     ureg.load_definitions('my_def.txt')
@@ -369,11 +413,11 @@ def checkMinMax(D,F, V): #check min max only for rule 2,
     df = pd.read_csv('dict/DevicefeatureTable.txt')
     df_D= df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
     if( (float(V) > float(df_D.iloc[0]['max'])) | ( float(V) < float(df_D.iloc[0]['min'])) ): #if value exceed range
-        return -7    # return -6 as error code
+        return -7    # return -7 as error code
     else:
         return 2     # return 2 as rule 2
 
-#followings are sub functions of support check
+#
 def findinfo(D,F):
     df = pd.read_csv('dict/DevicefeatureTable.txt')
     df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]

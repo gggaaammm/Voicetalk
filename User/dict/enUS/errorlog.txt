@@ -1,4 +1,4 @@
-id,error message,
+id,error message
 -1,too many tokens in token A/D/F/V
 -2,no device D found in the sentence
 -3,no device feature F found in the sentence

@@ -1,4 +1,4 @@
-U_abs,U_syn1
+U,alias
 percent,
 degree,
 Fahrenheit,

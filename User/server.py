@@ -44,7 +44,7 @@ def index():
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
             enspacy.readDB()
-            feature, device_queries = enspacy.textParse(text) #spacy function
+            name, feature, device_queries = enspacy.textParse(text) #spacy function
         else:  # chinese
             #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
             print("chinese not yet")
@@ -58,17 +58,30 @@ def index():
         thread.daemon = True
         thread.start()
         
-        returnlist = tokenlist
+        if(isinstance(device_queries[0], list) == False):
+            returnlist = device_queries
+            valid = device_queries[4]    # only 1 device, get valid/rule bits
+        else:
+            for device_query in device_queries:
+                if(device_query[4] < 0):
+                    valid = device_query[4]
+                    returnlist = device_query
+                    break
+                else:
+                    valid = device_query[4]
+                    device_query[2] = 0
+                    returnlist = device_query
         
-#         print("message bit:", valid)
+        print("[valid]message bit:", valid)
+        print("[response]response info:",returnlist)
         response = ''
-        if(returnlist[4] == -1):
+        if(valid < 0):
             response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
             returnlist = []
         else:
             response = 'OK, ' if language == 'en-US' else '收到，'
-            returnlist[2] = feature
-            if(returnlist[4] == 1): returnlist[3] = ''
+            #returnlist[2] = feature
+            #if(returnlist[4] == 1): returnlist[3] = ''
 
     return render_template("index.html",returnlist=returnlist, response = response) # response message add here
 
@@ -83,7 +96,7 @@ def ProcessSentence():
     print("voice sentence: ", sentence) #data should be decoded from bytestrem to utf-8
     
     if(language == 'en-US'): #English
-        feature, device_queries = enspacy.textParse(sentence) #spacy function
+        value,name, feature, device_queries = enspacy.textParse(sentence) #spacy function
     else:  # chinese
         #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
         print("chinese not yet")
@@ -92,39 +105,45 @@ def ProcessSentence():
     #get all device query(ies) from the tokenlist
     print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))    
     print("[ProcessSentence] how long:",len(device_queries,))
+    thread = Thread(target=sendIot, args=(device_queries,))
+    thread.daemon = True
+    thread.start()
     
 
-    if(isinstance(device_queries[0], list) == false):
-        valid = device_queries[4]
+    if(isinstance(device_queries[0], list) == False):
+        valid = device_queries[4]    # only 1 device, get valid/rule bits
+        returnlist = device_queries  # show the success/error message of device D
     else:
         for device_query in device_queries:
             if(device_query[4] < 0):
                 valid = device_query[4]
+                returnlist = device_query # show the error message of certiain deivce in A
+                name = device_query[1]
                 break
-            else
+            else:
                 valid = device_query[4]
+                returnlist = device_query # show the success message of A
             
     
     response = '' # init response
     # complete the response context
     if(valid < 0):
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
-        returnlist = []
     else:
         response = 'OK, ' if language == 'en-US' else '收到，'
-        returnlist[2] = feature  # feature is different from F
-        if(returnlist[4] == 1): returnlist[3] = ''      # rule 1: no value(token 3) need
-    print("source from voice", response, returnlist)
+#         if(returnlist[4] == 1): returnlist[3] = ''      # rule 1: no value(token 3) need
+            
+    print("source from response", response,"\nreturnlist:", returnlist,"\nvalid:", valid, )
     
     
-    return jsonify({ 'tokenlist': returnlist, 'response': response, 'valid':valid})
+    return jsonify({ 'tokenlist': returnlist, 'response': response, 'valid':valid, 'name': name, 'feature': feature, 'value':value})
 
 
 
 
 def sendIot(device_queries):
-    print("sendIot rework")
     if(isinstance(device_queries[0], list)):
+        print("[F] rework:", device_queries)
         for device_query in device_queries:
             print("each query:", device_query)
             D = device_query[1]
@@ -141,11 +160,14 @@ def sendIot(device_queries):
                 DAN.device_registration_with_retry(ServerURL, Regaddr)
 
                 print("device name: ",D,"device model: ", df.iloc[0]['device_model'])
+                print("device feature", F)
                 if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                     iotvalue = int(V)*10 if int(V)<=10 else 100
                     DAN.push(F, iotvalue)
                 else:
-                    DAN.push(F, float(V))
+                    DAN.push(F, int(V))
+
+            
             
     else:
         print("only 1 query", device_queries)
@@ -168,7 +190,7 @@ def sendIot(device_queries):
                 iotvalue = int(V)*10 if int(V)<=10 else 100
                 DAN.push(F, iotvalue)
             else:
-                DAN.push(F, float(V))
+                DAN.push(F, int(V))
     
     
 

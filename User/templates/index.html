@@ -123,17 +123,31 @@
                 data: {  language : language, sentence : final_transcript},
                 success: function(data){
                     if(language == "en-US"){
+                        console.log("data recieve", data)
+                        console.log("valid bit frontend", data.valid)
                         if(data.valid<0){
-                            renderhtml = data.response+data.valid
+                            renderhtml = data.response
                             switch(data.valid){
-                                case -2: renderhtml = "No Device in sentence"
-                                case -3: renderhtml = "No device feature in sentence"
-                                case -4: renderhtml = "Device feature need value"
-                                case -5: renderhtml = "Device not support device feature"
+                                case -1: renderhtml = "Too many tokens in token A/D/F/V"; break;
+                                case -2: renderhtml = "No device D found in the sentence"; break;
+                                case -3: renderhtml = "No device feature F found in the sentence"; break;
+                                case -4: renderhtml = "No value V found in the sentence"; break;
+                                case -5: renderhtml = "The numeber of value is not equal to the number of unit"; break;
+                                case -6: 
+                                    renderhtml = data.tokenlist[1] +" does not support "+data.tokenlist[3]; break;
+                                case -7: 
+                                    renderhtml = "the value V is out of the range"; 
+                                    // if some of the A exceed the range
+                                    if(data.tokenlist[0] != ''){
+                                        renderhtml = data.tokenlist[1]+"does not support value"+data.tokenlist[3]
+                                    }
+                                    break;
+                                case -8: renderhtml = "the unit U is not supported by device feature F of the device D"; break;
                             }
                         }
                         else{
-                            renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]
+//                             renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]
+                            renderhtml = data.response+data.name+" "+data.feature+" "+data.value
                         }
                     }
                     else if(language == "cmn-Hant-TW"){

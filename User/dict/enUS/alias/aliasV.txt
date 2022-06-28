@@ -1,10 +1,10 @@
-V_abs,V_syn1
+V,alias
 largest,
 smallest,
-brightest,
-darkest,
-high,
-low,
+bright,brightest
+dark,darkest
+high,highest
+low,lowest
 middle,
 red,
 blue,
