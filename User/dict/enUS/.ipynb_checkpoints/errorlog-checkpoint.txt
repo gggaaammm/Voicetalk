@@ -3,7 +3,7 @@ id,error message
 -2,no device D found in the sentence
 -3,no device feature F found in the sentence
 -4,no value V found in the sentence
--5,the numeber of value is not equal to the number of unit
+-5,the number of value is not equal to the number of unit
 -6,device D not support such device feature F
--7,the value V exceed the range of defined min and max[m~M]
+-7,the device D does not support value V
 -8,the unit U is not supported by device feature F of the device D

@@ -65,7 +65,7 @@ def ruleLookup(feature):
 def supportCheck(tokenlist):
     print("tokenlist before support check: ", tokenlist)
     #unified synonym
-    # check the synonym, redirect to iottalk ver
+    # check the alias, redirect to iottalk ver
     # check D synonym
     df = pd.read_csv('dict/zhTW/D_sys_zh.txt')
     df = df.loc[(df['D_abs']==tokenlist[1]) | (df['D_sys1'] == tokenlist[1])\
@@ -119,6 +119,12 @@ def supportCheck(tokenlist):
     
     
 def mappingToken(wordset): #mapping token should return an array of A/D/F/V
+    #=========== rework================
+    
+    
+    
+    
+    #=========== rework================
     token = ["","","","",0]
     j=0
     path_A_dict = r"dict/zhTW/A.txt"
