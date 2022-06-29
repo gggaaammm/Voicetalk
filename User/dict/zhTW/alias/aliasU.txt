@@ -1,0 +1,7 @@
+U,alias
+百分之,percent,
+度,degree,
+華氏,Fahrenheit,
+小時,時,hour,
+分鐘,分,minute,
+秒鐘,秒,second,

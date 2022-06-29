@@ -1,0 +1,8 @@
+A,A_abs,A_syn1
+Vfan,電扇,電風扇
+Vlight,燈,電燈
+Vcurtain,窗簾
+Vdoor,門,大門
+Vairpurifier,空氣清淨機
+Vwindow,窗戶
+Vdummy,虛擬裝置

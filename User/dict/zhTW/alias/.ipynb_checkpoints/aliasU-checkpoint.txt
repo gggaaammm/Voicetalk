@@ -1,0 +1,7 @@
+U,alias
+percent,
+degree,
+Fahrenheit,
+hour,
+minute,
+second,

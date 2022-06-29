@@ -1,0 +1,17 @@
+D,D_abs,D_syn1,D_syn2,D_syn3,D_syn4
+fluorescent lamp,日光燈,電燈一,1號電燈
+CHT LED,電燈二,2號電燈
+CAG LED,電燈三,3號電燈
+spot light,投射光,投射燈
+triangle light,三角燈,三角形燈
+indirect light,間接照明
+tatung fan,大同電扇,1號電扇,電扇一
+chimei fan,奇美電扇,2號電扇,電扇二
+curtain1,1號窗簾,左邊的窗簾,窗簾一
+curtain2,2號窗簾,中間的窗簾,窗簾二
+curtain3,3號窗簾,右邊的窗簾,窗簾三
+Tatung airpurifier,大同空氣清淨機
+robotic arm,機械手臂
+window,窗戶,窗
+door,門,大門
+dummy1,虛擬裝置1

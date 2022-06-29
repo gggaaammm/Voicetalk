@@ -1,0 +1,11 @@
+V,alias
+largest,
+smallest,
+bright,brightest
+dark,darkest
+high,highest
+low,lowest
+middle,
+red,
+blue,
+yellow

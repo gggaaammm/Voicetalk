@@ -1,9 +1,9 @@
 import spacy
 import ast
-import DAN
+import DAN #???
 import pandas as pd
 import sqlite3
-import time
+import time # time measure
 import os
 import glob # for reading multi files
 import re # for number finding

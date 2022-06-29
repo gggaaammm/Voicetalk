@@ -1,7 +1,10 @@
+from ast import keyword
 import os
 import pandas as pd
 import time
-import DAN
+import DAN #???
+from User.enspacy import readDB #???
+import glob # for reading multi files
 
 
 # define error message format:
@@ -263,40 +266,63 @@ def unitConversion(feature, entity, entityType, word_sentence):
 
 
 
+def readDB():
+    print("reading alias")
+    # read all the files in directory
+    #
+    path = r"dict/zhTW/alias/"                          #  path for alias
+    all_files = glob.glob(os.path.join(path , "*.txt")) #
+
+    keywordlist = []
+    # read all file at once
+    for filename in all_files:    
+        df = pd.read_csv(filename)
+        for column in df.columns:
+            keywordlist = keywordlist+list(df[column])             # read all elements in one file, stored as list
+        keywordlist = keywordlist+[x for x in keywordlist if str(x) != 'nan']  # filter all NAN element in the list
+    print("[readDB]", keywordlist)         
+    return keywordlist
 
 
 
 
-
-def textParse(text,ws,pos,ner):
+def textParse(sentence,ws,pos,ner):
     # Download data
     # data_utils.download_data("./")
+    # ============= read  ====================
     
-    
+    # the txt read from the alias 
+    keywordlist = readDB()
+    # =============== read ==========================
     # 用讀CSV的方式讀取前面匯出的txt
-    path_A_dict = r"dict/zhTW/A.txt"
-    df_ner_dictA = pd.read_csv(path_A_dict, sep="\n", header=None)
-    # 存到list
-    df_ner_dictA.columns = ['NER']
-    list_ner_dictA = list(df_ner_dictA['NER'])
+    # path_A_dict = r"dict/zhTW/A.txt"
+    # df_ner_dictA = pd.read_csv(path_A_dict, sep="\n", header=None)
+    # # 存到list
+    # df_ner_dictA.columns = ['NER']
+    # list_ner_dictA = list(df_ner_dictA['NER'])
     
     
-    # 用讀CSV的方式讀取前面匯出的txt
-    path_D_dict = r"dict/zhTW/D.txt"
-    df_ner_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
-    # 存到list
-    df_ner_dict.columns = ['NER']
-    list_ner_dict = list_ner_dictA+list(df_ner_dict['NER'])
+    # # 用讀CSV的方式讀取前面匯出的txt
+    # path_D_dict = r"dict/zhTW/D.txt"
+    # df_ner_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
+    # # 存到list
+    # df_ner_dict.columns = ['NER']
+    # list_ner_dict = list_ner_dictA+list(df_ner_dict['NER'])
+
+
+
+
+   
     # 將list轉成dict型態，這邊每個權重都設為1
-    dict_for_CKIP = dict((el,1) for el in list_ner_dict)
+    dict_for_CKIP = dict((el,1) for el in keywordlist)
     # Create custom dictionary(for D)
     dictionary = construct_dictionary(dict_for_CKIP)
+
+
     print("user defined dictionary", dictionary)
     
     # Run WS-POS-NER pipeline
-    sentence_list = [
-        text
-    ]
+    sentence_list = [sentence ]
     
     #word_sentence_list = ws(sentence_list, sentence_segmentation=True)
     start = time.time()
@@ -378,5 +404,7 @@ def textParse(text,ws,pos,ner):
         print("send iotinfo: ", iotinfo)
         for entity in sorted(entity_sentence_list[i]):
             print(entity)
-            
+
+    # the return type of the textparse should follow the rules decided in  server.py
+    # { value,name, feature, device_queries}
     return F,iotinfo
