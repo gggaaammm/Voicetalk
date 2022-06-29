@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import time
 import DAN #???
-from User.enspacy import readDB #???
+# from User.enspacy import readDB #???
 import glob # for reading multi files
 
 
@@ -180,6 +180,13 @@ def mappingToken(wordset): #mapping token should return an array of A/D/F/V
         j=j+1
     
     
+    # before support check and  validation, rediretion is needed
+    print("[redirection] ", token)
+    
+    
+    
+    
+    
     #when loop end, calculate token and check if valid.
     #sucess: token[4] = 1, E:token[4]=-1
     if(bool(token[0]!="") ^ bool(token[1]!="")):
@@ -200,6 +207,9 @@ def mappingToken(wordset): #mapping token should return an array of A/D/F/V
     else:
         token[4]=-2                            # error message #2: no device found in device
         
+    
+    
+    
     #now token has correct number, check if A/D support F
     if(token[4]  > 0):                        #=================need change to: <0
         token = supportCheck(token)
@@ -276,11 +286,12 @@ def readDB():
     keywordlist = []
     # read all file at once
     for filename in all_files:    
+        print("[readDB] ", filename)
         df = pd.read_csv(filename)
         for column in df.columns:
             keywordlist = keywordlist+list(df[column])             # read all elements in one file, stored as list
-        keywordlist = keywordlist+[x for x in keywordlist if str(x) != 'nan']  # filter all NAN element in the list
-    print("[readDB]", keywordlist)         
+        keywordlist = [x for x in keywordlist if str(x) != 'nan']  # filter all NAN element in the list
+    print("[readDB] ", keywordlist)         
     return keywordlist
 
 
@@ -312,21 +323,15 @@ def textParse(sentence,ws,pos,ner):
 
 
 
-   
-    # 將list轉成dict型態，這邊每個權重都設為1
+   # 將list轉成dict型態，這邊每個權重都設為1
     dict_for_CKIP = dict((el,1) for el in keywordlist)
     # Create custom dictionary(for D)
     dictionary = construct_dictionary(dict_for_CKIP)
-
-
     print("user defined dictionary", dictionary)
     
-    # Run WS-POS-NER pipeline
-    sentence_list = [sentence ]
-    
-    #word_sentence_list = ws(sentence_list, sentence_segmentation=True)
+    # Run WS-POS-NER pipeline, the input of pipeline sould be a list
+    sentence_list = [sentence]
     start = time.time()
-#     word_sentence_list = ws(sentence_list, recommend_dictionary=dictionary)
     word_sentence_list = ws(sentence_list, coerce_dictionary=dictionary)
     #segement sentence into list of words
     pos_sentence_list = pos(word_sentence_list)
@@ -393,13 +398,10 @@ def textParse(sentence,ws,pos,ner):
             
             
             
-        #return deviceFeature, tokenlist
+        return deviceFeature, tokenlist
 
 
-        # TODO: return value rework
-        sentence_value, sentence_device_name, sentence_feature = 0,0,0
-        device_queries = []
-        return sentence_value, sentence_device_name, sentence_feature, device_queries
+        
         
     
     for i, sentence in enumerate(sentence_list):
@@ -413,4 +415,9 @@ def textParse(sentence,ws,pos,ner):
 
     # the return type of the textparse should follow the rules decided in  server.py
     # { value,name, feature, device_queries}
-    return F,iotinfo
+#     return F,iotinfo
+
+    # TODO: return value rework
+    sentence_value, sentence_device_name, sentence_feature = 0,0,0
+    device_queries = iotinfo# should rework
+    return sentence_value, sentence_device_name, sentence_feature, device_queries

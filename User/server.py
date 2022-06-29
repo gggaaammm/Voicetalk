@@ -6,7 +6,7 @@ from threading import Thread
 import time, random, requests
 import DAN
 import unitconversion, enspacy, register
-#import zhckip #uncomment later
+import zhckip #uncomment later
 
 # define error message format:
 # 1: rule1, 2: rule2, <0: error
@@ -42,11 +42,11 @@ def index():
         language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
-        if(language == 'en-US'): #English
+        if(language == 'cmn-Hant-tw'): #English
             enspacy.readDB()
-            name, feature, device_queries = enspacy.textParse(text) #spacy function
+            value,name, feature, device_queries = enspacy.textParse(text) #spacy function
         else:  # chinese
-            #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+            value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
             print("chinese not yet")
         
         
@@ -98,7 +98,7 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         value,name, feature, device_queries = enspacy.textParse(sentence) #spacy function
     else:  # chinese
-        #feature,tokenlist = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+        value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
         print("chinese not yet")
     
     #get all device query(ies) from the tokenlist
