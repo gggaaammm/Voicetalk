@@ -1,9 +1,9 @@
 import spacy
 import ast
-import DAN
+import DAN #???
 import pandas as pd
 import sqlite3
-import time
+import time # time measure
 import os
 import glob # for reading multi files
 import re # for number finding
@@ -296,8 +296,10 @@ def valueCheck(tokenlist, feature): #issue give value
             else:
                 print('a quantity')
                 U = str(V).split(' ')[1] # check if unit in unit list
+                V = str(V).split(' ')[0] # split a string into list, extract 1 element     
                 if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
-                    print("value check rule 2 unit verified")
+                    print("value check rule 2 unit verified", tokenlist[3])
+                    tokenlist[3] = V
                     tokenlist[4] = checkMinMax(D,F,str(V).split(' ')[0])# already set to base unit, just extract the value 
                 else:
                     tokenlist[4] = -8 # unsupport unit
@@ -349,12 +351,14 @@ def valueCheck(tokenlist, feature): #issue give value
                     U = str(V).split(' ')[1] # check if unit is in unit list
                     if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
                         print("value check rule 2 unit verified")
+                        V = str(V).split(' ')[0] # split a string into list, extract 1 element                
+                        tokenlist[3] = V
+                        tokenlist[4] = checkMinMax(device,F,V)
                     else:
                         tokenlist[4] = -8 # unsupport unit
                         print("value check rule 2 quantity unit error!")
                         
-                    V = str(V).split(' ')[0] # split a string into list, extract 1 element                
-                    tokenlist[4] = checkMinMax(device,F,V)
+                    
                     device_queries[idx] = [A,device,F,V,tokenlist[4]]
                 print('device model value check quantity:', tokenlist)
                 print('[device model] value check queries:', device_queries)

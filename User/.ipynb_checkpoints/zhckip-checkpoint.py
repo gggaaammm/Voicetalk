@@ -24,7 +24,6 @@ import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 from ckiptagger import data_utils, construct_dictionary, WS, POS, NER
-ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
 #=========read ckiptagger model========
 start = time.time()
 ws = WS("./data", disable_cuda=False)
@@ -39,16 +38,18 @@ print("loading time: ", end-start)
 
     
     
-def dictionaryLookup(word,A_dict, D_dict, F_dict, V_dict):
-    key = 4
-    if word in A_dict:
+def dictionaryLookup(word,A_list, D_list, F_list, V_list, U_list):
+    key = 5
+    if word in A_list:
         key = 0
-    if word in D_dict: #if word in both A/D, word will be recognized as D
+    if word in D_list: #if word in both A/D, word will be recognized as D
         key = 1
-    if word in F_dict:
+    if word in F_list:
         key = 2
-    if word in V_dict:
+    if word in V_list:
         key = 3
+    if word in U_list:
+        key = 4
     return key
     
 def num_there(s): # check if any digit exist in any word
@@ -119,72 +120,85 @@ def supportCheck(tokenlist):
     # check if F support V(only for Rule2)   
         
     
+def readDict(filename):
+    
+    print("[readDict]")
+    path = r"dict/zhTW/alias/alias"+filename+".txt"
+    df = pd.read_csv(path)
+    dictlist = []
+    for column in df.columns:
+        dictlist = dictlist+list(df[column])             # read all elements in one file, stored as list
+    dictlist = [x for x in dictlist if str(x) != 'nan']  # filter all NAN element in the list
+    return dictlist
     
     
-def mappingToken(wordset): #mapping token should return an array of A/D/F/V
+def tokenClassifier(wordset): #mapping token should return an array of A/D/F/V
     #=========== rework================
-    
-    
-    
+    print("[tokenClassifier]", wordset)
+    list_A = readDict('A')
+    list_D = readDict('D')
+    list_F = readDict('F')
+    list_U = readDict('U')
+    list_V = readDict('V')
     
     #=========== rework================
-    token = ["","","","",0]
+#     token = ["","","","",0]
+    
+#     path_A_dict = r"dict/zhTW/A.txt"
+#     A_dict = pd.read_csv(path_A_dict, sep="\n", header=None)
+#     # 存到list
+#     A_dict.columns = ['A']
+#     A_list = list(A_dict['A'])
+    
+#     path_D_dict = r"dict/zhTW/D.txt"
+#     D_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
+#     # 存到list
+#     D_dict.columns = ['D']
+#     D_list = list(D_dict['D'])
+    
+#     path_F_dict = r"dict/zhTW/F.txt"
+#     F_dict = pd.read_csv(path_F_dict, sep="\n", header=None)
+#     # 存到list
+#     F_dict.columns = ['F']
+#     F_list = list(F_dict['F'])
+    
+#     path_V_dict = r"dict/zhTW/V.txt"
+#     V_dict = pd.read_csv(path_V_dict, sep="\n", header=None)
+#     # 存到list
+#     V_dict.columns = ['V']
+#     V_list = list(V_dict['V'])
+    
+    
+    # read dictionary
     j=0
-    path_A_dict = r"dict/zhTW/A.txt"
-    A_dict = pd.read_csv(path_A_dict, sep="\n", header=None)
-    # 存到list
-    A_dict.columns = ['A']
-    A_list = list(A_dict['A'])
-    
-    path_D_dict = r"dict/zhTW/D.txt"
-    D_dict = pd.read_csv(path_D_dict, sep="\n", header=None)
-    # 存到list
-    D_dict.columns = ['D']
-    D_list = list(D_dict['D'])
-    
-    path_F_dict = r"dict/zhTW/F.txt"
-    F_dict = pd.read_csv(path_F_dict, sep="\n", header=None)
-    # 存到list
-    F_dict.columns = ['F']
-    F_list = list(F_dict['F'])
-    
-    path_V_dict = r"dict/zhTW/V.txt"
-    V_dict = pd.read_csv(path_V_dict, sep="\n", header=None)
-    # 存到list
-    V_dict.columns = ['V']
-    V_list = list(V_dict['V'])
-    
     while(j<len(wordset)):
-        print(wordset[j])
-        if(num_there(wordset[j])): #check if this word is number
-            token[3] = wordset[j]
-            print('real num:', type(token[3]))
-        else: #second chance, a word contains in number
-            df = pd.read_csv(r"dict/zhTW/num_zh.txt")
-            df = df.loc[df['text'] == wordset[j]]
-            if(len(df.index)>0):
-                token[3] = int(df.iloc[0]['value'])
-                print('chinese num:', type(token[3]))
+#         print("[tokenClassifier] each word:",wordset[j])
+#         if(num_there(wordset[j])): #check if this word is number
+#             token[3] = wordset[j]
+#             print('real num:', type(token[3]))
+#         else: #second chance, a word contains in number
+#             df = pd.read_csv(r"dict/zhTW/num_zh.txt")
+#             df = df.loc[df['text'] == wordset[j]]
+#             if(len(df.index)>0):
+#                 token[3] = int(df.iloc[0]['value'])
+#                 print('chinese num:', type(token[3]))
         # look up from dictionary    
-        get_token = dictionaryLookup(wordset[j],A_list,D_list, F_list,V_list)
-        print("token: ",get_token)
+        token_id = dictionaryLookup(wordset[j],A_list,D_list, F_list,V_list)
+        print("[tokenClassifier]token id: ",token_id)
         #if A/D/F/V already exist another value, break
-        if(token[get_token]!="" and get_token<4):
-            print("it should break")
+        if(token[token_id]!="" and token_id<5):
+            print("[tokenClassifier]it should break because of multiple token")
             token[4]=-1
             break
         # if token belongs to A/D/F/V
-        if(get_token<4):
-            token[get_token] = wordset[j]
+        if(token_id<5):
+            token[token_id] = wordset[j]
         
         j=j+1
     
     
     # before support check and  validation, rediretion is needed
     print("[redirection] ", token)
-    
-    
-    
     
     
     #when loop end, calculate token and check if valid.
@@ -350,7 +364,7 @@ def textParse(sentence,ws,pos,ner):
         assert len(word_sentence) == len(pos_sentence)
         
         #mapping token will do token classifier
-        tokenlist = mappingToken(word_sentence)
+        tokenlist = tokenClassifier(word_sentence)
         #support check
         
         
