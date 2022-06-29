@@ -393,7 +393,13 @@ def textParse(sentence,ws,pos,ner):
             
             
             
-        return deviceFeature, tokenlist
+        #return deviceFeature, tokenlist
+
+
+        # TODO: return value rework
+        sentence_value, sentence_device_name, sentence_feature = 0,0,0
+        device_queries = []
+        return sentence_value, sentence_device_name, sentence_feature, device_queries
         
     
     for i, sentence in enumerate(sentence_list):
