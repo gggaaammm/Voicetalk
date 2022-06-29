@@ -5,8 +5,8 @@ import json
 from threading import Thread
 import time, random, requests
 import DAN
-import unitconversion, enspacy, register
-import zhckip #uncomment later
+import unitconversion, enspacy, register, zhspacy
+# import zhckip #uncomment later
 
 # define error message format:
 # 1: rule1, 2: rule2, <0: error
@@ -39,14 +39,15 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'en-US'
+        language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
-        if(language == 'cmn-Hant-tw'): #English
+        if(language == 'en-US'): #English
             enspacy.readDB()
             value,name, feature, device_queries = enspacy.textParse(text) #spacy function
         else:  # chinese
-            value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+            #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+            value,name, feature, device_queries = zhspacy.textParse(text) #spacy function
             print("chinese not yet")
         
         
@@ -69,7 +70,6 @@ def index():
                     break
                 else:
                     valid = device_query[4]
-                    device_query[2] = 0
                     returnlist = device_query
         
         print("[valid]message bit:", valid)
@@ -159,7 +159,7 @@ def sendIot(device_queries):
                 DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
                 DAN.device_registration_with_retry(ServerURL, Regaddr)
 
-                print("device name: ",D,"device model: ", df.iloc[0]['device_model'])
+                print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
                 print("device feature", F)
                 if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                     iotvalue = int(V)*10 if int(V)<=10 else 100
@@ -185,7 +185,7 @@ def sendIot(device_queries):
             DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
             DAN.device_registration_with_retry(ServerURL, Regaddr)
             
-            print("device name: ",D,"device model: ", df.iloc[0]['device_model'])
+            print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
             if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                 iotvalue = int(V)*10 if int(V)<=10 else 100
                 DAN.push(F, iotvalue)

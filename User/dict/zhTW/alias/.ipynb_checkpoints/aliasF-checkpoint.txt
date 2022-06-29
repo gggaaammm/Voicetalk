@@ -1,8 +1,8 @@
-F,alias1,alias2,alias3
-Switch1,open,turn on,power on
-Switch1,close,turn off,power off
-Fanspeed-I,fan speed,fan speed
-Luminance-I,brightness,brightness
-Rotation-I,rotation
-Temperature-I,temperature
-Timer-I,timer
+F,alias1,alias2,alias3,alias4
+Switch1,open,打開,開,開啟
+Switch1,close,關掉,關,關閉
+Fanspeed-I,風速,
+Luminance-I,亮度
+Rotation-I,旋轉
+Temperature-I,溫度
+Timer-I,定時器,時間,碼表

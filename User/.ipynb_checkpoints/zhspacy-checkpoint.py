@@ -1,10 +1,10 @@
 import spacy
 import ast
-import DAN #???
 import pandas as pd
 import sqlite3
 import time # time measure
 import os
+import sys
 import glob # for reading multi files
 import re # for number finding
 #import the phrase matcher
@@ -12,11 +12,15 @@ from numerizer import numerize
 from spacy.matcher import PhraseMatcher
 from pint import UnitRegistry
 #load a model and create nlp object
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("zh_core_web_sm")
 #initilize the matcher with a shared vocab
 matcher = PhraseMatcher(nlp.vocab)
+# aside from english, chinese need some changes
 
-
+# 1. a word segmentation before token classify(must)
+from ckiptagger import data_utils, construct_dictionary, WS, POS, NER
+ws = WS("./data")
+# 2. a special use of quantity managing(chosen)
 
 #======= function readDB() ========
 # in this function, program read files at the path "./dict/enUS/alias/"
@@ -27,7 +31,7 @@ matcher = PhraseMatcher(nlp.vocab)
 
 def readDB():
     #create the list of alias to match
-    path = r"dict/enUS/alias/"                          #  path for alias
+    path = r"dict/zhTW/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
     aliasDict={}                                        # create a dictionary of alias A/D/F/V/U
 
@@ -57,6 +61,9 @@ def readDB():
     matcher.add("U", U)
 
     
+    return aliasDict.values()
+
+    
 # ============  function textParse(sentence) ============
 # main function of the spaCy, do the following:
 # 1. read Database
@@ -70,9 +77,20 @@ def readDB():
     
 
 def textParse(sentence):
-    sentence = sentence.lower() # lower all the chracters in sentence
+    # in chinese, do word segmentation before nlp
     
-    readDB() # read database
+    
+    alias_list_dict = readDB() # read database
+    dict_for_CKIP = {}
+    for alias_list in alias_list_dict:
+        dict_for_CKIP.update( dict((el,1) for el in alias_list) )
+
+    dict_for_CKIP = construct_dictionary(dict_for_CKIP)
+    word_list = ws([sentence], coerce_dictionary=dict_for_CKIP)
+    sentence_space = ' '.join(word_list[0])
+    print("[segmentation]", sentence_space)
+    
+    
     tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
     
     # new a list: token
@@ -85,11 +103,12 @@ def textParse(sentence):
     # user matcher(doc) to classify words to tokens
     # unclassified word will be thrown away
     
-    doc = nlp(sentence)  
+    doc = nlp(sentence_space)  
     matches = matcher(doc)
     for match_id, start, end in matches:
         token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
         span = doc[start:end]                   # get the object of word insentence
+        print("token_id", token_id, "text", span.text)
     
         if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
             tokendict[token_id] = span.text     # insert key and value in tokendict
@@ -114,7 +133,7 @@ def textParse(sentence):
     else:
         value_doc = nlp(sentence) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
         print("value detect", value_doc._.numerize())
-        if(len(value_doc._.numerize())== 1): # if V is recognized as numeric strings, save it as a string of quantity 
+        if(len(value_doc._.numerize()) > 0): # if V is recognized as numeric strings, save it as a string of quantity 
             quantity = list(value_doc._.numerize().values())
             sentence_value = quantity
             tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue() 
@@ -127,7 +146,7 @@ def textParse(sentence):
     
     # ============================ alias redirection ================================
     # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
-    path = r"dict/enUS/alias/" #  path for synonym
+    path = r"dict/zhTW/alias/" #  path for synonym
     all_files = glob.glob(os.path.join(path , "*.txt"))
     for filename in all_files:
         sublist = []
@@ -256,8 +275,8 @@ def valueCheck(tokenlist, feature): #issue give value
 
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
-        df2 = pd.read_csv('dict/enUS/alias/aliasF.txt')
-        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) ]
+        df2 = pd.read_csv('dict/zhTW/alias/aliasF.txt')
+        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) | (df2['alias3']==feature)]
         feature = df2.iloc[0]['alias1']
         #feature change to absolute device feature('open'/'close')
         
@@ -296,10 +315,8 @@ def valueCheck(tokenlist, feature): #issue give value
             else:
                 print('a quantity')
                 U = str(V).split(' ')[1] # check if unit in unit list
-                V = str(V).split(' ')[0] # split a string into list, extract 1 element     
                 if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
-                    print("value check rule 2 unit verified", tokenlist[3])
-                    tokenlist[3] = V
+                    print("value check rule 2 unit verified")
                     tokenlist[4] = checkMinMax(D,F,str(V).split(' ')[0])# already set to base unit, just extract the value 
                 else:
                     tokenlist[4] = -8 # unsupport unit
@@ -351,14 +368,12 @@ def valueCheck(tokenlist, feature): #issue give value
                     U = str(V).split(' ')[1] # check if unit is in unit list
                     if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
                         print("value check rule 2 unit verified")
-                        V = str(V).split(' ')[0] # split a string into list, extract 1 element                
-                        tokenlist[3] = V
-                        tokenlist[4] = checkMinMax(device,F,V)
                     else:
                         tokenlist[4] = -8 # unsupport unit
                         print("value check rule 2 quantity unit error!")
                         
-                    
+                    V = str(V).split(' ')[0] # split a string into list, extract 1 element                
+                    tokenlist[4] = checkMinMax(device,F,V)
                     device_queries[idx] = [A,device,F,V,tokenlist[4]]
                 print('device model value check quantity:', tokenlist)
                 print('[device model] value check queries:', device_queries)

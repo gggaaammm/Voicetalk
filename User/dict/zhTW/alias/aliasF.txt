@@ -1,6 +1,6 @@
-F,alias1,alias2,alias3
-Switch1,打開,開,開啟
-Switch1,關掉,關,關閉
+F,alias1,alias2,alias3,alias4
+Switch1,open,打開,開,開啟
+Switch1,close,關掉,關,關閉
 Fanspeed-I,風速,
 Luminance-I,亮度
 Rotation-I,旋轉
