@@ -1,7 +1,7 @@
-U,alias
-百分之,percent,
-度,degree,
-華氏,Fahrenheit,
-小時,時,hour,
-分鐘,分,minute,
-秒鐘,秒,second,
+U,alias1,alias2
+percent,百分之,
+degree,度,
+Fahrenheit,華氏,
+hour,小時,時
+minute,分鐘,分
+second,秒鐘,秒

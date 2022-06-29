@@ -1,4 +1,4 @@
-V,alias
+V,alias1,alias2
 largest,大
 smallest,小
 bright,亮
