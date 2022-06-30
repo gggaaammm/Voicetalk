@@ -2,7 +2,7 @@ Regaddr,device_name,device_feature,rule,min,max,unit_list,value_dict,
 20220501sp2,spotlight,Switch1,1,0,1,"[]","{'open':1, 'close':0}"
 20220501sp3,indirect light,Switch1,1,0,1,"[]","{'open':1, 'close':0}"
 20220501trilight,triangle light,Switch1,1,0,1,"[]","{'open':1, 'close':0}"
-20220501trilight,triangle light,Luminance-I,2,0,10,"[]","{'bright':9,'dark':1}"
+20220501trilight,triangle light,Luminance-I,2,0,10,"[]","{'bright':9,'dark':2}"
 20220501CHTLED,CHT LED,Switch1,1,0,1,"[]","{'open':1, 'close':0}"
 20220501CHTLED,CHT LED,Luminance-I,2,0,10,"['nit']","{'brigh':9,'dark':1}"
 20220501CAGLED,CAG LED,Switch1,1,0,1,"[]","{'open':1, 'close':0}"

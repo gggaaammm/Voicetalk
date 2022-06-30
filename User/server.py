@@ -98,8 +98,8 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         value,name, feature, device_queries = enspacy.textParse(sentence) #spacy function
     else:  # chinese
-        value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-        print("chinese not yet")
+        value,name, feature, device_queries = zhspacy.textParse(text) #spacy function
+#         value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
     
     #get all device query(ies) from the tokenlist
     #get all device query(ies) from the tokenlist

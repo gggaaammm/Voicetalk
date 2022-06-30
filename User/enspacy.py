@@ -57,6 +57,20 @@ def readDB():
     matcher.add("U", U)
 
     
+# ============ function spellCorrection ============
+# phone,van <-> fan
+# number to <-> number two
+# 
+def spellCorrection(sentence):
+    # read a correction table from db
+    df = pd.read_csv(r"dict/enUS/correction/correction.txt")
+    
+    # redirection
+    
+    
+    # new sentence as return
+    return sentence
+    
 # ============  function textParse(sentence) ============
 # main function of the spaCy, do the following:
 # 1. read Database

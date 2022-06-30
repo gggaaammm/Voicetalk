@@ -28,7 +28,14 @@
       
       var recognizing = false; // 是否辨識中 
 
-        
+      
+      //=============== funtion selectLanguage(event) =======================
+      // This function is triggered when dropdown menu of language list is selected
+      // 1. stop the recognition and empty all the fields(recognition result,systme response)
+      // 2. change the API's language setting
+      // 3. change the language of context of GUI  
+      // input: event driven  
+      // output: recognition.lang is changed  
       function selectLanguage(event){
           if(recognizing){recognition.stop();} //如果正在辨識, 就停止
           
@@ -48,12 +55,16 @@
               
           }else{
               infoBox.innerText = "按此開始"
-          }
-          
-         
-            
+          }      
         }
+      
         
+        
+      // ===== startButton(event)  =================
+      // This function is triggered when button on GUI is clicked
+      // 1. get the language value from the dropdown list
+      // 2. if system is recognizing, the button means stop, so stop the recognition
+      // 3. if system is not recognizing, the button means start, so start the rocognition  
       function startButton(event) {
         infoBox = document.getElementById("infoBox"); // 取得訊息控制項 infoBox
         recognitionBox = document.getElementById("recognitionBox"); // 取得最終的辨識訊息控制項 recognitionBox
@@ -81,7 +92,6 @@
 
         recognition.onstart = function() { // 開始辨識
           recognizing = true; // 設定為辨識中
-          // startStopButton.value = "按此停止"; // 辨識中...按鈕改為「按此停止」。  
           if(language == "en-US"){
               infoBox.innerText = "Tap to stop";  // 顯示訊息為「辨識中」...
           }else{
@@ -92,11 +102,10 @@
 
         recognition.onend = function() { // 辨識完成
           recognizing = false; // 設定為「非辨識中」
-          // startStopButton.value = "開始辨識";  // 辨識完成...按鈕改為「開始辨識」。
            if(language == "en-US"){
                infoBox.innerText = "Tap to start";  // 顯示訊息為
            }else{
-               infoBox.innerText = "按此開始"; // 不顯示訊息
+               infoBox.innerText = "按此開始"; 
            }
           startStopButton.src="{{ url_for('static', filename='images/stop.jpg') }}";
 
@@ -241,11 +250,6 @@
         window.onload = selectLanguage(event);
     </script>
       
-
-    
-      
-      
-    <script src="{{ url_for('static', filename='js/langswitch.js') }}" type="text/javascript"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
