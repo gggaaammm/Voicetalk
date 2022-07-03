@@ -1,8 +1,8 @@
-U,alias1,alias2
+U,alias1,alias2,alias3
 percent,百分之,
 degree,度,
 Fahrenheit,華氏,
-Celsius,攝氏
-hour,小時,時
+Celsius,攝氏,
+hour,小時,時,
 minute,分鐘,分
 second,秒鐘,秒

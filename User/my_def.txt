@@ -4,6 +4,11 @@
 # Angle(Rotation-I)
 percent = degree * 3.6
 
+#
+分 = minute
+秒 = second
+
+
 #### new SYSTEMS OF BASE UNITS: iottalk ####
 
 

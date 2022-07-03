@@ -1,6 +1,4 @@
 V,alias1,alias2
-largest,大
-smallest,小
 bright,亮
 dark,暗
 high,高,強

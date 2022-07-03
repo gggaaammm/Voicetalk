@@ -143,7 +143,7 @@
                                 case -4: renderhtml = "No value V found in the sentence"; break;
                                 case -5: renderhtml = "The number of value is not equal to the number of unit"; break;
                                 case -6: 
-                                    renderhtml = data.tokenlist[1] +" does not support "+data.tokenlist[3]; break;
+                                    renderhtml = data.name +" does not support "+data.feature; break;
                                 case -7: 
                                     renderhtml = "the value V is out of the range"; 
                                     // if some of the A exceed the range
@@ -160,17 +160,37 @@
                         }
                     }
                     else if(language == "cmn-Hant-TW"){
+                        console.log("data recieve", data)
+                        console.log("valid bit frontend", data.valid)
                         if(data.valid<0){
                             renderhtml = data.response+data.valid
                             switch(data.valid){
-                                case -2: renderhtml = "句子中未包含電器"
-                                case -3: renderhtml = "句子中未包含電器功能"
-                                case -4: renderhtml = "電器功能需要給予值"
-                                case -5: renderhtml = "電器不支援此功能"
+                                case -1: renderhtml = "A/D/F/V token數量過多"; break;
+                                case -2: renderhtml = "句子中未包含電器"; break;
+                                case -3: renderhtml = "句子中未包含電器功能"; break;
+                                case -4: renderhtml = "電器功能需要給予數值"; break;
+                                case -5: renderhtml = "單位個數錯誤"; break;
+                                case -6: renderhtml = data.name+" 不支援 "+data.feature; break;
+                                case -7: 
+                                    renderhtml = "不支援的數值: "+ data.tokenlist[3]; 
+                                    // if some of the A exceed the range
+                                    if(data.tokenlist[0] != ''){
+                                        renderhtml = data.tokenlist[1]+"不支援的數值"+data.tokenlist[3]
+                                    }
+                                    break;
+                                case -8: renderhtml = "此電器的功能不支援該單位"; break;
                             }
                         }
                         else{
-                            renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]
+                            if(data.value == ""){
+                                renderhtml = data.response+data.name+"即將"+data.feature
+                            }
+                            else{
+                                renderhtml = data.response+data.name+"的"+data.feature+"將設定為"+data.value
+                            }
+                            
+                            
+//                             renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]
                         }
                     }
                     

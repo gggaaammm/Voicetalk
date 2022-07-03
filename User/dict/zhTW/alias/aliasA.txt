@@ -1,4 +1,4 @@
-A,A_abs,A_syn1
+A,alias1,alias2
 Vfan,電扇,電風扇
 Vlight,燈,電燈
 Vcurtain,窗簾
