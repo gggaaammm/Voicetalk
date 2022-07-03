@@ -25,14 +25,14 @@ Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
  
 ### Added
-1. add the ckiptagger's module: POS and NER for number and unit handling
+1. add the ckiptagger's module: POS and NER for number and unit handling, it will increase the Data loading time from 4 sec to 25 sec
 2. chinese number redirection to number: use num_zh.txt
 ### Changed
- 
+1. [frontend] startmessage and stopmessage 
 
 ### Need Fix
 1. special case: "兩分鐘30秒" will ignore "30秒", but "兩分鐘"process successfully
-2.
+2. 
 
 
 ## [1.1.1] - 2022-07-01

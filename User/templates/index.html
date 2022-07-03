@@ -22,6 +22,8 @@
       var responseBox =   document.getElementById("responseBox");     //系統回覆
       var startStopButton; // 「開始/停止」按鈕
       var infoBox = document.getElementById("infoBox"); // 提示使用者的訊息
+      var startMessage = {"en-US":"Tap to start","cmn-Hant-TW":"按此開始"}  
+      var stopMessage = {"en-US":"Tap to stop","cmn-Hant-TW":"按此結束"}  
       var selectlangBox = document.getElementById("selectlangBox"); // 語言選擇的下拉式選單
       
 
@@ -48,16 +50,8 @@
           recognition.lang = language;   //辨識API切換至當前語言
           $("#recognitionTitle").html(recognitionTitle[language]) // 辨識欄位的標題切換至當前語言
           $("#responseTitle").html(responseTitle[language])       // 回應欄位的標題切換至當前語言
+          $("#infobox").html(startMessage[language])              // 提示使用者的訊息切換至當前語言
           
-          
-          if(language == "en-US"){    //提示使用者的訊息切換至當前語言
-              infoBox.innerText = "Tap to start"
-              
-          }else{
-              infoBox.innerText = "按此開始"
-          }      
-        }
-      
         
         
       // ===== startButton(event)  =================
@@ -92,6 +86,7 @@
 
         recognition.onstart = function() { // 開始辨識
           recognizing = true; // 設定為辨識中
+//           infoBox.innerText =  stopMessage[language]
           if(language == "en-US"){
               infoBox.innerText = "Tap to stop";  // 顯示訊息為「辨識中」...
           }else{
@@ -102,6 +97,7 @@
 
         recognition.onend = function() { // 辨識完成
           recognizing = false; // 設定為「非辨識中」
+//           infoBox.innerText = startMessage[language]  
            if(language == "en-US"){
                infoBox.innerText = "Tap to start";  // 顯示訊息為
            }else{
