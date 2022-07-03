@@ -4,8 +4,9 @@ import pandas as pd
 import json
 from threading import Thread
 import time, random, requests
-import DAN
-import unitconversion, enspacy, register, zhspacy
+import DAN, register
+import enspacy as US
+import zhspacy as TW
 # import zhckip #uncomment later
 
 # define error message format:
@@ -44,10 +45,10 @@ def index():
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
             enspacy.readDB()
-            value,name, feature, device_queries = enspacy.textParse(text) #spacy function
+            value,name, feature, device_queries = US.textParse(text) #spacy function
         else:  # chinese
             #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-            value,name, feature, device_queries = zhspacy.textParse(text) #spacy function
+            value,name, feature, device_queries = TW.textParse(text) #spacy function
             print("chinese not yet")
         
         
@@ -96,10 +97,10 @@ def ProcessSentence():
     print("voice sentence: ", sentence) #data should be decoded from bytestrem to utf-8
     
     if(language == 'en-US'): #English
-        value,name, feature, device_queries = enspacy.textParse(sentence) #spacy function
+        value,name, feature, device_queries = US.textParse(sentence) #spacy function
     else:  # chinese
-        value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-        print("chinese not yet")
+        value,name, feature, device_queries = TW.textParse(sentence) #spacy function
+#         value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
     
     #get all device query(ies) from the tokenlist
     #get all device query(ies) from the tokenlist
@@ -158,6 +159,8 @@ def sendIot(device_queries):
                 DAN.profile['dm_name'] = df.iloc[0]['device_model']
                 DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
                 DAN.device_registration_with_retry(ServerURL, Regaddr)
+                #turn on the device
+                DAN.push('Switch1',1)
 
                 print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
                 print("device feature", F)
@@ -184,6 +187,8 @@ def sendIot(device_queries):
             DAN.profile['dm_name'] = df.iloc[0]['device_model']
             DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
             DAN.device_registration_with_retry(ServerURL, Regaddr)
+            #turn on the device
+            DAN.push('Switch1',1)
             
             print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
             if(F == 'Luminance-I' or F == 'ColorTemperature-I'):

@@ -57,6 +57,18 @@ def readDB():
     matcher.add("U", U)
 
     
+# ============ function spellCorrection ============
+# phone,van <-> fan
+# number to <-> number two
+# 
+def spellCorrection(sentence):
+    # read a correction table from db
+    df = pd.read_csv(r"dict/enUS/correction/correction.txt")
+    
+    # redirection
+    # new sentence as return
+    return sentence
+    
 # ============  function textParse(sentence) ============
 # main function of the spaCy, do the following:
 # 1. read Database
@@ -71,6 +83,8 @@ def readDB():
 
 def textParse(sentence):
     sentence = sentence.lower() # lower all the chracters in sentence
+    # spell correction
+    sentence = spellCorrection(sentence)
     
     readDB() # read database
     tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
@@ -151,8 +165,8 @@ def textParse(sentence):
     # check if number of tokens is enough.
     # if not enough, token[4] will record error id
     
-    if(bool(token[0]!="") ^ bool(token[1]!="")): #check either A or D exist
-        if(token[2]!=""):                        #check if F exist
+    if(bool(token[0]!="") ^ bool(token[1]!="")): # check either A or D exist
+        if(token[2]!=""):                        # check if F exist
             rule = ruleLookup(token[2])          # lookup rule by F
             token[4] = rule                      # token[4] record rule
             if(token[3]=="" and rule==2):        # check if V(for rule2) exist

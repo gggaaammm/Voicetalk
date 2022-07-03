@@ -1,12 +1,12 @@
-D,D_abs,D_syn1,D_syn2,D_syn3,D_syn4
-fluorescent lamp,日光燈,電燈一,1號電燈
-CHT LED,電燈二,2號電燈
-CAG LED,電燈三,3號電燈
+D,alias1,alias2,alias3,alias4,alias5
+fluorescent lamp,日光燈,電燈一,1號電燈,一號電燈
+CHT LED,電燈二,2號電燈,二號電燈
+CAG LED,電燈三,3號電燈,三號電燈
 spot light,投射光,投射燈
 triangle light,三角燈,三角形燈
 indirect light,間接照明
-tatung fan,大同電扇,1號電扇,電扇一
-chimei fan,奇美電扇,2號電扇,電扇二
+tatung fan,大同電扇,1號電扇,電扇一,一號電扇
+chimei fan,奇美電扇,2號電扇,電扇二,二號電扇
 curtain1,1號窗簾,左邊的窗簾,窗簾一
 curtain2,2號窗簾,中間的窗簾,窗簾二
 curtain3,3號窗簾,右邊的窗簾,窗簾三

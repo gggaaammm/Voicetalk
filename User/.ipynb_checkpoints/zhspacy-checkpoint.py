@@ -19,7 +19,13 @@ matcher = PhraseMatcher(nlp.vocab)
 
 # 1. a word segmentation before token classify(must)
 from ckiptagger import data_utils, construct_dictionary, WS, POS, NER
-ws = WS("./data")
+start = time.time()
+ws = WS("./data")   # word segmentation need 4 seconds
+pos = POS("./data")
+ner = NER("./data")
+
+end = time.time()
+print("loading time: ", end-start)
 # 2. a special use of quantity managing(chosen)
 
 #======= function readDB() ========
@@ -86,7 +92,13 @@ def textParse(sentence):
         dict_for_CKIP.update( dict((el,1) for el in alias_list) )
 
     dict_for_CKIP = construct_dictionary(dict_for_CKIP)
-    word_list = ws([sentence], coerce_dictionary=dict_for_CKIP)
+    word_list = ws([sentence], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
+    pos_list = pos(word_list)
+    entity_list = ner(word_list, pos_list)
+    print("[ckip pos]", pos_list)
+    print("[ckip entity]", entity_list)
+    
+    
     sentence_space = ' '.join(word_list[0])
     print("[segmentation]", sentence_space)
     
@@ -121,23 +133,56 @@ def textParse(sentence):
     # ===========================  value handling start=================================
     # check if sentence contains number, before sentence redirecting
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
-#     sentence = sentence.replace(tokendict['A'], "")
-    sentence = sentence.replace(tokendict['D'], "")
-#     sentence = sentence.replace(tokendict['F'], "")
-    
+
+    sentence_space = sentence_space.replace(tokendict['D'], "")
     sentence_value = tokendict['V']
+    
+    
+  # ========================== chinese number handling =========================
+    
+    
+    word_list = ws([sentence_space], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
+    pos_list = pos(word_list)
+    entity_list = ner(word_list, pos_list)
+    print("[ckip space]", pos_list)
+    print("[ckip space]", entity_list)
+    # in entity list , we only find out 1. cardianl 2. quanity 3. time
+    entity_list = list(entity_list)
+    print("[value list]", entity_list[0])
+    for entity in entity_list[0]:
+        print("[entity]", entity, type(entity))
+        entity = list(entity)
+        if(entity[2] == 'QUANTITY' or entity[2] == 'TIME' or entity[2] == 'CARDINAL' or entity[2] == 'ORDINAL' ):
+            tokendict['V'] = handleValue(entity[3])
+        else:
+            print("not the thing i need to find")
+        
+    # last , we use handlevalue to calculate the value
+    
+    # =======================chinese number handling end ===============
+    
+    
+    
     
     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
         sentence_value = tokendict['V']  # save device name before alias redirect
+        print("[numerizer] already have something in V")
         pass
     else:
-        value_doc = nlp(sentence) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
-        print("value detect", value_doc._.numerize())
+        value_doc = nlp(sentence_space) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
+        print("value detect", value_doc._.numerize(), "in", sentence_space)
+        df = pd.read_csv("dict/zhTW/num_zh.txt")
         if(len(value_doc._.numerize()) > 0): # if V is recognized as numeric strings, save it as a string of quantity 
             quantity = list(value_doc._.numerize().values())
             sentence_value = quantity
-            tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue() 
+            print("[numerizer]quantity", quantity)
+            #examine which chinese number need to be detected
+            tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue()
+        
     # ===========================  value handling end =================================
+    
+    
+
 
     sentence_feature = tokendict['F']     # save feature name before alias redirect
     sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
@@ -276,7 +321,7 @@ def valueCheck(tokenlist, feature): #issue give value
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
         df2 = pd.read_csv('dict/zhTW/alias/aliasF.txt')
-        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) | (df2['alias3']==feature)]
+        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) |  (df2['alias3']==feature)]
         feature = df2.iloc[0]['alias1']
         #feature change to absolute device feature('open'/'close')
         
@@ -390,12 +435,21 @@ def valueCheck(tokenlist, feature): #issue give value
 # return value: quantitylist[0] or handleUnit(quantitylist)
 
 def handleValue(quantity):
-    print("quantity: ",quantity)
+    print("[handleValue] quantity: ",quantity)
     quantitylist = quantity.split(' ') # split a string into list
+    df = pd.read_csv("dict/zhTW/num_zh.txt")
+    
     
     if(len(quantitylist) == 1):
         print("only value")
-        return int(quantitylist[0])
+        value = quantitylist[0]
+        #cannot find number, so we choose chinese
+        if(value.isdigit() == False):
+            print("it is a chinese number")
+            df = df.loc[(df['text1'] == value) | (df['text2'] == value)]
+            value = df.iloc[0]['value']
+        print("value", value)
+        return int(value)
     else:
         return handleUnit(quantitylist)
 
@@ -408,7 +462,8 @@ def handleValue(quantity):
 def handleUnit(quantitylist): # use Pint package for unit hanlding 
     ureg = UnitRegistry()     # new a unit module
     Q_ = ureg.Quantity        # define a quantity element quantity = (value, unit)
-    
+    df = pd.read_csv(r"dict/zhTW/alias/aliasU.txt")
+    df_n = pd.read_csv(r"dict/zhTW/num_zh.txt")
     #(issue)get base unit from iottalk define
     ureg.load_definitions('my_def.txt')
     ureg.default_system = 'iottalk'
@@ -418,8 +473,13 @@ def handleUnit(quantitylist): # use Pint package for unit hanlding
     if(len(quantitylist)%2 == 0):
         print("is by 2")
         for q_id in range(0, len(quantitylist),2):
+            # redirection must be applied before unit calculation
+            df_U = df.loc[(df['alias1'] == quantitylist[q_id+1]) | (df['alias2'] == quantitylist[q_id+1]) | (df['alias3'] == quantitylist[q_id+1])]
+            quantitylist[q_id+1] = df_U.iloc[0]['U']
+            df_N = df_n.loc[(df_n['text1'] == quantitylist[q_id]) | (df_n['text2'] == quantitylist[q_id])]
+            quantitylist[q_id] = df_N.iloc[0]['value']
             value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
-        print("base unit value changed:", value)
+        print("[pint] base unit value:", value)
         return value
     else:
         print("error: is not by 2")
