@@ -93,17 +93,18 @@ def textParse(sentence):
     # user matcher(doc) to classify words to tokens
     # unclassified word will be thrown away
     
-    doc = nlp(sentence)  
-    matches = matcher(doc)
-    for match_id, start, end in matches:
-        token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
-        span = doc[start:end]                   # get the object of word insentence
+    tokendict, token = tokenClassifier(sentence)
+#     doc = nlp(sentence)  
+#     matches = matcher(doc)
+#     for match_id, start, end in matches:
+#         token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
+#         span = doc[start:end]                   # get the object of word insentence
     
-        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
-            tokendict[token_id] = span.text     # insert key and value in tokendict
-        else:
-            print("too much element in one token!") # error message #1: too much token
-            token[4] = -1                           # store error bit in token[4](rule/error bit)
+#         if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
+#             tokendict[token_id] = span.text     # insert key and value in tokendict
+#         else:
+#             print("too much element in one token!") # error message #1: too much token
+#             token[4] = -1                           # store error bit in token[4](rule/error bit)
     # ====================   tokenclassifier end ===================================
     
     
@@ -113,9 +114,8 @@ def textParse(sentence):
 #     sentence = sentence.replace(tokendict['A'], "")
     sentence = sentence.replace(tokendict['D'], "")
 #     sentence = sentence.replace(tokendict['F'], "")
-    
-    sentence_value = tokendict['V']
-    
+    sentence_value = tokendict['V']  # save device name before alias redirect
+
     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
         sentence_value = tokendict['V']  # save device name before alias redirect
         pass
@@ -135,19 +135,21 @@ def textParse(sentence):
     
     # ============================ alias redirection ================================
     # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
-    path = r"dict/enUS/alias/" #  path for synonym
-    all_files = glob.glob(os.path.join(path , "*.txt"))
-    for filename in all_files:
-        sublist = []
-        df = pd.read_csv(filename)
-        #redirect A,D,F to device_model, device_name, device_feature individually
-        #redirect V,U to default_value_name, unit_name
-        for column in df.columns:
-            df_abs = df.loc[(df[column] == tokendict[filename[21]])]
-            if(len(df_abs.index)>0):
-                tokendict[filename[21]] = df_abs.iloc[0][0]
+    
+    token = aliasRedirection(tokendict, token)
+#     path = r"dict/enUS/alias/" #  path for synonym
+#     all_files = glob.glob(os.path.join(path , "*.txt"))
+#     for filename in all_files:
+#         sublist = []
+#         df = pd.read_csv(filename)
+#         #redirect A,D,F to device_model, device_name, device_feature individually
+#         #redirect V,U to default_value_name, unit_name
+#         for column in df.columns:
+#             df_abs = df.loc[(df[column] == tokendict[filename[21]])]
+#             if(len(df_abs.index)>0):
+#                 tokendict[filename[21]] = df_abs.iloc[0][0]
                 
-    token = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], token[4]]
+#     token = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], token[4]]
     #============================ alias redirection end =================================
 
     # eliminate A if both AD exist
@@ -159,16 +161,17 @@ def textParse(sentence):
     # check if number of tokens is enough.
     # if not enough, token[4] will record error id
     
-    if(bool(token[0]!="") ^ bool(token[1]!="")): # check either A or D exist
-        if(token[2]!=""):                        # check if F exist
-            rule = ruleLookup(token[2])          # lookup rule by F
-            token[4] = rule                      # token[4] record rule
-            if(token[3]=="" and rule==2):        # check if V(for rule2) exist
-                token[4]=-4                   # error message #4: device feature need value
-        else:
-            token[4]=-3                       # error message #3: no feature found in sentence 
-    else:
-        token[4]=-2                           # error message #2: no device found in sentence    
+    token[4] = tokenValidation(token)
+#     if(bool(token[0]!="") ^ bool(token[1]!="")): # check either A or D exist
+#         if(token[2]!=""):                        # check if F exist
+#             rule = ruleLookup(token[2])          # lookup rule by F
+#             token[4] = rule                      # token[4] record rule
+#             if(token[3]=="" and rule==2):        # check if V(for rule2) exist
+#                 token[4]=-4                   # error message #4: device feature need value
+#         else:
+#             token[4]=-3                       # error message #3: no feature found in sentence 
+#     else:
+#         token[4]=-2                           # error message #2: no device found in sentence    
     
     # =========================== number of token validation end =======================================    
     
@@ -193,6 +196,78 @@ def textParse(sentence):
     print("[final] before send to iottalk,", "\ndevice query", device_queries)
     return sentence_value, sentence_device_name, sentence_feature, device_queries
         
+
+    
+    
+    
+# ======== tokenClassifer(tokendict, token) ============
+# use nlp() to process sentence and matcher() to match each word to the token 
+# token that cannot be matched will be thrown away
+# token that can be matched will store in tokendict{'A', 'D', 'F', 'V', 'U'}
+# token[4] will record -1 if too many tokens in a sentence
+# input parameter: sentence, tokendict(empty), token(empty)
+# return: tokendict, token
+
+def tokenClassifier(sentence):
+    tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
+    token = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
+    doc = nlp(sentence)
+    matches = matcher(doc)
+    for match_id, start, end in matches:
+        token_id = nlp.vocab.strings[match_id]  # get the token ID from matches token, i.e. 'A', 'D', 'F', 'V', 'U'
+        span = doc[start:end]                   # get the object of word insentence
+        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is undefined or tokendict has same value
+            tokendict[token_id] = span.text     # insert key and value in tokendict
+        else:
+            print("too much element in one token!") # error message #1: too much token
+            token[4] = -1
+    return tokendict, token    
+
+
+
+
+
+
+# ======= aliasRedirection(tokendict, token) =============
+# redirect all the alias(A/D/F/V) to deivce_model, device_name, device_feature, value_name
+# input: tokendict, token
+# return: token
+
+def aliasRedirection(tokendict, token):
+    path = r"dict/enUS/alias/" #  path for synonym
+    all_files = glob.glob(os.path.join(path , "*.txt"))
+    for filename in all_files:
+        sublist = []
+        df = pd.read_csv(filename)
+        #redirect A,D,F to device_model, device_name, device_feature individually
+        #redirect V,U to default_value_name, unit_name
+        for column in df.columns:
+            df_abs = df.loc[(df[column] == tokendict[filename[21]])]
+            if(len(df_abs.index)>0):
+                tokendict[filename[21]] = df_abs.iloc[0][0]
+                
+    token = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], token[4]]
+    return token
+
+# ======= tokenValidation(token)  ========
+# check if the number of token is valid
+# token[4] will record rule if number of each token is enough
+# token[4] will record error if number of each token is not enough
+def tokenValidation(token):
+    if(bool(token[0]!="") ^ bool(token[1]!="")): # check either A or D exist
+        if(token[2]!=""):                        # check if F exist
+            rule = ruleLookup(token[2])          # lookup rule by F
+            token[4] = rule                      # token[4] record rule
+            if(token[3]=="" and rule==2):        # check if V(for rule2) exist
+                token[4]=-4                   # error message #4: device feature need value
+        else:
+            token[4]=-3                       # error message #3: no feature found in sentence 
+    else:
+        token[4]=-2                           # error message #2: no device found in sentence
+        
+    return token[4]
+
+
 
 # ======= ruleLookup(feature) =======
 # read the Table: DevicefeatureTable.txt

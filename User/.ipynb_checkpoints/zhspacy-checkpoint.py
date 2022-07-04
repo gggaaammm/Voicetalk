@@ -115,6 +115,7 @@ def textParse(sentence):
     # user matcher(doc) to classify words to tokens
     # unclassified word will be thrown away
     
+
     doc = nlp(sentence_space)  
     matches = matcher(doc)
     for match_id, start, end in matches:
@@ -249,12 +250,34 @@ def textParse(sentence):
     print("[final] before send to iottalk,", "\ndevice query", device_queries)
     return sentence_value, sentence_device_name, sentence_feature, device_queries
         
+# ======== tokenClassifer(tokendict, token) ============
+# use matcher() to match each word to the token 
+# token that cannot be matched will be thrown away
+# input parameter: sentence, tokendict, token
+# return: tokendict, token
 
+def tokenClassifier(sentence, tokendict, token):
+    doc = nlp(sentence)
+    matches = matcher(doc)
+    for match_id, start, end in matches:
+        token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
+        span = doc[start:end]                   # get the object of word insentence
+        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
+            tokendict[token_id] = span.text     # insert key and value in tokendict
+        else:
+            print("too much element in one token!") # error message #1: too much token
+            token[4] = -1
+    return tokendict, token
+    
+    
+    
+    
+    
 # ======= ruleLookup(feature) =======
 # read the Table: DevicefeatureTable.txt
 # look up the rule of the device feature and return rule number
 # input parameter: feature(device_feature_name)
-# return value: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
+# return: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
     
 def ruleLookup(feature): #check rule by feature
     # rulelookup will read DevicefeatureTable.txt

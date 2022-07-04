@@ -40,7 +40,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'zh-TW'
+        language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
