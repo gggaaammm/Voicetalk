@@ -321,7 +321,7 @@ def valueCheck(tokenlist, feature): #issue give value
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
         df2 = pd.read_csv('dict/zhTW/alias/aliasF.txt')
-        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) |  (df2['alias3']==feature)]
+        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) |  (df2['alias3']==feature) | (df2['alias4']==feature)]
         feature = df2.iloc[0]['alias1']
         #feature change to absolute device feature('open'/'close')
         

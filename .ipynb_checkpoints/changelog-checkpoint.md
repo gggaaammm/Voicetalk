@@ -2,37 +2,38 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2022-07-02
+## [Unreleased] - 2022-07-XX
  
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
  
 ### Added
-- [PROJECTNAME-XXXX](http://tickets.projectname.com/browse/PROJECTNAME-XXXX)
-  MINOR Ticket title goes here.
-- [PROJECTNAME-YYYY](http://tickets.projectname.com/browse/PROJECTNAME-YYYY)
-  PATCH Ticket title goes here.
- 
+
 ### Changed
  
 ### Fixed
 
 
 
-## [Unreleased] - 2022-07-03
+## [1.1.2] - 2022-07-03
  
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
  
 ### Added
-1. add the ckiptagger's module: POS and NER for number and unit handling, it will increase the Data loading time from 4 sec to 25 sec
+1. add the ckiptagger's module: POS and NER back for number and unit handling, it will increase the Data loading time from 4 sec to 25 sec
 2. chinese number redirection to number: use num_zh.txt
+
 ### Changed
-1. [frontend] startmessage and stopmessage 
+1. [frontend](https://github.com/gggaaammm/Voicetalk/blob/v2/User/templates/index.html) startmessage and stopmessage 
 
 ### Need Fix
-1. special case: "兩分鐘30秒" will ignore "30秒", but "兩分鐘"process successfully
-2. 
+1. [ZHTW](https://github.com/gggaaammm/Voicetalk/blob/v2/User/zhspacy.py) special case: "兩分鐘30秒" will ignore "30秒", but "兩分鐘"process successfully
+2. [ZHTW](https://github.com/gggaaammm/Voicetalk/blob/v2/User/zhspacy.py) 錯字校正: 風速到吧 -> 風速到8; 風速到時->風速到10
+3. [ENUS](https://github.com/gggaaammm/Voicetalk/blob/v2/User/enspacy.py) len(value_doc._.numerize()) > 1的狀況
+4. [ENUS](https://github.com/gggaaammm/Voicetalk/blob/v2/User/enspacy.py) value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units() 錯誤處理
+5. [ENUS](https://github.com/gggaaammm/Voicetalk/blob/v2/User/enspacy.py) Spell correction: number 'to'
+
 
 
 ## [1.1.1] - 2022-07-01
@@ -56,20 +57,11 @@ straightforward as possible.
 Here we would have the update steps for 1.1.0 for people to follow.
  
 ### Added
-add ckip word segmentation
+1. add ckip word segmentation
  
 ### Changed
-ckip now only use WS(word segmentation), POS and NER are removed
-
-### future work
- 
+1. ckip now only use WS(word segmentation), POS and NER are removed to reduce loading time
 
  
-## [1.0.9] - 2022-06-27
- 
-### Added
 
-### Changed
- 
-### Fixed
  

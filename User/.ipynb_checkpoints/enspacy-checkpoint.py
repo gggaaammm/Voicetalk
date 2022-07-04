@@ -83,15 +83,9 @@ def spellCorrection(sentence):
 
 def textParse(sentence):
     sentence = sentence.lower() # lower all the chracters in sentence
-    # spell correction
-    sentence = spellCorrection(sentence)
-    
     readDB() # read database
     tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
-    
-    # new a list: token
-    token = ['','','','',''] #token[4] store rule/error bits, 
-    
+    token = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
     device_queries = [[0]*5]*1 # init a device query(ies) which will send to devicetalk at the end of function
     
     
@@ -231,7 +225,7 @@ def supportCheck(tokenlist):
     F = tokenlist[2]
     # read device info in DeviceTable.txt
     df = pd.read_csv('dict/DeviceTable.txt')
-    DeviceTable = readDeviceTable(A,D,F)
+    DeviceTable = readDeviceTable(A,D)
     
     if(D!=''):  #check if D supports F
         print("spotlight Device table check",DeviceTable )
@@ -436,12 +430,27 @@ def checkMinMax(D,F, V): #check min max only for rule 2,
         return 2     # return 2 as rule 2
 
 #
+def findAlias(feature):
+    df = pd.read_csv('dict/enUS/alias/aliasF.txt')
+    df = df.loc[ (df['alias1']==feature) | (df['alias2']==feature) | (df['alias3']==feature) ]
+    return df.iloc[0]['alias1']                               
+
+    
+    
+#
 def findinfo(D,F):
     df = pd.read_csv('dict/DevicefeatureTable.txt')
     df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
     return df
 
-def readDeviceTable(A,D,F):
+def findDeviceList(A):
+    df = pd.read_csv('dict/DeviceTable.txt')
+    df = df.loc[df['device_model'] == A]
+    device_list =  list(df['device_name'])
+    return device_list
+
+
+def readDeviceTable(A,D):
     df = pd.read_csv('dict/DeviceTable.txt')
     if(D != ""):
         df = df.loc[df['device_name']== D]

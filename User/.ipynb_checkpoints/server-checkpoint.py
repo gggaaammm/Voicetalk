@@ -44,7 +44,7 @@ def index():
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
-            enspacy.readDB()
+            #enspacy.readDB()
             value,name, feature, device_queries = US.textParse(text) #spacy function
         else:  # chinese
             #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
