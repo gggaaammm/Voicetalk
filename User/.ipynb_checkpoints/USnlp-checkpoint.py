@@ -1,10 +1,10 @@
 import spacy
 import ast
+import DAN #???
 import pandas as pd
 import sqlite3
 import time # time measure
 import os
-import sys
 import glob # for reading multi files
 import re # for number finding
 #import the phrase matcher
@@ -12,21 +12,11 @@ from numerizer import numerize
 from spacy.matcher import PhraseMatcher
 from pint import UnitRegistry
 #load a model and create nlp object
-nlp = spacy.load("zh_core_web_sm")
+nlp = spacy.load("en_core_web_sm")
 #initilize the matcher with a shared vocab
 matcher = PhraseMatcher(nlp.vocab)
-# aside from english, chinese need some changes
 
-# 1. a word segmentation before token classify(must)
-from ckiptagger import data_utils, construct_dictionary, WS, POS, NER
-start = time.time()
-ws = WS("./data")   # word segmentation need 4 seconds
-pos = POS("./data")
-ner = NER("./data")
 
-end = time.time()
-print("loading time: ", end-start)
-# 2. a special use of quantity managing(chosen)
 
 #======= function readDB() ========
 # in this function, program read files at the path "./dict/enUS/alias/"
@@ -37,7 +27,7 @@ print("loading time: ", end-start)
 
 def readDB():
     #create the list of alias to match
-    path = r"dict/zhTW/alias/"                          #  path for alias
+    path = r"dict/enUS/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
     aliasDict={}                                        # create a dictionary of alias A/D/F/V/U
 
@@ -67,20 +57,17 @@ def readDB():
     matcher.add("U", U)
 
     
-    return aliasDict.values()
-
-# ========= chinese number redirection(word) ========
-def chinese_redirection(wordlist):
-    df = pd.read_csv("dict/zhTW/num_zh.txt")
-    for idx in range(len(wordlist)):
-        zh_df = df.loc[(df['text1'] == wordlist[idx]) | (df['text2'] == wordlist[idx]) ]
-        if(len(zh_df.index)>0):
-            print("[chinese] number", wordlist[idx])
-            wordlist[idx] = str(zh_df.iloc[0]['value'])
-            print("redirection", wordlist[idx])
-    return wordlist
-
-
+# ============ function spellCorrection ============
+# phone,van <-> fan
+# number to <-> number two
+# 
+def spellCorrection(sentence):
+    # read a correction table from db
+    df = pd.read_csv(r"dict/enUS/correction/correction.txt")
+    
+    # redirection
+    # new sentence as return
+    return sentence
     
 # ============  function textParse(sentence) ============
 # main function of the spaCy, do the following:
@@ -95,37 +82,10 @@ def chinese_redirection(wordlist):
     
 
 def textParse(sentence):
-    # in chinese, do word segmentation before nlp
-    
-    
-    alias_list_dict = readDB() # read database
-    dict_for_CKIP = {}
-    for alias_list in alias_list_dict:
-        dict_for_CKIP.update( dict((el,1) for el in alias_list) )
-
-    dict_for_CKIP = construct_dictionary(dict_for_CKIP)
-    word_list = ws([sentence], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
-    pos_list = pos(word_list)
-    entity_list = ner(word_list, pos_list)
-    print("[ckip pos]", pos_list)
-    print("[ckip entity]", entity_list)
-    
-    # do chinese number redirection before sentence is joined
-    wordlist = word_list[0]
-    print("old [wordlist]", wordlist)
-    wordlist = chinese_redirection(wordlist)
-    
-    print("new [wordlist]", wordlist)
-    sentence_space = ' '.join(wordlist)
-    print("[segmentation]", sentence_space)
-    
-    
-    
+    sentence = sentence.lower() # lower all the chracters in sentence
+    readDB() # read database
     tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
-    
-    # new a list: token
-    token = ['','','','',''] #token[4] store rule/error bits, 
-    
+    token = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
     device_queries = [[0]*5]*1 # init a device query(ies) which will send to devicetalk at the end of function
     
     
@@ -133,75 +93,30 @@ def textParse(sentence):
     # user matcher(doc) to classify words to tokens
     # unclassified word will be thrown away
     
+    tokendict, token = tokenClassifier(sentence)
 
-    doc = nlp(sentence_space)  
-    matches = matcher(doc)
-    for match_id, start, end in matches:
-        token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
-        span = doc[start:end]                   # get the object of word insentence
-        print("token_id", token_id, "text", span.text)
-    
-        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
-            tokendict[token_id] = span.text     # insert key and value in tokendict
-        else:
-            print("too much element in one token!") # error message #1: too much token
-            token[4] = -1                           # store error bit in token[4](rule/error bit)
     # ====================   tokenclassifier end ===================================
     
     
     # ===========================  value handling start=================================
     # check if sentence contains number, before sentence redirecting
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
+#     sentence = sentence.replace(tokendict['A'], "")
+    sentence = sentence.replace(tokendict['D'], "")
+#     sentence = sentence.replace(tokendict['F'], "")
+    sentence_value = tokendict['V']  # save device name before alias redirect
 
-    sentence_space = sentence_space.replace(tokendict['D'], "")
-    sentence_value = tokendict['V']
-    
-    
-  # ========================== chinese number handling =========================
-    
-    
-    word_list = ws([sentence_space], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
-    pos_list = pos(word_list)
-    entity_list = ner(word_list, pos_list)
-    print("[ckip space]", pos_list)
-    print("[ckip space]", entity_list)
-    # in entity list , we only find out 1. cardianl 2. quanity 3. time
-    entity_list = list(entity_list)
-    print("[value list]", entity_list[0])
-    for entity in entity_list[0]:
-        print("[entity]", entity, type(entity))
-        entity = list(entity)
-        if(entity[2] == 'QUANTITY' or entity[2] == 'TIME' or entity[2] == 'CARDINAL' or entity[2] == 'ORDINAL' ):
-            tokendict['V'] = handleValue(entity[3])
-        else:
-            print("not the thing i need to find")
-        
-    # last , we use handlevalue to calculate the value
-    
-    # =======================chinese number handling end ===============
-    
-    
-    
-    
     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
         sentence_value = tokendict['V']  # save device name before alias redirect
-        print("[numerizer] already have something in V")
         pass
     else:
-        value_doc = nlp(sentence_space) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
-        print("value detect", value_doc._.numerize(), "in", sentence_space)
-        df = pd.read_csv("dict/zhTW/num_zh.txt")
-        if(len(value_doc._.numerize()) > 0): # if V is recognized as numeric strings, save it as a string of quantity 
+        value_doc = nlp(sentence) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
+        print("value detect", value_doc._.numerize())
+        if(len(value_doc._.numerize())== 1): # if V is recognized as numeric strings, save it as a string of quantity 
             quantity = list(value_doc._.numerize().values())
             sentence_value = quantity
-            print("[numerizer]quantity", quantity)
-            #examine which chinese number need to be detected
-            tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue()
-        
+            tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue() 
     # ===========================  value handling end =================================
-    
-    
-
 
     sentence_feature = tokendict['F']     # save feature name before alias redirect
     sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
@@ -210,19 +125,9 @@ def textParse(sentence):
     
     # ============================ alias redirection ================================
     # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
-    path = r"dict/zhTW/alias/" #  path for synonym
-    all_files = glob.glob(os.path.join(path , "*.txt"))
-    for filename in all_files:
-        sublist = []
-        df = pd.read_csv(filename)
-        #redirect A,D,F to device_model, device_name, device_feature individually
-        #redirect V,U to default_value_name, unit_name
-        for column in df.columns:
-            df_abs = df.loc[(df[column] == tokendict[filename[21]])]
-            if(len(df_abs.index)>0):
-                tokendict[filename[21]] = df_abs.iloc[0][0]
-                
-    token = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], token[4]]
+    
+    token = aliasRedirection(tokendict, token)
+
     #============================ alias redirection end =================================
 
     # eliminate A if both AD exist
@@ -234,16 +139,7 @@ def textParse(sentence):
     # check if number of tokens is enough.
     # if not enough, token[4] will record error id
     
-    if(bool(token[0]!="") ^ bool(token[1]!="")): #check either A or D exist
-        if(token[2]!=""):                        #check if F exist
-            rule = ruleLookup(token[2])          # lookup rule by F
-            token[4] = rule                      # token[4] record rule
-            if(token[3]=="" and rule==2):        # check if V(for rule2) exist
-                token[4]=-4                   # error message #4: device feature need value
-        else:
-            token[4]=-3                       # error message #3: no feature found in sentence 
-    else:
-        token[4]=-2                           # error message #2: no device found in sentence    
+    token[4] = tokenValidation(token)
     
     # =========================== number of token validation end =======================================    
     
@@ -266,36 +162,86 @@ def textParse(sentence):
 
     saveLog(sentence, token)   # save logs
     print("[final] before send to iottalk,", "\ndevice query", device_queries)
-    return sentence_value, sentence_device_name, sentence_feature, device_queries
+    return  sentence_device_name, sentence_feature, sentence_value, device_queries
         
+
+    
+    
+    
 # ======== tokenClassifer(tokendict, token) ============
-# use matcher() to match each word to the token 
+# use nlp() to process sentence and matcher() to match each word to the token 
 # token that cannot be matched will be thrown away
-# input parameter: sentence, tokendict, token
+# token that can be matched will store in tokendict{'A', 'D', 'F', 'V', 'U'}
+# token[4] will record -1 if too many tokens in a sentence
+# input parameter: sentence, tokendict(empty), token(empty)
 # return: tokendict, token
 
-def tokenClassifier(sentence, tokendict, token):
+def tokenClassifier(sentence):
+    tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
+    token = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
     doc = nlp(sentence)
     matches = matcher(doc)
     for match_id, start, end in matches:
-        token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
+        token_id = nlp.vocab.strings[match_id]  # get the token ID from matches token, i.e. 'A', 'D', 'F', 'V', 'U'
         span = doc[start:end]                   # get the object of word insentence
-        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is  undefined or tokendict has same value
+        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is undefined or tokendict has same value
             tokendict[token_id] = span.text     # insert key and value in tokendict
         else:
             print("too much element in one token!") # error message #1: too much token
             token[4] = -1
-    return tokendict, token
-    
-    
-    
-    
-    
+    return tokendict, token    
+
+
+
+
+
+
+# ======= aliasRedirection(tokendict, token) =============
+# redirect all the alias(A/D/F/V) to deivce_model, device_name, device_feature, value_name
+# input: tokendict, token
+# return: token
+
+def aliasRedirection(tokendict, token):
+    path = r"dict/enUS/alias/" #  path for synonym
+    all_files = glob.glob(os.path.join(path , "*.txt"))
+    for filename in all_files:
+        sublist = []
+        df = pd.read_csv(filename)
+        #redirect A,D,F to device_model, device_name, device_feature individually
+        #redirect V,U to default_value_name, unit_name
+        for column in df.columns:
+            df_abs = df.loc[(df[column] == tokendict[filename[21]])]
+            if(len(df_abs.index)>0):
+                tokendict[filename[21]] = df_abs.iloc[0][0]
+                
+    token = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], token[4]]
+    return token
+
+# ======= tokenValidation(token)  ========
+# check if the number of token is valid
+# token[4] will record rule if number of each token is enough
+# token[4] will record error if number of each token is not enough
+def tokenValidation(token):
+    if(bool(token[0]!="") ^ bool(token[1]!="")): # check either A or D exist
+        if(token[2]!=""):                        # check if F exist
+            rule = ruleLookup(token[2])          # lookup rule by F
+            token[4] = rule                      # token[4] record rule
+            if(token[3]=="" and rule==2):        # check if V(for rule2) exist
+                token[4]=-4                   # error message #4: device feature need value
+        else:
+            token[4]=-3                       # error message #3: no feature found in sentence 
+    else:
+        token[4]=-2                           # error message #2: no device found in sentence
+        
+    return token[4]
+
+
+
 # ======= ruleLookup(feature) =======
 # read the Table: DevicefeatureTable.txt
 # look up the rule of the device feature and return rule number
 # input parameter: feature(device_feature_name)
-# return: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
+# return value: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
     
 def ruleLookup(feature): #check rule by feature
     # rulelookup will read DevicefeatureTable.txt
@@ -322,7 +268,7 @@ def supportCheck(tokenlist):
     F = tokenlist[2]
     # read device info in DeviceTable.txt
     df = pd.read_csv('dict/DeviceTable.txt')
-    DeviceTable = readDeviceTable(A,D,F)
+    DeviceTable = readDeviceTable(A,D)
     
     if(D!=''):  #check if D supports F
         print("spotlight Device table check",DeviceTable )
@@ -361,8 +307,8 @@ def valueCheck(tokenlist, feature): #issue give value
 
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
-        df2 = pd.read_csv('dict/zhTW/alias/aliasF.txt')
-        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) |  (df2['alias3']==feature) | (df2['alias4']==feature)]
+        df2 = pd.read_csv('dict/enUS/alias/aliasF.txt')
+        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) ]
         feature = df2.iloc[0]['alias1']
         #feature change to absolute device feature('open'/'close')
         
@@ -401,8 +347,10 @@ def valueCheck(tokenlist, feature): #issue give value
             else:
                 print('a quantity')
                 U = str(V).split(' ')[1] # check if unit in unit list
+                V = str(V).split(' ')[0] # split a string into list, extract 1 element     
                 if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
-                    print("value check rule 2 unit verified")
+                    print("value check rule 2 unit verified", tokenlist[3])
+                    tokenlist[3] = V
                     tokenlist[4] = checkMinMax(D,F,str(V).split(' ')[0])# already set to base unit, just extract the value 
                 else:
                     tokenlist[4] = -8 # unsupport unit
@@ -454,12 +402,14 @@ def valueCheck(tokenlist, feature): #issue give value
                     U = str(V).split(' ')[1] # check if unit is in unit list
                     if(len(df.loc[(df['device_name'] == D)&(df['unit_list'].str.contains(U))].index)>0):
                         print("value check rule 2 unit verified")
+                        V = str(V).split(' ')[0] # split a string into list, extract 1 element                
+                        tokenlist[3] = V
+                        tokenlist[4] = checkMinMax(device,F,V)
                     else:
                         tokenlist[4] = -8 # unsupport unit
                         print("value check rule 2 quantity unit error!")
                         
-                    V = str(V).split(' ')[0] # split a string into list, extract 1 element                
-                    tokenlist[4] = checkMinMax(device,F,V)
+                    
                     device_queries[idx] = [A,device,F,V,tokenlist[4]]
                 print('device model value check quantity:', tokenlist)
                 print('[device model] value check queries:', device_queries)
@@ -476,21 +426,12 @@ def valueCheck(tokenlist, feature): #issue give value
 # return value: quantitylist[0] or handleUnit(quantitylist)
 
 def handleValue(quantity):
-    print("[handleValue] quantity: ",quantity)
+    print("quantity: ",quantity)
     quantitylist = quantity.split(' ') # split a string into list
-    df = pd.read_csv("dict/zhTW/num_zh.txt")
-    
     
     if(len(quantitylist) == 1):
         print("only value")
-        value = quantitylist[0]
-        #cannot find number, so we choose chinese
-        if(value.isdigit() == False):
-            print("it is a chinese number")
-            df = df.loc[(df['text1'] == value) | (df['text2'] == value)]
-            value = df.iloc[0]['value']
-        print("value", value)
-        return int(value)
+        return int(quantitylist[0])
     else:
         return handleUnit(quantitylist)
 
@@ -503,8 +444,7 @@ def handleValue(quantity):
 def handleUnit(quantitylist): # use Pint package for unit hanlding 
     ureg = UnitRegistry()     # new a unit module
     Q_ = ureg.Quantity        # define a quantity element quantity = (value, unit)
-    df = pd.read_csv(r"dict/zhTW/alias/aliasU.txt")
-    df_n = pd.read_csv(r"dict/zhTW/num_zh.txt")
+    
     #(issue)get base unit from iottalk define
     ureg.load_definitions('my_def.txt')
     ureg.default_system = 'iottalk'
@@ -514,13 +454,8 @@ def handleUnit(quantitylist): # use Pint package for unit hanlding
     if(len(quantitylist)%2 == 0):
         print("is by 2")
         for q_id in range(0, len(quantitylist),2):
-            # redirection must be applied before unit calculation
-            df_U = df.loc[(df['alias1'] == quantitylist[q_id+1]) | (df['alias2'] == quantitylist[q_id+1]) | (df['alias3'] == quantitylist[q_id+1])]
-            quantitylist[q_id+1] = df_U.iloc[0]['U']
-            df_N = df_n.loc[(df_n['text1'] == quantitylist[q_id]) | (df_n['text2'] == quantitylist[q_id])]
-            quantitylist[q_id] = df_N.iloc[0]['value']
             value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
-        print("[pint] base unit value:", value)
+        print("base unit value changed:", value)
         return value
     else:
         print("error: is not by 2")
@@ -538,12 +473,27 @@ def checkMinMax(D,F, V): #check min max only for rule 2,
         return 2     # return 2 as rule 2
 
 #
+def findAlias(feature):
+    df = pd.read_csv('dict/enUS/alias/aliasF.txt')
+    df = df.loc[ (df['alias1']==feature) | (df['alias2']==feature) | (df['alias3']==feature) ]
+    return df.iloc[0]['alias1']                               
+
+    
+    
+#
 def findinfo(D,F):
     df = pd.read_csv('dict/DevicefeatureTable.txt')
     df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
     return df
 
-def readDeviceTable(A,D,F):
+def findDeviceList(A):
+    df = pd.read_csv('dict/DeviceTable.txt')
+    df = df.loc[df['device_model'] == A]
+    device_list =  list(df['device_name'])
+    return device_list
+
+
+def readDeviceTable(A,D):
     df = pd.read_csv('dict/DeviceTable.txt')
     if(D != ""):
         df = df.loc[df['device_name']== D]

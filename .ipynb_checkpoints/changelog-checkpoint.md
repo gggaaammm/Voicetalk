@@ -21,6 +21,8 @@ straightforward as possible.
 
 ### Need Fix
 1. [ZHTW](https://github.com/gggaaammm/Voicetalk/blob/v2/User/zhspacy.py) 「設定電扇風速到一。」 the sentence will be cause error of '1 '(with space inside the number) and handlevalue() is broken
+2. 二維的value該怎麼處理
+3. 修改DevicefeatureTable: 修改database
 
 
 ## [1.1.1] - 2022-07-03

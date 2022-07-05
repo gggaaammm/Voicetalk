@@ -101,9 +101,9 @@ def textParse(sentence):
     # ===========================  value handling start=================================
     # check if sentence contains number, before sentence redirecting
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
-#     sentence = sentence.replace(tokendict['A'], "")
+
     sentence = sentence.replace(tokendict['D'], "")
-#     sentence = sentence.replace(tokendict['F'], "")
+
     sentence_value = tokendict['V']  # save device name before alias redirect
 
     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
@@ -162,7 +162,7 @@ def textParse(sentence):
 
     saveLog(sentence, token)   # save logs
     print("[final] before send to iottalk,", "\ndevice query", device_queries)
-    return sentence_value, sentence_device_name, sentence_feature, device_queries
+    return  sentence_device_name, sentence_feature, sentence_value, device_queries
         
 
     

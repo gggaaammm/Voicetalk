@@ -5,8 +5,8 @@ import json
 from threading import Thread
 import time, random, requests
 import DAN, register
-import enspacy as US
-import zhspacy as TW
+import TWnlp
+import USnlp
 # import zhckip #uncomment later
 
 # define error message format:
@@ -45,10 +45,10 @@ def index():
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
             #enspacy.readDB()
-            value,name, feature, device_queries = US.textParse(text) #spacy function
+            name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
             #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-            value,name, feature, device_queries = TW.textParse(text) #spacy function
+            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
@@ -97,9 +97,9 @@ def ProcessSentence():
     print("voice sentence: ", sentence) #data should be decoded from bytestrem to utf-8
     
     if(language == 'en-US'): #English
-        value,name, feature, device_queries = US.textParse(sentence) #spacy function
+        name, feature,value, device_queries = USnlp.textParse(sentence) #spacy function
     else:  # chinese
-        value,name, feature, device_queries = TW.textParse(sentence) #spacy function
+        name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
 #         value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
     
     #get all device query(ies) from the tokenlist
