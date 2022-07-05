@@ -4,7 +4,31 @@ All notable changes to this project will be documented in this file.
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
 
-## [Unreleased] - 2022-07-04
+
+## [1.1.1] - 2022-07-04
+ 
+
+ 
+### Added
+1. chinese number redirection to number: use num_zh.txt to help ckiptagger detect the number
+
+### Changed
+1. [ENUS](https://github.com/gggaaammm/Voicetalk/blob/v2/User/enspacy.py) code remodulize as function
+    1. tokenClassifier
+    2. aliasRedirection
+    3. tokenValidation
+
+
+### Need Fix
+1. [ZHTW](https://github.com/gggaaammm/Voicetalk/blob/v2/User/zhspacy.py) 「設定電扇風速到一。」 the sentence will be cause error of '1 '(with space inside the number) and handlevalue() is broken
+
+
+## [1.1.1] - 2022-07-03
+
+
+
+
+## [1.1.1] - 2022-07-04
  
 
  
