@@ -69,6 +69,18 @@ def readDB():
     
     return aliasDict.values()
 
+# ========= chinese number redirection(word) ========
+def chinese_redirection(wordlist):
+    df = pd.read_csv("dict/zhTW/num_zh.txt")
+    for idx in range(len(wordlist)):
+        zh_df = df.loc[(df['text1'] == wordlist[idx]) | (df['text2'] == wordlist[idx]) ]
+        if(len(zh_df.index)>0):
+            print("[chinese] number", wordlist[idx])
+            wordlist[idx] = str(zh_df.iloc[0]['value'])
+            print("redirection", wordlist[idx])
+    return wordlist
+
+
     
 # ============  function textParse(sentence) ============
 # main function of the spaCy, do the following:
@@ -98,9 +110,15 @@ def textParse(sentence):
     print("[ckip pos]", pos_list)
     print("[ckip entity]", entity_list)
     
+    # do chinese number redirection before sentence is joined
+    wordlist = word_list[0]
+    print("old [wordlist]", wordlist)
+    wordlist = chinese_redirection(wordlist)
     
-    sentence_space = ' '.join(word_list[0])
+    print("new [wordlist]", wordlist)
+    sentence_space = ' '.join(wordlist)
     print("[segmentation]", sentence_space)
+    
     
     
     tokendict = {'A':'', 'D':'', 'F':'', 'V':'', 'U':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string

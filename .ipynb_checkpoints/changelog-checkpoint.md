@@ -9,9 +9,10 @@ straightforward as possible.
 
  
 ### Added
+1. chinese number redirection to number: use num_zh.txt to help ckiptagger detect the number
 
 ### Changed
-1. [ENUS](https://github.com/gggaaammm/Voicetalk/blob/v2/User/enspacy.py) function code remodulize
+1. [ENUS](https://github.com/gggaaammm/Voicetalk/blob/v2/User/enspacy.py) code remodulize as function
     1. tokenClassifier
     2. aliasRedirection
     3. tokenValidation
@@ -30,7 +31,7 @@ straightforward as possible.
  
 ### Added
 1. add the ckiptagger's module: POS and NER back for number and unit handling, it will increase the Data loading time from 4 sec to 25 sec
-2. chinese number redirection to number: use num_zh.txt
+
 
 ### Changed
 1. [frontend](https://github.com/gggaaammm/Voicetalk/blob/v2/User/templates/index.html) startmessage and stopmessage 
