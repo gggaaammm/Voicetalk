@@ -1,4 +1,4 @@
-D,D_abs,D_syn1,D_syn2,D_syn3,D_syn4,D_syn5
+D,alias1,alias2,alias2,alias4,alias5,alias6
 fluorescent lamp,light number one,light number 1,light 1,light one,light #1,
 CHT LED,light number two,light number 2,light 2,light two,light #2,
 CAG LED,light number three,light number 3,light 3,light three,light #3,
@@ -14,4 +14,5 @@ Tatung airpurifier,Tatung airpurifier
 robotic arm,robotic arm
 window,window
 door,door
-dummy1,dummy1
+dummy1,dummy1,light bulb
+dummy2,dummy2

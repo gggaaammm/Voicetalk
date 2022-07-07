@@ -105,17 +105,26 @@ def textParse(sentence):
     sentence = sentence.replace(tokendict['D'], "")
 
     sentence_value = tokendict['V']  # save device name before alias redirect
-
+    
     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
         sentence_value = tokendict['V']  # save device name before alias redirect
         pass
     else:
-        value_doc = nlp(sentence) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
-        print("value detect", value_doc._.numerize())
-        if(len(value_doc._.numerize())== 1): # if V is recognized as numeric strings, save it as a string of quantity 
-            quantity = list(value_doc._.numerize().values())
-            sentence_value = quantity
-            tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue() 
+        print("[0706 new function]" )
+        tokendict['V'] = quantityDetect(sentence)
+    
+    
+    
+
+#     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
+#         sentence_value = tokendict['V']  # save device name before alias redirect
+#         pass
+#     else:
+#         value_doc = nlp(sentence) # use spacy's extension: numerizer, converts numerical and quantitative words into numeric strings.
+#         if(len(value_doc._.numerize())== 1): # if V is recognized as numeric strings, save it as a string of quantity 
+#             quantity = list(value_doc._.numerize().values())
+#             sentence_value = quantity
+#             tokendict['V'] = handleValue(str(quantity[0])) # the string of quantity will be sent to handleValue() 
     # ===========================  value handling end =================================
 
     sentence_feature = tokendict['F']     # save feature name before alias redirect
@@ -165,8 +174,7 @@ def textParse(sentence):
     return  sentence_device_name, sentence_feature, sentence_value, device_queries
         
 
-    
-    
+
     
 # ======== tokenClassifer(tokendict, token) ============
 # use nlp() to process sentence and matcher() to match each word to the token 
@@ -227,7 +235,8 @@ def tokenValidation(token):
             rule = ruleLookup(token[2])          # lookup rule by F
             token[4] = rule                      # token[4] record rule
             if(token[3]=="" and rule==2):        # check if V(for rule2) exist
-                token[4]=-4                   # error message #4: device feature need value
+                print("[new issue]: the value may store in quantityDetect()" )
+                token[4]= 2                   # error message #4: device feature need value
         else:
             token[4]=-3                       # error message #3: no feature found in sentence 
     else:
@@ -416,6 +425,23 @@ def valueCheck(tokenlist, feature): #issue give value
 
     print("[valueCheck end] :", "device query:",device_queries, "\n tokenlist", tokenlist)    
     return device_queries
+
+
+
+# ======= quantitydetector(sentence) ======= 
+# use spacy extension: numerizer to detect number
+# when number is not detected,
+# when number is detected 
+
+def quantityDetect(sentence):
+    value_doc = nlp(sentence)
+    if(len(value_doc._.numerize())> 1): # if V is recognized as numeric strings, save it as a string of quantity
+        quantity = list(value_doc._.numerize().values())
+        sentence_value = quantity
+        print("[quantityDetect]", quantity)
+
+
+
 
 
 # ====== handleValue(quantity) ========

@@ -1,4 +1,4 @@
-A,A_abs,A_syn1
+A,alias1,alias2
 Vfan,fan,fans
 Vlight,light,lights
 Vcurtain,curtain,curtains
@@ -6,3 +6,4 @@ Vdoor,door,doors
 Vairpurifier,air purifier,air purifiers
 Vwindow,window,windows
 Vdummy,dummy,dummys
+Varm,arm,arms

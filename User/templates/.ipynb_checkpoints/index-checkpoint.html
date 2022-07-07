@@ -17,7 +17,7 @@
       //****************************************************************************************  
       var recognitionTitle = {"en-US":"Recognition Result","cmn-Hant-TW":"辨識結果"} 
       var recognitionBox = document.getElementById("recognitionBox"); // 辨識結果  "HTML元件"
-      var final_transcript = '';                                      // 最終的辨識訊息 "JS變數"        
+      var final_transcript = '';       
       var responseTitle = {"en-US":"System Response","cmn-Hant-TW":"系統回覆"}  
       var responseBox =   document.getElementById("responseBox");     //系統回覆
       var startStopButton; // 「開始/停止」按鈕
@@ -81,7 +81,6 @@
       } else {
         var recognition = new webkitSpeechRecognition(); // 建立語音辨識物件 webkitSpeechRecognition
         recognition.continuous = true;                   // 設定連續辨識模式
-        recognition.interimResults = true;               // 設定輸出持續產生結果。
         
 
         recognition.onstart = function() { // 開始辨識
@@ -101,15 +100,11 @@
             if (event.results[i].isFinal) { // 如果是最終結果
                 final_transcript = event.results[i][0].transcript; // 將其加入最終結果中
                 console.log("i:" + i + event.results[i][0].transcript);
-            } else { // 否則
-              interim_transcript += event.results[i][0].transcript; // 將其加入中間結果中
-            }
+            } 
           }
-          if (final_transcript.trim().length > 0) // 如果有最終辨識文字
+          if (final_transcript.trim().length > 0){ // 如果有最終辨識文字
               recognitionBox.value = final_transcript; // 顯示最終辨識文字到HTML
-        
-            
-            
+
             // portocol: send input to backend and get the input
 
             $.getJSON({
@@ -187,6 +182,8 @@
                     //alert("fail")
                 }
             });
+              
+          }   
              
             //
             

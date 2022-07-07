@@ -5,4 +5,5 @@ Fanspeed-I,fan speed,fan speed
 Luminance-I,brightness,brightness
 Rotation-I,rotation
 Temperature-I,temperature
-Timer-I,timer
+Timer,timer
+Color-I,color

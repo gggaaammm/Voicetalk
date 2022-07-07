@@ -5,9 +5,9 @@ import json
 from threading import Thread
 import time, random, requests
 import DAN, register
-import TWnlp
+# import TWnlp #uncomment later
 import USnlp
-# import zhckip #uncomment later
+
 
 # define error message format:
 # 1: rule1, 2: rule2, <0: error
@@ -40,7 +40,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'zh-TW'
+        language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -48,7 +48,7 @@ def index():
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
             #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
@@ -99,8 +99,8 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         name, feature,value, device_queries = USnlp.textParse(sentence) #spacy function
     else:  # chinese
-        name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
-#         value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+#         name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
+        print("chinese not yet")
     
     #get all device query(ies) from the tokenlist
     #get all device query(ies) from the tokenlist
@@ -168,7 +168,10 @@ def sendIot(device_queries):
                     iotvalue = int(V)*10 if int(V)<=10 else 100
                     DAN.push(F, iotvalue)
                 else:
-                    DAN.push(F, int(V))
+                    if(isinstance(V,list)):
+                        DAN.push(F,*V)
+                    else:
+                        DAN.push(F, V)
 
             
             
@@ -195,7 +198,10 @@ def sendIot(device_queries):
                 iotvalue = int(V)*10 if int(V)<=10 else 100
                 DAN.push(F, iotvalue)
             else:
-                DAN.push(F, int(V))
+                if(isinstance(V,list)):
+                    DAN.push(F,*V)
+                else:
+                    DAN.push(F, V)
     
     
 
