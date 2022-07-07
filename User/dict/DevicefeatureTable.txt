@@ -24,5 +24,7 @@ Regaddr,device_name,device_feature,dim,rule,min,max,unit_list,value_dict,
 20220501dummy,dummy1,Temperature-I,1,2,0,100,"['celsius']","[]"
 20220501dummy,dummy1,Color-I,3,2,0,255,"['']","{'red':[255,0,0], 'blue':[0,0,255], 'pink':[255,192,203]}"
 20220501dummy2,dummy2,Switch1,1,1,0,1,"[]","{'open':1, 'close':0}"
+20220501dummy2,dummy2,Place-I,1,2,0,0,"[]","{}"
 20220501dummy2,dummy2,Timer,1,2,0,3600,"['second','minute','hour']","[]"
 20220501dummy2,dummy2,Color-I,3,2,0,255,"['']","{'red':[255,0,0], 'blue':[0,0,255]}"
+20220501dummy2,dummy2,Special-I,3,2,0,255,"['']","{'red':[255,0,0], 'blue':[0,0,255]}"

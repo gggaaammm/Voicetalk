@@ -1,0 +1,7 @@
+device_name,device_feature,p_id,type,min,max,unit,param_dict
+tatung fan,Fanspeed-I,0,int,0,5,"[]","{}"
+dummy2,Timer,0,int,0,3600,"[]","{}"
+dummy2,Place-I,0,string,0,3600,"[]","{}"
+dummy2,Special-I,0,int,0,90,"[]","{}"
+dummy2,Special-I,1,int,0,180,"[]","{}"
+dummy2,Special-I,2,string,0,0,"[]","[]"

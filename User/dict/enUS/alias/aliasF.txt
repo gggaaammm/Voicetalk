@@ -7,3 +7,5 @@ Rotation-I,rotation
 Temperature-I,temperature
 Timer,timer
 Color-I,color
+Special-I,special
+Place-I,place

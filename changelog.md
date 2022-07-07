@@ -16,7 +16,11 @@ straightforward as possible.
 
 
 ### Need Fix
-1.
+1. parameterTable
+2. handleValue()
+3. handleUnit()
+4. checkminMax()
+5. base unit 修正
 
 
 
