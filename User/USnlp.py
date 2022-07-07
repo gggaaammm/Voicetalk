@@ -438,7 +438,6 @@ def handleValue(quantity):
     quantitylist = quantity.split(' ') # split a string into list
     
     if(len(quantitylist) == 1):
-        print("only value")
         return float(quantitylist[0])
     else:
         return handleUnit(quantitylist)

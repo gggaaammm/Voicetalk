@@ -135,8 +135,13 @@
                             }
                         }
                         else{
-//                             renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]
-                            renderhtml = data.response+data.name+" "+data.feature+" "+data.value
+                            if(data.value == ""){
+                                renderhtml = data.response+data.name+"is set to"+data.feature
+                            }
+                            else{
+                                renderhtml = data.response+data.name+"'s '"+data.feature+"is set to"+data.value
+                            }
+                            
                         }
                     }
                     else if(language == "cmn-Hant-TW"){
