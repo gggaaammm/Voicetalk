@@ -77,9 +77,25 @@ def chinese_redirection(wordlist):
         if(len(zh_df.index)>0):
             print("[chinese] number", wordlist[idx])
             wordlist[idx] = str(zh_df.iloc[0]['value'])
-            print("redirection", wordlist[idx])
+            print("number redirection", wordlist[idx])
     return wordlist
 
+def spellCorrection(sentence):
+    df = pd.read_csv("dict/zhTW/correction/correction.txt")
+    wrongwordlist = list(df['wrong'])
+    print(wrongwordlist)
+    for wrongword in wrongwordlist:
+        if (wrongword in sentence):
+            correctdf = df.loc[(df['wrong'] == wrongword)]
+            correctword = correctdf.iloc[0]['correct']
+            sentence = sentence.replace(wrongword, correctword)
+            print("[correct process]: ", wrongword,"->", correctword)
+    print("[correction]: ", sentence)
+    return sentence
+    
+    
+    
+    
 
     
 # ============  function textParse(sentence) ============
@@ -97,6 +113,7 @@ def chinese_redirection(wordlist):
 def textParse(sentence):
     # in chinese, do word segmentation before nlp
     
+    sentence = spellCorrection(sentence)
     
     alias_list_dict = readDB() # read database
     dict_for_CKIP = {}

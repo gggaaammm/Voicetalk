@@ -5,7 +5,7 @@ import json
 from threading import Thread
 import time, random, requests
 import DAN, register
-# import TWnlp #uncomment later
+import TWnlp #uncomment later
 import USnlp
 
 
@@ -40,7 +40,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'en-US'
+        language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -48,7 +48,7 @@ def index():
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
             #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
@@ -99,7 +99,7 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         name, feature,value, device_queries = USnlp.textParse(sentence) #spacy function
     else:  # chinese
-#         name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
+        name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
         print("chinese not yet")
     
     #get all device query(ies) from the tokenlist

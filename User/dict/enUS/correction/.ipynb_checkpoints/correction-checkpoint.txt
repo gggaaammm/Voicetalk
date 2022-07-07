@@ -1,2 +1,4 @@
 correct,wrong
 number 2,number to
+fan,van
+fan,phone

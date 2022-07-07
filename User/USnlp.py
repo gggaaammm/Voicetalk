@@ -60,13 +60,20 @@ def readDB():
 # phone,van <-> fan
 # number to <-> number two
 # 
+
 def spellCorrection(sentence):
-    # read a correction table from db
-    df = pd.read_csv(r"dict/enUS/correction/correction.txt")
-    
-    # redirection
-    # new sentence as return
+    df = pd.read_csv("dict/enUS/correction/correction.txt")
+    wrongwordlist = list(df['wrong'])
+    print(wrongwordlist)
+    for wrongword in wrongwordlist:
+        if (wrongword in sentence):
+            correctdf = df.loc[(df['wrong'] == wrongword)]
+            correctword = correctdf.iloc[0]['correct']
+            sentence = sentence.replace(wrongword, correctword)
+            print("[correct process]: ", wrongword,"->", correctword)
+    print("[correction]: ", sentence)
     return sentence
+
     
 # ============  function textParse(sentence) ============
 # main function of the spaCy, do the following:
@@ -82,6 +89,7 @@ def spellCorrection(sentence):
 
 def textParse(sentence):
     sentence = sentence.lower() # lower all the chracters in sentence
+    sentence = spellCorrection()
     readDB() # read database
     tokendict = {'A':'', 'D':'', 'F':'', 'V':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
     tokenlist = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
@@ -106,19 +114,16 @@ def textParse(sentence):
     sentence_value = tokendict['V']  # save device name before alias redirect
 
     if(tokendict['V'] != ''):     # if token V has a string already matched, pass
-        sentence_value = tokendict['V']  # save device name before alias redirect
         quantity = []
+        sentence_value = tokendict['V']  # save device name before alias redirect
         pass
     else:
         quantity = quantityDetect(sentence)
-        print("[unsaved quantity]", quantity)
         sentence_value = quantity
     # ===========================  value handling end =================================
 
     sentence_feature = tokendict['F']     # save feature name before alias redirect
     sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
-    
-    
     
     # ============================ alias redirection ================================
     # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
@@ -198,7 +203,6 @@ def quantityDetect(sentence):
     value_doc = nlp(sentence)
     if(len(value_doc._.numerize())>0): # if V is recognized as numeric strings, save it as a string of quantity
         quantity = list(value_doc._.numerize().values())
-        sentence_value = quantity
     return quantity
 
 

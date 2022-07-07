@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
 
+## [1.1.2] - 2022-07-07
+ 
+
+ 
+### Added
+1. 多dimension的處理
+2. quantityDetect(sentence)
+
+### Changed
+1. enspacy.py -> USnlp.py
+2. zhspacy.py -> TWnlp.py
+3. DevicefeatureTable.txt: add column 'dim'
+4. token -> tokenlist in USnlp.py
+
+
+### Need Fix
+1. [ZHTW](https://github.com/gggaaammm/Voicetalk/blob/v2/User/zhspacy.py) 「設定電扇風速到一。」 the sentence will be cause error of '1 '(with space inside the number) and handlevalue() is broken
+2. USnlp.py修正
+3. 修改DevicefeatureTable: 修改database
+4. TWnlp.py修正
+5. [ZHTW] 中文錯字修正
+6. [ENUS] 英文錯字修正
+
+
+
+
+
 ## [1.1.2] - 2022-07-06
  
 
@@ -21,9 +48,11 @@ straightforward as possible.
 
 ### Need Fix
 1. [ZHTW](https://github.com/gggaaammm/Voicetalk/blob/v2/User/zhspacy.py) 「設定電扇風速到一。」 the sentence will be cause error of '1 '(with space inside the number) and handlevalue() is broken
-2. 二維的value該怎麼處理
+2. USnlp.py修正
 3. 修改DevicefeatureTable: 修改database
 4. TWnlp.py修正
+5. [ZHTW] 中文錯字修正
+6. [ENUS] 英文錯字修正
 
 
 
