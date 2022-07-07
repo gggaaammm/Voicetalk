@@ -9,8 +9,8 @@ straightforward as possible.
 
  
 ### Added
-1. 多dimension的處理
-2. quantityDetect(sentence)
+1. 錯字校正，詳見[中文校正列表](https://github.com/gggaaammm/Voicetalk/blob/v2/User/dict/zhTW/correction/correction.txt) 以及 [英文校正列表](https://github.com/gggaaammm/Voicetalk/blob/v2/User/dict/enUS/correction/correction.txt)
+2. 
 
 ### Changed
 1. enspacy.py -> USnlp.py
