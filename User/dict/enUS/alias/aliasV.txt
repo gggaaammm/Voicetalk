@@ -9,5 +9,10 @@ middle,
 red,
 blue,
 yellow,
-pink
+pink,
+boston,
+seattle,
+cool,
+warm
+
 

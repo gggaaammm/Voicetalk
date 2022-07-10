@@ -115,14 +115,18 @@ def textParse(sentence):
     sentence_value = tokendict['V']  # save device name before alias redirect
     
     print("[V]:", tokendict['V'])
-    if(len(tokendict['V'])>0):     # if token V has a string already matched, pass
-        quantity = []
-        sentence_value = tokendict['V']  # save device name before alias redirect
-        pass
-    else:
-        quantity = quantityDetect(sentence)
-        print("[quantity]", quantity)
-        sentence_value = quantity
+    
+    
+    quantity = quantityDetect(sentence)
+    print("[quantity]", quantity)
+#     if(len(tokendict['V'])>0):     # if token V has a string already matched, do not pass
+#         quantity = []
+#         sentence_value = tokendict['V']  # save device name before alias redirect
+#         pass
+#     else:
+#         quantity = quantityDetect(sentence)
+#         print("[quantity]", quantity)
+#         sentence_value = quantity
     # ===========================  value handling end =================================
 
     sentence_feature = tokendict['F']     # save feature name before alias redirect
@@ -130,6 +134,38 @@ def textParse(sentence):
     
     # ============================ alias redirection ================================
     # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
+    
+    
+    V_result = []
+    num_V = len(tokendict['V'])+len(quantity)
+    # create an absolute V list
+    d_id = 0
+    q_id = 0
+    for v_id in range(num_V):
+        print(v_id)
+        if(d_id<len(tokendict['V']) and q_id<len(quantity) ):
+            if(sentence.index(tokendict['V'][d_id]) < sentence.index(quantity[q_id])):
+                V_result.append(tokendict['V'][d_id])
+                print(tokendict['V'][d_id])
+                d_id +=1
+            else:
+                V_result.append(quantity[q_id])
+                print(quantity[q_id])
+                q_id +=1
+        elif(d_id == len(tokendict['V'])):
+            V_result.append(quantity[q_id])
+            print(quantity[q_id])
+            q_id +=1
+        elif(q_id == len(quantity)):
+            V_result.append(tokendict['V'][d_id])
+            print(tokendict['V'][d_id])
+            d_id +=1
+             
+    print("[remake V_result]", V_result)
+#     tokendict['V'] = V_result
+        
+        
+        
     
     tokenlist = aliasRedirection(tokendict, tokenlist)
 
@@ -182,7 +218,7 @@ def textParse(sentence):
 # return: tokendict, token
 
 def tokenClassifier(sentence):
-    tokendict = {'A':'', 'D':'', 'F':'', 'V':[]}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string 
+    tokendict = {'A':'', 'D':'', 'F':'', 'V':[]}  # new a dict of token, default key(A/D/F/V) is set with empty string 
     # V is set to a list to accept multiple token
     tokenlist = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
     doc = nlp(sentence)
@@ -190,11 +226,14 @@ def tokenClassifier(sentence):
     for match_id, start, end in matches:
         token_id = nlp.vocab.strings[match_id]  # get the token ID from matches token, i.e. 'A', 'D', 'F', 'V'
         span = doc[start:end]                   # get the object of word insentence
-        if(tokendict[token_id] == '' or tokendict[token_id] == span.text):   # if tokendict is undefined or tokendict has same value
-            tokendict[token_id] = span.text     # insert key and value in tokendict
-        elif(token_id == 'V'):
+        print("[token]", token_id,": " ,span.text)
+        
+        if(token_id == 'V'):
             print("another V accepted")
             tokendict[token_id].append(span.text)
+        elif(tokendict[token_id] == '' or tokendict[token_id] in span.text):   
+            # if tokendict is undefined or tokendict has same value
+            tokendict[token_id] = span.text     # insert key and value in tokendict
         else:
             print("too much element in A/D/F token!") # error message #1: too much token
             tokenlist[4] = -1
@@ -225,29 +264,20 @@ def aliasRedirection(tokendict, tokenlist):
     for filename in all_files:
         sublist = []
         df = pd.read_csv(filename)
-        if(filename[21] == 'V'):
-            print("V redirection is special, a list", tokendict[filename[21]])
+        if(filename[21] == 'V'): # V is a special with a list
             V_list = list(tokendict[filename[21]])
-            print("V list", V_list)
             for idx, V_word in enumerate(V_list):
                 for column in df.columns:
                     df_abs = df.loc[(df[column])== V_word]
-                    print("[df]", df_abs)
                     if(len(df_abs.index)>0):
-                        print("V change?", V_word)
                         V_list[idx] = df_abs.iloc[0][0] 
             tokendict['V'] = V_list
-
-            
         #redirect A,D,F to device_model, device_name, device_feature individually
-        #redirect V,U to default_value_name, unit_name
-        # V is a special with a list
         else:
             for column in df.columns:
                 df_abs = df.loc[(df[column] == tokendict[filename[21]])]
                 if(len(df_abs.index)>0):
-                    tokendict[filename[21]] = df_abs.iloc[0][0]
-                
+                    tokendict[filename[21]] = df_abs.iloc[0][0]              
     tokenlist = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], tokenlist[4]]
     return tokenlist
 
@@ -324,11 +354,11 @@ def supportCheck(tokenlist):
 
 # ======== valueCheck(tokenlist, feature) ============
 
-def valueCheck(tokenlist, feature, quantity): #issue give value
+def valueCheck(tokenlist, feature, quantityV): #issue give value
     A = tokenlist[0]
     D = tokenlist[1]
     F = tokenlist[2]
-    V = tokenlist[3]
+    stringV = tokenlist[3]
     rule = tokenlist[4]
     
     device_queries = [[0]*5]*1   # create a device query as return type of function
@@ -365,74 +395,71 @@ def valueCheck(tokenlist, feature, quantity): #issue give value
         # 3. a quantity(check if unit support and check exceed min/max)
         if(D != ''):  #access the device info(which D and F are fitted)
             dimension = findDimension(D,F)
-            
+            paramTable = readParameterTable(D,F)
                 
-            ## for each dimension, we need to check:
-            ## 1.  its type
-            ## for type string, extract element from tokendict['V']
-            ## for type int/float, extract element from the quantity
-            
-            if(dimension == 1): # parameterTable only 1 line
-                print("dimension 1")
-                paramTable = readParameterTable(D,F)
-                print("paramTable", paramTable)
-                
-                if(len(V)+len(quantity) == 1):
-                    print("[1-dim]valid number of V")
-                else:
-                    print("[1-dim]invaid number of V")
-                
-                if(len(V)>0):
-                    V = V[0]
-                    # value dictionary lookup first
-                    df = findinfo(D,F) #find if string exist in DB value_dict, if no, bypass string.
-                    if(V in df.iloc[0]['value_dict']): # if yes, give value;
-                        V =  ast.literal_eval(df.iloc[0]['value_dict'])[V] 
-                    print("[1-dim before type]",V)
-                    
-                    
-                elif(len(quantity)>0):
-                    V = handleValue(str(quantity[0])) 
-                
-                
-                print("[V ignore quan]:",V, type(V))
-                
-                if(paramTable.iloc[0]['type'] == "string"):
-                    print("a string in 1-dim")
-                    # check if V is a pure string
-                    if(isinstance(V,str)):
-                        pass
-                    else:
-                        print("[error] type error: ", type(V))
-                    
-
-                        
-                    
-                else:
-                    print("a int or float in 1-dim")
-                    if(isinstance(V,str)):
-                        print("[error] type error", type(V))
+            if(len(stringV)+len(quantityV) == dimension == 1):
+                V = ''
+                if(len(stringV)>0):    # do param_dict transform to value
+                    if(stringV[0] in paramTable.iloc[0]['param_dict']): #give value;
+                        V =  ast.literal_eval(paramTable.iloc[0]['param_dict'])[stringV[0]]
+                elif(len(quantityV)>0):
+                    V = handleValue(str(quantityV[0])) # do unit calculation
+                ## TYPEcheck
+                if(paramTable.iloc[0]['type'] == "string" and isinstance(V,str)):
+                    pass
+                elif(paramTable.iloc[0]['type'] == "int" or paramTable.iloc[0]['type'] == "float"):
+                    if(isinstance(V,str) or V is None):  # string or handle Value error
+                        print("[error] V error")
+                        tokenlist[4] = -10
                     elif(isinstance(V,int) or isinstance(V,float)):
-                        tokenlist[4] = checkMinMax(D,F,V)
-                        
-                    else:
-                        U = str(V).split(' ')[1]      # extract element
-                        V = int(str(V).split(' ')[0]) # check if unit exist in DB unit_list
-                        
-                    
-                        
-                        
-                        
-                        
+                        tokenlist[4] = checkMinMax(D,F,V,0)
+                    else: #
+                        V = float(str(V).split(' ')[0]) # extract element
+                        tokenlist[4] = checkMinMax(D,F,V,0)   
+                
                 
             else:
-                print("multidimension")
+                V = []
                 # parameterTable have multi-line
-            
-            
-            
-            
-            
+                print("dimension X", stringV, type(stringV))
+                paramTable = readParameterTable(D,F)
+                print("paramTable", paramTable)
+                # lookup dict in value_dict
+                featureTable = findinfo(D,F)
+                for keyword in stringV:
+                    print(type(ast.literal_eval(featureTable.iloc[0]['value_dict'])),keyword,"quantity?", type(keyword))
+                    if(keyword in ast.literal_eval(featureTable.iloc[0]['value_dict'])): # if yes, give value and refresh V;
+                        print("keyword find", keyword)
+                        V =  ast.literal_eval(featureTable.iloc[0]['value_dict'])[keyword]
+                # check each dimension 1 by 1
+                # for now, only accept the str lookup in str and number lookup in number
+                str_id, num_id = 0,0
+                if( V != []):   ## has already assign value from
+                    pass
+                else:
+                    for p_id in paramTable.index:
+                        print(paramTable['type'][p_id])
+                        if(paramTable['type'][p_id] == "string"):
+                            print("add stringV: ", stringV, str_id)
+                            V.append(stringV[str_id])
+                            str_id = str_id + 1
+                        elif(paramTable['type'][p_id] == "float" or paramTable['type'][p_id] == "int"):
+                            quantity = handleValue(str(quantityV[num_id]))
+                            V.append(quantity)
+                            print("[numid]", num_id)
+                            print("quantity in D x-dim",quantity, type(quantity))
+                            if(quantity is None):
+                                tokenlist[4] = -10
+                            elif(isinstance(quantity,int) or isinstance(quantity,float)):
+                                if(checkMinMax(D,F,quantity, num_id)<0):
+                                    tokenlist[4] = checkMinMax(D,F,quantity,num_id)
+                            else:
+                                quantity = float(str(quantity).split(' ')[0]) # extract element
+                                if(checkMinMax(D,F,quantity, num_id)<0):
+                                    tokenlist[4] = checkMinMax(D,F,quantity, num_id)   
+                            num_id = num_id+ 1
+                print("[multi-dim] V result:", V)
+                    
 #             print("[value dimension]: ", dimension)    
 #             if(V != '' and len(quantity) == 0 ):                 # 1. a string
 #                 df = findinfo(D,F) #find if string exist in DB value_dict, if no, bypass string.
@@ -479,35 +506,97 @@ def valueCheck(tokenlist, feature, quantity): #issue give value
             
             device_queries = [[0]*5]*len(device_list)    # create a query for each device in 1 device model
             
-            if(V != '' and len(quantity) == 0):
-                for idx, device in enumerate(device_list):
-                    df = findinfo(device, F)
-                    print("[value_A_str]", V)
-                    if(V in df.iloc[0]['value_dict']):
-                        tokenlist[3] =  ast.literal_eval(df.iloc[0]['value_dict'])[V]
-                    device_queries[idx] = [A,device,F,tokenlist[3],tokenlist[4]]
-            elif(V == '' and len(quantity)!= 0 ):
-                for idx,device in enumerate(device_list):
-                    dimension = findDimension(device,F)      # find the dimension of this feature
-                    if(dimension == len(quantity)==1):       # the dimension of feature must equal to the number of quantity
-                        V = handleValue(str(quantity[0])) 
-                        if(isinstance(V,int) or isinstance(V,float)):                # 2. a number
-                            tokenlist[4] = checkMinMax(device,F,V)
-                        else:                                 # 3. a quantity(value + a unit)
-                            U = str(V).split(' ')[1]          # check if unit in unit list
-                            V = int(str(V).split(' ')[0])     # check if unit in unit
-                            if(len(df.loc[(df['device_name'] == device)&(df['unit_list'].str.contains(U))].index)>0):
-                                tokenlist[4] = checkMinMax(device,F,V)
-                            else:
-                                tokenlist[4] = -8 # unit error
-                    elif(dimension == len(quantity)>1):
-                        V = []                           # a for loop to check if each value is in min max
-                        for idy in range(len(quantity)):
-                            V.append(handleValue(quantity[idy]))
-                            tokenlist[4] = checkMinMax(device,F,V[idy])
+            for idx, device in enumerate(device_list):
+                dimension = findDimension(device,F)
+                paramTable = readParameterTable(device,F)
+                if(len(stringV)+len(quantityV) == dimension == 1):
+                    V = ''
+                    if(len(stringV)>0):    # do param_dict transform to value
+                        if(stringV[0] in paramTable.iloc[0]['param_dict']): #give value;
+                            V =  ast.literal_eval(paramTable.iloc[0]['param_dict'])[stringV[0]]
+                    elif(len(quantityV)>0):
+                        V = handleValue(str(quantityV[0])) # do unit calculation
+                    ## TYPEcheck
+                    if(paramTable.iloc[0]['type'] == "string" and isinstance(V,str)):
+                            pass
+                    elif(paramTable.iloc[0]['type'] == "int" or paramTable.iloc[0]['type'] == "float"):
+                        if(isinstance(V,str) or V is None):
+                            tokenlist[4] = -10
+                        elif(isinstance(V,int) or isinstance(V,float)):
+                            tokenlist[4] = checkMinMax(device,F,V,0)
+                        else: #
+                            V = float(str(V).split(' ')[0]) # extract element
+                            tokenlist[4] = checkMinMax(device,F,V,0)   
+                    
+                    
+                else:
+                    V = []
+                    featureTable = findinfo(device,F)
+                    for keyword in stringV:
+                        print(type(ast.literal_eval(featureTable.iloc[0]['value_dict'])),keyword,"quantity?", type(keyword))
+                        if(keyword in ast.literal_eval(featureTable.iloc[0]['value_dict'])): # if yes, give value and refresh V;
+                            print("keyword find", keyword)
+                            V =  ast.literal_eval(featureTable.iloc[0]['value_dict'])[keyword]
+                    # check each dimension 1 by 1
+                    # for now, only accept the str lookup in str and number lookup in number
+                    str_id, num_id = 0,0
+                    if( V != []):   ## has already assign value from
+                        pass
                     else:
-                        tokenlist[4] = -9 # dimension error
-                    device_queries[idx] = [A,device,F,V,tokenlist[4]]
+                        for p_id in paramTable.index:
+                            print(paramTable['type'][p_id])
+                            if(paramTable['type'][p_id] == "string"):
+                                print("add stringV: ", stringV, str_id)
+                                V.append(stringV[str_id])
+                                str_id = str_id + 1
+                            elif(paramTable['type'][p_id] == "float" or paramTable['type'][p_id] == "int"):
+                                quantity = handleValue(str(quantityV[num_id]))
+                                V.append(quantity)
+                                if(quantity is None):
+                                    tokenlist[4] = -10
+                                elif(isinstance(quantity,int) or isinstance(quantity,float)):
+                                    if(checkMinMax(device,F,quantity, num_id)<0):
+                                        tokenlist[4] = checkMinMax(device,F,quantity,num_id)
+                                else:
+                                    quantity = float(str(quantity).split(' ')[0]) # extract element
+                                    if(checkMinMax(device,F,quantity, num_id)<0):
+                                        tokenlist[4] = checkMinMax(device,F,quantity, num_id)  
+                                num_id = num_id+ 1
+                    print("[multi-dim] V result:", V)
+                    
+                device_queries[idx] = [A,device,F,V,tokenlist[4]]
+            
+            
+            
+#             if(V != '' and len(quantity) == 0):
+#                 for idx, device in enumerate(device_list):
+#                     df = findinfo(device, F)
+#                     print("[value_A_str]", V)
+#                     if(V in df.iloc[0]['value_dict']):
+#                         tokenlist[3] =  ast.literal_eval(df.iloc[0]['value_dict'])[V]
+#                     device_queries[idx] = [A,device,F,tokenlist[3],tokenlist[4]]
+#             elif(V == '' and len(quantity)!= 0 ):
+#                 for idx,device in enumerate(device_list):
+#                     dimension = findDimension(device,F)      # find the dimension of this feature
+#                     if(dimension == len(quantity)==1):       # the dimension of feature must equal to the number of quantity
+#                         V = handleValue(str(quantity[0])) 
+#                         if(isinstance(V,int) or isinstance(V,float)):                # 2. a number
+#                             tokenlist[4] = checkMinMax(device,F,V)
+#                         else:                                 # 3. a quantity(value + a unit)
+#                             U = str(V).split(' ')[1]          # check if unit in unit list
+#                             V = int(str(V).split(' ')[0])     # check if unit in unit
+#                             if(len(df.loc[(df['device_name'] == device)&(df['unit_list'].str.contains(U))].index)>0):
+#                                 tokenlist[4] = checkMinMax(device,F,V)
+#                             else:
+#                                 tokenlist[4] = -8 # unit error
+#                     elif(dimension == len(quantity)>1):
+#                         V = []                           # a for loop to check if each value is in min max
+#                         for idy in range(len(quantity)):
+#                             V.append(handleValue(quantity[idy]))
+#                             tokenlist[4] = checkMinMax(device,F,V[idy])
+#                     else:
+#                         tokenlist[4] = -9 # dimension error
+#                     device_queries[idx] = [A,device,F,V,tokenlist[4]]
                     
 
 
@@ -548,22 +637,26 @@ def handleUnit(quantitylist): # use Pint package for unit hanlding
     value = 0 #init value
     #(issue) When exception, catch the error message(wrong unit cannot be calculated. ex: 3 minute + 20 cm)
     if(len(quantitylist)%2 == 0):
-        print("is by 2")
         for q_id in range(0, len(quantitylist),2):
-            value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
-        print("base unit value changed:", value)
+            try:
+                value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
+            except:
+                return None
+        print("[base unit]:", value)
         return value
     else:
-        print("error: is not by 2")
-        return -5  # quantity error, number of value and unit mismatch
+        print("Unit cannot be calculated")
+        return None  # quantity error, number of value and unit mismatch
     
     
 #followings are sub functions of value check
-def checkMinMax(D,F, V): #check min max only for rule 2, and only in parameterTable
-    print(D,F,V)
-    df = pd.read_csv('dict/DevicefeatureTable.txt')
+def checkMinMax(D,F, V,num_id): #check min max only for rule 2, and only in parameterTable
+    print("[checkminmax]",D,F,V, num_id)
+    df = pd.read_csv('dict/ParameterTable.csv')
     df_D= df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    if( (float(V) > float(df_D.iloc[0]['max'])) | ( float(V) < float(df_D.iloc[0]['min'])) ): #if value exceed range
+    print(df_D)
+    if( (float(V) > float(df_D.iloc[num_id]['max'])) | ( float(V) < float(df_D.iloc[num_id]['min'])) ): #if value exceed range
+        print("exceed range")
         return -7    # return -7 as error code
     else:
         return 2     # return 2 as rule 2
@@ -602,7 +695,7 @@ def readDeviceTable(A,D):
     return df
 
 def readParameterTable(D,F):
-    df = pd.read_csv('dict/ParameterTable.txt')
+    df = pd.read_csv('dict/ParameterTable.csv')
     df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
     return df
 
