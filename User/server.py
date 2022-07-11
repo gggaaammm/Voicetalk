@@ -47,7 +47,7 @@ def index():
             #enspacy.readDB()
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
-            #value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
+#             value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
 #             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         

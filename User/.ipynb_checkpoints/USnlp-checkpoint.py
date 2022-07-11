@@ -335,7 +335,7 @@ def supportCheck(tokenlist):
         print("spotlight Device table check",DeviceTable )
         feature_list = ast.literal_eval(DeviceTable.iloc[0]['device_feature_list'])
         if(F not in feature_list):
-            tokenlist[4] = -6   #error message#6: Device not support such feature
+            tokenlist[4] = -4   #error message #4: Device not support such feature
             
     if(A!=''): #check if A all support F
         allsupport,d_id = 1,0
@@ -347,7 +347,7 @@ def supportCheck(tokenlist):
             d_id = d_id+1
 
         if(allsupport == 0):
-            tokenlist[4] = -6 #error message #6: Device not support such feature
+            tokenlist[4] = -4 #error message #4: Device not support such feature
             
     return tokenlist[4]
 
@@ -394,10 +394,73 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
         # 2. a number(check if exceed min/max) 
         # 3. a quantity(check if unit support and check exceed min/max)
         if(D != ''):  #access the device info(which D and F are fitted)
-            dimension = findDimension(D,F)
+            dimensions = findDimension(D,F)
             paramTable = readParameterTable(D,F)
+            ## we does not support dimension check
+            ## a rework of new V
+            new_V = []
+            num_id,str_id = 0,0
+            print('[string V]', stringV)
+            print('[quantity V]', quantityV)
+            for p_id in paramTable.index:
+                print("dimension check", p_id)
                 
-            if(len(stringV)+len(quantityV) == dimension == 1):
+                ##for each dimension, lookup parameter Table
+                
+                ##the input contains stringV and quantityV
+                
+                ## if string, we extract the element from string V
+                print(paramTable['type'][p_id])
+                if(paramTable['type'][p_id] == 'string'):
+                    try:
+                        print("type string")
+                        new_V.append(stringV[str_id])
+                        str_id+=1
+                    except IndexError:
+                        print("[index out of bounds]")
+                    # for string, there might be error if stringV is not so much
+                elif(paramTable['type'][p_id] == 'int' or paramTable['type'][p_id] == 'float'):
+                    print("type number")
+                    # 1. check out if stringV represent value in dictionary
+                    
+                    #iterate all the string to lookup param_dict
+                    value_find = 0
+                    for keyword in stringV:
+                        if keyword in paramTable['param_dict'][p_id]:
+                            print("a value find!")
+                            new_V.append(ast.literal_eval(paramTable['param_dict'][p_id])[keyword])
+                            value_find =1
+                    if(value_find == 0):
+                        # might cause index out of bounds error
+                        try:
+                            quantity = handleValue(str(quantityV[num_id]))
+                            print("quantity handled", quantity)
+                            num_id +=1
+                        except IndexError:
+                            print("[index out of bounds]")
+                        
+                        
+                        # need an tokenlist[4] to save the error: dimension mismatch
+                        
+                            
+#                     if(len(new_V) == ):
+#                         print(" extract element from quantity")
+#                         new_V.append(handleValue(str(quantityV[num_id])))
+#                         num_id+=1
+            print("[result]", new_V)
+                    # 2. if not, extract element from handling quantiyV
+                    
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            if(len(stringV)+len(quantityV) == dimensions == 1):
                 V = ''
                 if(len(stringV)>0):    # do param_dict transform to value
                     if(stringV[0] in paramTable.iloc[0]['param_dict']): #give value;
@@ -410,7 +473,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
                 elif(paramTable.iloc[0]['type'] == "int" or paramTable.iloc[0]['type'] == "float"):
                     if(isinstance(V,str) or V is None):  # string or handle Value error
                         print("[error] V error")
-                        tokenlist[4] = -10
+                        tokenlist[4] = -5
                     elif(isinstance(V,int) or isinstance(V,float)):
                         tokenlist[4] = checkMinMax(D,F,V,0)
                     else: #
@@ -449,7 +512,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
                             print("[numid]", num_id)
                             print("quantity in D x-dim",quantity, type(quantity))
                             if(quantity is None):
-                                tokenlist[4] = -10
+                                tokenlist[4] = -5
                             elif(isinstance(quantity,int) or isinstance(quantity,float)):
                                 if(checkMinMax(D,F,quantity, num_id)<0):
                                     tokenlist[4] = checkMinMax(D,F,quantity,num_id)
@@ -521,7 +584,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
                             pass
                     elif(paramTable.iloc[0]['type'] == "int" or paramTable.iloc[0]['type'] == "float"):
                         if(isinstance(V,str) or V is None):
-                            tokenlist[4] = -10
+                            tokenlist[4] = -5
                         elif(isinstance(V,int) or isinstance(V,float)):
                             tokenlist[4] = checkMinMax(device,F,V,0)
                         else: #
@@ -553,7 +616,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
                                 quantity = handleValue(str(quantityV[num_id]))
                                 V.append(quantity)
                                 if(quantity is None):
-                                    tokenlist[4] = -10
+                                    tokenlist[4] = -5
                                 elif(isinstance(quantity,int) or isinstance(quantity,float)):
                                     if(checkMinMax(device,F,quantity, num_id)<0):
                                         tokenlist[4] = checkMinMax(device,F,quantity,num_id)
@@ -657,7 +720,7 @@ def checkMinMax(D,F, V,num_id): #check min max only for rule 2, and only in para
     print(df_D)
     if( (float(V) > float(df_D.iloc[num_id]['max'])) | ( float(V) < float(df_D.iloc[num_id]['min'])) ): #if value exceed range
         print("exceed range")
-        return -7    # return -7 as error code
+        return -5    # return -5 as error code
     else:
         return 2     # return 2 as rule 2
 

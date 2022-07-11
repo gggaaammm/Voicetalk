@@ -28,9 +28,9 @@ dummy1,Color-I,2,int,0,255,[],
 dummy2,Switch1,0,int,0,1,[],"{'open':1, 'close':0}"
 dummy2,Place-I,0,string,0,0,[],"{'seattle':'seattle'}"
 dummy2,Timer,0,int,0,3600,[],
-dummy2,Color-I,0,int,0,255,[],
-dummy2,Color-I,0,int,0,255,[],
-dummy2,Color-I,0,int,0,255,[],
+dummy2,Color-I,0,int,0,255,[],"{'red':255}"
+dummy2,Color-I,0,int,0,255,[],"{'red':0}"
+dummy2,Color-I,0,int,0,255,[],"{'red':0}"
 dummy2,Special-I,0,int,0,90,[],
 dummy2,Special-I,1,int,0,180,[],
 dummy2,Special-I,2,string,0,0,[],
