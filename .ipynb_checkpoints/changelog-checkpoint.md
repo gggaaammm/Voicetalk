@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
 
+
+## [1.1.2] - 2022-07-12
+
+ 
+### Added
+1. parameterTable增加
+2. param_dict程式
+3. 多dimension處理方式
+
+### Changed
+1. Database 修正, 預計刪除FeatureTable的value_dict
+2. value_dict改為各個dimension各自處理. {'red': [255,0,0]} -> {'red':255}, {'red':0}, {'red':0}
+3. quantityDetect儲存quantity 
+4. token['V'] 改為不限一個
+
+
+### Need Fix
+
+
+
 ## [1.1.2] - 2022-07-07
  
 
