@@ -5,8 +5,11 @@ import json
 from threading import Thread
 import time, random, requests
 import DAN, register
-# import TWnlp #uncomment later
+import TWnlp #uncomment later
 import USnlp
+# v2
+# import managesa as SA
+
 
 
 # define error message format:
@@ -18,6 +21,18 @@ import USnlp
 
 # ========iottalk================
 ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
+#  ========= iottalk v2==========
+api_url = 'https://test.iottalk2.tw/csm/'  # default
+device_name = 'Dummy1'
+device_model = 'Dummy_Device'
+
+push_interval = 60
+device_queries = []
+# The input/output device features, please check IoTtalk document.
+idf_list = ['DummySensor-I']
+odf_list = ['DummyControl-O']
+
+#  ==========================
 #ServerURL = 'https://DomainName' #with SSL connection
 # for D+F
 
@@ -40,7 +55,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'en-US'
+        language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -48,17 +63,24 @@ def index():
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
 #             value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
         #get all device query(ies) from the tokenlist
         print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-        print("[ProcessSentence] how long:",len(device_queries))
-        thread = Thread(target=sendIot, args=(device_queries,))
+#         print("[ProcessSentence] how long:",len(device_queries))
+#         thread = Thread(target=sendIot, args=(device_queries,))
+#         thread.daemon = True
+#         thread.start()
+        
+        print("[IOTTALK V2]", device_queries)
+        thread = Thread(target=sendDevicetalk, args=(device_queries,))
         thread.daemon = True
         thread.start()
+        
+        
         
         if(isinstance(device_queries[0], list) == False):
             returnlist = device_queries
@@ -99,7 +121,7 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         name, feature,value, device_queries = USnlp.textParse(sentence) #spacy function
     else:  # chinese
-#         name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
+        name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
         print("chinese not yet")
     
     #get all device query(ies) from the tokenlist
@@ -202,72 +224,78 @@ def sendIot(device_queries):
                     DAN.push(F,*V)
                 else:
                     DAN.push(F, V)
+
+                    
+                    
+
+def readDeviceTable(D):
+    df = pd.read_csv('dict/DeviceTable.txt')
+    if(D != ""):
+        df = df.loc[df['device_name']== D]
+    return df
+
+
+            
+            
+            
+             
+                    
+def sendDevicetalk(device_queries):
+    print("[V2]device_queries")
+    
+    if(isinstance(device_queries[0], list)):
+        print("[A] rework:")
+        
+        for device_query in device_queries:
+            print("each query:", device_query)
+            D = device_query[1]
+            F = device_query[2]
+            V = device_query[3]
+            valid = device_query[4]
+    else:
+        print("[D] rework:", device_queries)
+        device_query = device_queries
+        D = device_query[1]
+        F = device_query[2]
+        V = device_query[3]
+        Table = readDeviceTable(D).iloc[0]
+        regaddr = Table.Regaddr
+        print('id_', Table.Regaddr)
+        print('name', Table.device_name)
+        print('model', Table.device_model)
+        print('idflist', Table.device_feature_list)
+        
+        
+        
+        
+    
+    SA.dan3 = SA.Client()
+    SA.dan3.register(url=api_url,on_signal= None, on_data=None, name='Voice99', idf_list=idf_list,  odf_list=None, 
+              id_= 'd3a5dc8e-5816-4141-9765-8baffc7e4499', 
+              profile={'model': device_model,'u_name': 'hscli',})
+    time.sleep(1)
+    SA.dan3.push('DummySensor-I', 9453)
     
     
 
-# def sendIot_old(A,D,F,V,valid,lang):
-#     if(D !="" and valid >0 ): # D+F
-#         df = pd.read_csv('dict/ADF.txt')
-#         print('df info:', df, "searching", D)
-#         if(lang == "en-US"):
-#             df = df.loc[df['D_en']==D]
-#         else:
-#             df = df.loc[df['D'] == D]
-#         print("remain df", df)
-#         deviceName = df.iloc[0]['D_en']
-#         deviceModel = df.iloc[0]['A_en']
-#         dfList = df.iloc[0]['DFlist']
-#         Regaddr = df.iloc[0]['Regaddr']
-#         dfList = eval(dfList)
-#         print(type(dfList))
-#         returnValue = V
-#         deviceFeature = F
-#         print("device name: ",deviceName,"device model: ", deviceModel)
-#         Reg_addr = Regaddr
-#         DAN.profile['d_name']= deviceName # search for device name 
-#         DAN.profile['dm_name']=deviceModel # use specific device model 
-#         DAN.profile['df_list']=dfList
-#         DAN.device_registration_with_retry(ServerURL, Reg_addr)
-# #         DAN.push('Switch1', 1)
-#         if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
-#             iotvalue = int(returnValue)*10 if int(returnValue)<=10 else 100
-#             DAN.push(deviceFeature, iotvalue)
-#         else:
-#             DAN.push(deviceFeature, int(returnValue))
     
-#     if(A !="" and valid >0): #  A+F
-#         print("tokenlist outer loop change1?:", A,D,F,V)
-#         df = pd.read_csv('dict/ADF.txt')
-#         if(lang == 'en-US'):
-#             df = df.loc[df['A_en']==A]
-#         else:
-#             df = df.loc[df['A'] == A]
-#         print('df info:',df)
-#         for ind in df.index:     
-#             print(df['D_en'][ind], df['A_en'][ind], df['DFlist'][ind], df['Regaddr'][ind])
-#             deviceName = df['D_en'][ind]
-#             deviceModel = df['A_en'][ind]
-#             dfList = df['DFlist'][ind]
-#             Regaddr = df['Regaddr'][ind]
-#             dfList = eval(dfList)
-#             returnValue = V
-#             deviceFeature = F
-#             print("device name: ",deviceName,"device model: ", deviceModel )
-#             Reg_addr = Regaddr
-#             DAN.profile['d_name']= deviceName # search for device name 
-#             DAN.profile['dm_name']=deviceModel # use specific device model 
-#             DAN.profile['df_list']=dfList
-            
-#             DAN.device_registration_with_retry(ServerURL, Reg_addr)
-#             if(deviceFeature == 'Luminance-I' or deviceFeature == 'ColorTemperature-I'):
-#                 DAN.push(deviceFeature, int(returnValue)*10)
-#             else:
-#                 DAN.push(deviceFeature, int(returnValue))
+    
+
+
+    
+
+# def DummySensor_I(valid):
+#     print("valid")
+#     if(valid > 0):
+#         return 12
+        
 
     
 
 if __name__ == "__main__":
     #register.registerIottalk()
     #register will be close for debug
+        
+
     app.run(host='0.0.0.0',debug=True, port=19453)
     

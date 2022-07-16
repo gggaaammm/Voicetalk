@@ -169,19 +169,20 @@ def textParse(sentence):
     # ===========================  value handling start=================================
     # check if sentence contains number, before sentence redirecting
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
+    # use the non-space version to do number detection
 
-    sentence_space = sentence_space.replace(tokendict['D'], "")
+    sentence_nospace = sentence.replace(tokendict['D'], "")
     sentence_value = tokendict['V']
     
     
   # ========================== chinese number handling =========================
     
     
-    word_list = ws([sentence_space], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
+    word_list = ws([sentence_nospace], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
     pos_list = pos(word_list)
     entity_list = ner(word_list, pos_list)
-    print("[ckip space]", pos_list)
-    print("[ckip space]", entity_list)
+    print("[ckip nospace]", pos_list)
+    print("[ckip nospace]", entity_list)
     # in entity list , we only find out 1. cardianl 2. quanity 3. time
     entity_list = list(entity_list)
     print("[value list]", entity_list[0])

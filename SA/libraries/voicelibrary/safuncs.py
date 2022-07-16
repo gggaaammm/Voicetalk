@@ -1,4 +1,6 @@
 from typing import List
+
+
 from iottalkpy.dan import NoData
 
 
@@ -36,10 +38,10 @@ class DummySensor_I(IdfFunction):
 		
         return
 
-    def runs(self)-> List[float, ]:
+    def runs(self, inputvalue)-> List[float, ]:
         value = [0, ]
-        print("-I A")
-        return value
+        print("-I A", inputvalue)
+        return inputvalue
 
 '''
 name = Voice_O1

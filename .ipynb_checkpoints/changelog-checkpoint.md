@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
 
+## [1.1.3] - 2022-07-14
+
+ 
+### Added
+
+### Changed
+1. param長度 = quantityV長度+stringV長度+key_id數量-keylist長度
+2. keylist, key_id用於關鍵字轉數字(紅色=255, etc)
+
+
+### Need Fix
+1. device talk
+2. connect voicetalk to devicetalk
+3. a param_dictionary check function if exist for type string
+4. a unit dictionary to save unit(to use or to compare?)
+5. 
+
+
 
 ## [1.1.2] - 2022-07-12
 
@@ -21,6 +39,11 @@ straightforward as possible.
 
 
 ### Need Fix
+1. need a devicetalk template
+2. connect voicetalk to devicetalk
+3. a param_dictionary check function if exist for type string
+4. a unit dictionary to save unit(to use or to compare?)
+5. 
 
 
 

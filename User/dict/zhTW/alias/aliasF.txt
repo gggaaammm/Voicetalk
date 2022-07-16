@@ -6,3 +6,4 @@ Luminance-I,亮度
 Rotation-I,旋轉
 Temperature-I,溫度
 Timer-I,定時器,時間,碼表
+ColorTemperature-I,色溫
