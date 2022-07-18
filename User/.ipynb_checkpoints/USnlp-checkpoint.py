@@ -118,15 +118,7 @@ def textParse(sentence):
     
     quantity = quantityDetect(sentence)
     print("[quantity]", quantity)
-#     if(len(tokendict['V'])>0):     # if token V has a string already matched, do not pass
-#         quantity = []
-#         sentence_value = tokendict['V']  # save device name before alias redirect
-#         pass
-#     else:
-#         quantity = quantityDetect(sentence)
-#         print("[quantity]", quantity)
-#         sentence_value = quantity
-    # ===========================  value handling end =================================
+
 
     sentence_feature = tokendict['F']     # save feature name before alias redirect
     sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
@@ -161,7 +153,7 @@ def textParse(sentence):
             print(tokendict['V'][d_id])
             d_id +=1
              
-    print("[remake V_result]", V_result)
+    print("[remake V_result? what is this]", V_result)
 #     tokendict['V'] = V_result
         
         

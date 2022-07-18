@@ -4,7 +4,25 @@ All notable changes to this project will be documented in this file.
 Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
 
-## [1.1.3] - 2022-07-14
+
+## [1.1.4] - 2022-07-18
+
+ 
+### Added
+1. V2server.py: a server to connect to devicetalk
+
+### Changed
+1. 中文程式TWnlp.py更新：已和英文版同步
+2. error message: 更新為五種error message,詳情看[中文版錯誤訊息](https://github.com/gggaaammm/Voicetalk/blob/v2/User/dict/zhTW/errorlog_zhTW.txt)/[English ver. error message](https://github.com/gggaaammm/Voicetalk/blob/v2/User/dict/enUS/errorlog_enUS.txt)
+
+### Need Fix
+1. device talk template
+
+
+
+
+
+## [1.1.3] - 2022-07-16
 
  
 ### Added
@@ -12,7 +30,8 @@ straightforward as possible.
 ### Changed
 1. param長度 = quantityV長度+stringV長度+key_id數量-keylist長度
 2. keylist, key_id用於關鍵字轉數字(紅色=255, etc)
-
+3. 中文版：數字問題, 暫時解決
+4. 中文版：中文, 
 
 ### Need Fix
 1. device talk

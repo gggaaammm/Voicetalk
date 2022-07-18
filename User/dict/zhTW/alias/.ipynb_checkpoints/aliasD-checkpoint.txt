@@ -14,4 +14,5 @@ Tatung airpurifier,大同空氣清淨機
 robotic arm,機械手臂
 window,窗戶,窗
 door,門,大門
-dummy1,虛擬裝置1
+dummy1,虛擬裝置1,2號虛擬裝置
+dummy2,虛擬裝置2,2號虛擬裝置

@@ -21,7 +21,16 @@ import USnlp
 
 # ========iottalk================
 ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
+#  ========= iottalk v2==========
+api_url = 'https://test.iottalk2.tw/csm/'  # default
+device_name = 'Dummy1'
+device_model = 'Dummy_Device'
 
+push_interval = 60
+device_queries = []
+# The input/output device features, please check IoTtalk document.
+idf_list = ['DummySensor-I']
+odf_list = ['DummyControl-O']
 
 #  ==========================
 #ServerURL = 'https://DomainName' #with SSL connection
@@ -61,8 +70,13 @@ def index():
         #get all device query(ies) from the tokenlist
         print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-        print("[ProcessSentence] how long:",len(device_queries))
-        thread = Thread(target=sendIot, args=(device_queries,))
+#         print("[ProcessSentence] how long:",len(device_queries))
+#         thread = Thread(target=sendIot, args=(device_queries,))
+#         thread.daemon = True
+#         thread.start()
+        
+        print("[IOTTALK V2]", device_queries)
+        thread = Thread(target=sendDevicetalk, args=(device_queries,))
         thread.daemon = True
         thread.start()
         
@@ -211,7 +225,69 @@ def sendIot(device_queries):
                 else:
                     DAN.push(F, V)
 
+                    
+                    
 
+def readDeviceTable(D):
+    df = pd.read_csv('dict/DeviceTable.txt')
+    if(D != ""):
+        df = df.loc[df['device_name']== D]
+    return df
+
+
+            
+            
+            
+             
+                    
+def sendDevicetalk(device_queries):
+    print("[V2]device_queries")
+    
+    if(isinstance(device_queries[0], list)):
+        print("[A] rework:")
+        
+        for device_query in device_queries:
+            print("each query:", device_query)
+            D = device_query[1]
+            F = device_query[2]
+            V = device_query[3]
+            valid = device_query[4]
+    else:
+        print("[D] rework:", device_queries)
+        device_query = device_queries
+        D = device_query[1]
+        F = device_query[2]
+        V = device_query[3]
+        Table = readDeviceTable(D).iloc[0]
+        regaddr = Table.Regaddr
+        print('id_', Table.Regaddr)
+        print('name', Table.device_name)
+        print('model', Table.device_model)
+        print('idflist', Table.device_feature_list)
+        
+        
+        
+        
+    
+    SA.dan3 = SA.Client()
+    SA.dan3.register(url=api_url,on_signal= None, on_data=None, name='Voice99', idf_list=idf_list,  odf_list=None, 
+              id_= 'd3a5dc8e-5816-4141-9765-8baffc7e4499', 
+              profile={'model': device_model,'u_name': 'hscli',})
+    time.sleep(1)
+    SA.dan3.push('DummySensor-I', 9453)
+    
+    
+
+    
+    
+
+
+    
+
+# def DummySensor_I(valid):
+#     print("valid")
+#     if(valid > 0):
+#         return 12
         
 
     
