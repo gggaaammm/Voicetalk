@@ -356,7 +356,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
     device_queries = [[0]*5]*1   # create a device query as return type of function
 
     
-    df = pd.read_csv('dict/DevicefeatureTable.csv')
+    df = pd.read_csv('dict/ParameterTable.csv')
 
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
@@ -367,7 +367,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
         
         #require table of dictionary
         df = df.loc[(df['device_feature'] == F)]
-        tokenlist[3] = ast.literal_eval(df.iloc[0]['value_dict'])[feature]
+        tokenlist[3] = ast.literal_eval(df.iloc[0]['param_dict'])[feature]
         
         if(D != ""):
             device_queries = [A,D,F,tokenlist[3], rule]
@@ -808,15 +808,16 @@ def findAlias(feature):
 
 #
 def findDimension(D,F):
-    df = findinfo(D,F)
+    df = pd.read_csv('dict/DevicefeatureTable.csv')
+    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
     dimension = df.iloc[0]['dim']
     return dimension
     
 #
-def findinfo(D,F):
-    df = pd.read_csv('dict/DevicefeatureTable.csv')
-    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    return df
+# def findinfo(D,F):
+#     df = pd.read_csv('dict/DevicefeatureTable.csv')
+#     df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+#     return df
 
 def findDeviceList(A):
     df = pd.read_csv('dict/DeviceTable.txt')

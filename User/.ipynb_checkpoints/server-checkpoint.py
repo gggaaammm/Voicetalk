@@ -172,6 +172,13 @@ def sendIot(device_queries):
 
                 print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
                 print("device feature", F)
+                if(F == 'Luminance-I' or F == 'Fanspeed-I' ):
+                    if(V == 0):
+                        DAN.push("Switch1", 0)
+                    else:
+                        DAN.push('Switch1',1)
+                else:
+                    DAN.push('Switch1',1)
                 if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                     iotvalue = int(V)*10 if int(V)<=10 else 100
                     DAN.push(F, iotvalue)
@@ -199,9 +206,16 @@ def sendIot(device_queries):
             DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
             DAN.device_registration_with_retry(ServerURL, Regaddr)
             #turn on the device
-            DAN.push('Switch1',1)
+            
             
             print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
+            if(F == 'Luminance-I' or F == 'Fanspeed-I' ):
+                if(V == 0):
+                    DAN.push("Switch1", 0)
+                else:
+                    DAN.push('Switch1',1)
+            else:
+                DAN.push('Switch1',1)
             if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                 iotvalue = int(V)*10 if int(V)<=10 else 100
                 DAN.push(F, iotvalue)

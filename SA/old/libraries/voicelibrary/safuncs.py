@@ -30,10 +30,10 @@ lines = 14
 ro_lines = [1, 2, 3, 4, 5, 7, 9, 10, 12]
 '''
 
-class DummySensor_I(IdfFunction):
+class Ｓwitch_I(IdfFunction):
     def __init__(self):
         # Variable Setup will be inserted here.
-        
+        feature_name ='[open, close, turn on , turn off]'
         # End of Variable Setup block.
 		
         return

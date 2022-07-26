@@ -68,7 +68,7 @@ def readDB():
     return aliasDict.values()
 
 # ========= chinese number redirection(word) ========
-def chinese_redirection(wordlist):
+def chinese_numredirection(wordlist):
     df = pd.read_csv("dict/zhTW/num_zh.txt")
     for idx in range(len(wordlist)):
         zh_df = df.loc[(df['text1'] == wordlist[idx]) | (df['text2'] == wordlist[idx]) ]
@@ -122,11 +122,11 @@ def textParse(sentence):
     # do chinese number redirection before sentence is joined
     wordlist = word_list[0]
     print("old [wordlist]", wordlist)
-    wordlist = chinese_redirection(wordlist)
+#     wordlist = chinese_numredirection(wordlist)
     
-    print("new [wordlist]", wordlist)
-    sentence_nozh = ''.join(wordlist)
-    print("[segmentation]", sentence_nozh)
+#     print("new [wordlist]", wordlist)
+#     sentence_nozh = ''.join(wordlist)
+#     print("[segmentation]", sentence_nozh)
     
     
     
@@ -154,14 +154,14 @@ def textParse(sentence):
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
     # use the non-space version to do number detection
 
-    sentence_nozh = sentence_nozh.replace(tokendict['D'], "")
+    sentence = sentence.replace(tokendict['D'], "")
     
     
     
 # ========================== we detect the quantity =========================
 # for chinese number, we use ckip entity to detect number
     
-    quantity = quantityDetect(sentence_nozh , dict_for_CKIP)
+    quantity = quantityDetect(sentence , dict_for_CKIP)
 
     
     
@@ -236,25 +236,26 @@ def tokenClassifier(sentence):
     
 # ===== quantityDetect =========
 def quantityDetect(sentence, dict_for_CKIP):
-    print("[func] quantity detection")
-    quantity = []
+    quantity = [] 
     word_list = ws([sentence], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
+    word_list[0] = chinese_numredirection(word_list[0])
     pos_list = pos(word_list)
     entity_list = ner(word_list, pos_list)
-    print("[quantity Detect]", pos_list)
-    print("[quantity Detect]", entity_list)
     # in entity list , we only find out 1. cardianl 2. quanity 3. time 4. ORDINAL
     entity_list = list(entity_list)
-    print("[value list]", entity_list[0])
     for entity in entity_list[0]:
-        print("[entity]", entity, type(entity))
         entity = list(entity)
         if(entity[2] == 'QUANTITY' or entity[2] == 'TIME' or entity[2] == 'CARDINAL' or entity[2] == 'ORDINAL' ):
             quantity.append(handleEntity(entity[2],entity[3]))
-        else:
-            print("not the thing i need to find")
-    print("[quantityDetect] result(list): ", quantity )
     return quantity
+
+
+# == read entity
+def readEntity():
+    df = pd.read_csv("dict/zhTW/entity.txt")
+    return df
+
+
 
 # == handle entity, we need to change chienese entity into english entity
 # for Quantity and Time search for aliasU and redirect to english ver
@@ -264,9 +265,9 @@ def handleEntity(Type, Context):
     #Context might contain number(s)+unit(s)
     #extract all units
     #change all unit to english ver
-    print("entity is", Context)
+    print("[Entity Detection]", Context)
     if(Type == 'QUANTITY' or Type == 'TIME'):# get all the units in loop
-        df = pd.read_csv("dict/zhTW/aliasU.txt")
+        df = readEntity()
         for n in re.findall(r'[\u4e00-\u9fff]+', Context):
             # for each unit, get the absolute name
             df_abs = df.loc[((df['alias1'] == n) | (df['alias2'] == n) | (df['alias3'] == n))]
@@ -392,7 +393,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
     device_queries = [[0]*5]*1   # create a device query as return type of function
     print("[valueCheck] begin: ", tokenlist, feature, quantityV)
     
-    df = pd.read_csv('dict/DevicefeatureTable.txt')
+    df = pd.read_csv('dict/ParameterTable.csv')
 
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
@@ -403,7 +404,7 @@ def valueCheck(tokenlist, feature, quantityV): #issue give value
         
         #require table of dictionary
         df = df.loc[(df['device_feature'] == F)]
-        tokenlist[3] = ast.literal_eval(df.iloc[0]['value_dict'])[feature]
+        tokenlist[3] = ast.literal_eval(df.iloc[0]['param_dict'])[feature]
         
         if(D != ""):
             device_queries = [A,D,F,tokenlist[3], rule]
@@ -617,7 +618,7 @@ def checkMinMax(D,F, V,p_id): #check min max only for rule 2, and only in parame
     print(df_D)
     if( (float(V) > float(df_D['max'][p_id])) | ( float(V) < float(df_D['min'][p_id])) ): #if value exceed range
         print("exceed range")
-        return -5    # return -5 as error code
+        return -6    # return -6 as error code: exceed range
     else:
         print("in range")
         return 2     # return 2 as rule 2

@@ -72,6 +72,7 @@
           final_transcript = ''; // 最終的辨識訊息變數
           recognition.lang = language //設定當前語言
           recognition.start(); // 開始辨識
+          $("#responseBox").val("");
         }
       }
 
@@ -125,11 +126,11 @@
                             }
                         }
                         else{
-                            if(data.value == ""){
-                                renderhtml = data.response+data.name+"is set to"+data.feature
+                            if(data.valid == 1){
+                                renderhtml = data.response+data.name+" is set to "+data.feature
                             }
                             else{
-                                renderhtml = data.response+data.name+"'s '"+data.feature+"is set to"+data.value
+                                renderhtml = data.response+data.name+"'s "+data.feature+" is set to "+data.value
                             }
                             
                         }
@@ -145,11 +146,12 @@
                                 case -3: renderhtml = "句子中未包含電器功能"; break;
                                 case -4: renderhtml = data.name+" 不支援 "+data.feature; break;
                                 case -5: renderhtml = "句子中的數值"+data.value+"有誤"; break;
+                                case -6: renderhtml = "句子中的數值"+data.value+"超出範圍"; break;
                                 
                             }
                         }
                         else{
-                            if(data.value == ""){
+                            if(data.valid == 1){
                                 renderhtml = data.response+data.name+"即將"+data.feature
                             }
                             else{
@@ -192,10 +194,10 @@
           <input id="recognitionBox" class="form-control" type="text" size="60" value=""/>
             <br>
             <br>
-          <form method="post">
+          <!--form method="post">
             <input type="text" name="user">
             <input type="submit" name="send" value="文字送出">
-          </form>
+          </form-->
         </div>
         <div class="col-sm">
             <label id="responseTitle" for="recognitionBox">系統回覆:</label>

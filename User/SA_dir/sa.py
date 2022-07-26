@@ -9,6 +9,7 @@ api_url = 'https://test.iottalk2.tw/csm/'
 
 ### [OPTIONAL] If not given or None, server will auto-generate.
 device_name = 'Voice_D1'
+
 device_addr = 'd3a5dc8e-5816-4141-9765-8baffc7e7dca'
 
 ### [OPTIONAL] If the device_addr is set as a fixed value, user can enable
@@ -17,6 +18,7 @@ persistent_binding = True
 
 ### The Device Model in IoTtalk, please check IoTtalk document.
 device_model = 'Dummy_Device'
+
 
 ### The input/output device features, please check IoTtalk document.
 idf_list = ['DummySensor-I']

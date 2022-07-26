@@ -1,11 +1,11 @@
 D,alias1,alias2,alias2,alias4,alias5,alias6
-fluorescent lamp,light number one,light number 1,light 1,light one,light #1,
-CHT LED,light number two,light number 2,light 2,light two,light #2,
-CAG LED,light number three,light number 3,light 3,light three,light #3,
+fluorescent lamp,light number one,light number 1,light 1,light one,light #1,lights number one
+CHT LED,light number two,light number 2,light 2,light two,light #2,lights number two
+CAG LED,light number three,light number 3,light 3,light three,light #3,lights number three
 spot light,spotlight,spotlights
 triangle light,triangle light,triangle lights,
 indirect light,indirect light,indirect lights,
-tatung fan,fan number one,fan number 1,fan 1,fan one,fan #1
+tatung fan,fan number one,fan number 1,fan 1,fan one,fan #1,
 chimei fan,fan number two,fan number 2,fan 2,fan two,fan #2
 curtain1,curtain number one,curtain number 1,curtain 1,curtain one,curtain #1
 curtain2,curtain number two,curtain number 2,curtain 2,curtain two,curtain #2

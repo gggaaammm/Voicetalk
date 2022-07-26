@@ -41,35 +41,40 @@ interval = {
     'Dummy_Sensor': 3,  # assign feature interval
 }
 
+dandict = {}
+dans = []
 
-dan1 = Client()
-dan1.register(url=url2,on_signal= None, on_data=None, name='Voice66', idf_list=idf_list,  odf_list=odf_list, 
+
+dans.append(Client())
+dans[0].register(url=url2,on_signal= None, on_data=None, name='Voice66', idf_list=idf_list,  odf_list=odf_list, 
               id_= 'd3a5dc8e-5816-4141-9765-8baffc7e4466', 
-              profile={'model': device_model,'u_name': 'hscli',}
+              profile={'model': device_model,}
              )
 
 
-# dan2 = Client()
-# dan2.register(url=url2, on_signal= None, on_data=None, name='Voice88', idf_list=idf_list,  odf_list=odf_list, 
-#               id_= 'd3a5dc8e-5816-4141-9765-8baffc7e4488', 
-#               profile={'model': device_model,'u_name': 'hscli',}
-#              )
 
+dans.append(Client())
+dans[1].register(url=url2, on_signal= None, on_data=None, name='Voice88', idf_list=idf_list,  odf_list=odf_list, 
+              id_= 'd3a5dc8e-5816-4141-9765-8baffc7e4488', 
+              profile={'model': device_model,}
+             )
+dandict['Voice66'] = dans[0]
+dandict['Voice88'] = dans[1]
 
-def registering(q):
+def pushing(q):
     if(q % 4 == 0 ):
-        dan1.push('DummySensor-I', q)
+        dandict['Voice66'].push('DummySensor-I', q)
     elif(q % 4 == 1 ):
-        dan1.push('DummySensor-I', q)
-#     elif(q % 4 == 2 ):
-#         dan2.push('DummySensor-I', q)
-#     elif(q % 4 == 3 ):
-#         dan2.push('DummySensor-I', q)
+        dandict['Voice66'].push('DummySensor-I', q)
+    elif(q % 4 == 2 ):
+        dandict['Voice88'].push('DummySensor-I', q)
+    elif(q % 4 == 3 ):
+        dandict['Voice88'].push('DummySensor-I', q)
 
-# for i in range(4):
-#     print(i)
-#     registering(i)
-#     time.sleep(1)
+for i in range(40):
+    print(i)
+    pushing(i)
+    time.sleep(1)
 
 
 

@@ -5,6 +5,18 @@ Here we write upgrading notes for brands. It's a team effort to make them as
 straightforward as possible.
 
 
+## [1.1.4] - 2022-07-19
+
+ 
+### Added
+
+
+### Changed
+1. [ENUS] add color temperature(s) in dict/enUS/aliasF light(s) number one/two/three in dict/enUS/aliasD
+
+### Need Fix
+
+
 ## [1.1.4] - 2022-07-18
 
  

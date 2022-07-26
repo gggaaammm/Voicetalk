@@ -8,7 +8,7 @@ import DAN, register
 import TWnlp #uncomment later
 import USnlp
 # v2
-# import managesa as Devicetalk
+# import managesa as SA
 
 
 
@@ -254,15 +254,15 @@ def sendDevicetalk(device_queries):
                 print('name', Table.device_name)
                 print('model', Table.device_model)
                 print('idflist', Table.device_feature_list)
-                Devicetalk.dan = Devicetalk.Client()
-                Devicetalk.dan.register(url=api_url, on_signal = None,  on_data=None, name=Table.device_name, 
+                SA.dan = SA.Client()
+                SA.dan.register(url=api_url, on_signal = None,  on_data=None, name=Table.device_name, 
                                 idf_list=Table.device_feature_list,  odf_list=None, 
                                 id_= Table.Regaddr, profile={'model': Table.device_model,'u_name': 'hscli',})
                 time.sleep(1)
                 if(isinstance(V,list)):
-                    Devicetalk.dan.push(F,*V)
+                    SA.dan.push(F,*V)
                 else:
-                    Devicetalk.dan.push(F,V)
+                    SA.dan.push(F,V)
     else:
         device_query = device_queries
         D = device_query[1]
@@ -276,15 +276,15 @@ def sendDevicetalk(device_queries):
             print('name', Table.device_name)
             print('model', Table.device_model)
             print('idflist', Table.device_feature_list)
-            Devicetalk.dan = Devicetalk.Client()
-            Devicetalk.dan.register(url=api_url, on_signal = None,  on_data=None, name=Table.device_name, 
+            SA.dan = SA.Client()
+            SA.dan.register(url=api_url, on_signal = None,  on_data=None, name=Table.device_name, 
                             idf_list=Table.device_feature_list,  odf_list=None, 
                             id_= Table.Regaddr, profile={'model': Table.device_model,'u_name': 'hscli',})
             time.sleep(1)
             if(isinstance(V,list)):
-                Devicetalk.dan.push(F,*V)
+                SA.dan.push(F,*V)
             else:
-                Devicetalk.dan.push(F,V)
+                SA.dan.push(F,V)
         
         
         
