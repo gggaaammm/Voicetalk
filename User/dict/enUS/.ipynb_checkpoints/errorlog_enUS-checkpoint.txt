@@ -1,9 +1,6 @@
 id,error message
--1,too many tokens in token A/D/F/V
--2,no device D found in the sentence
--3,no device feature F found in the sentence
--4,no value V found in the sentence
--5,the number of value is not equal to the number of unit
--6,device D not support such device feature F
--7,the device D does not support value V
--8,the unit U is not supported by device feature F of the device D
+-1, "The number of device/device feature should be one, not multiple."; break;
+-2, "No device found in the sentence."; break;
+-3, "No device feature found in the sentence"; break;
+-4, "Device "+data.name +" does not support "+ data.feature; break;
+-5, "The value"+data.value+" in sentence cause error"; break;

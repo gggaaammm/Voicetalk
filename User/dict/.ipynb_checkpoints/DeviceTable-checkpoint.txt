@@ -13,5 +13,6 @@ Regaddr,device_model,device_name,device_feature_list
 20220501window,Vwindow,window,"['Switch1',]"
 20220501airpurifier,Vairpurifier,Tatung airpurifier,"['Switch1',]"
 20220501door,Vdoor,door,"['Switch1',]"
-20220501dummy,Vdummy,dummy1,"['Timer-I','Temperature-I']"
-20220501roboticarm,Vdummy,robotic arm,"['Rotation-I',]"
+20220501dummy,Vdummy,dummy1,"['Switch1','Timer','Temperature-I','Color-I']"
+20220501dummy2,Vdummy,dummy2,"['Switch1','Timer','Color-I', 'Special-I','Place-I']"
+20220501roboticarm,Varm,robotic arm,"['Rotation-I',]"

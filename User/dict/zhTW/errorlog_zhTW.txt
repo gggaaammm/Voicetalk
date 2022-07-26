@@ -1,9 +1,6 @@
 id,error message
--1,
--2,
--3,
--4,
--5,
--6,
--7,
--8,
+-1, "句子中的電器/電器功能的數量僅能為一個"; break;
+-2, "句子中未包含電器"; break;
+-3, "句子中未包含電器功能"; break;
+-4, data.name+" 不支援 "+data.feature; break;
+-5, "句子中的數值"+data.value+"有誤"; break;

@@ -1,4 +1,4 @@
-V,alias
+V,alias1
 largest,
 smallest,
 bright,brightest
@@ -8,4 +8,11 @@ low,lowest
 middle,
 red,
 blue,
-yellow
+yellow,
+pink,
+boston,
+seattle,
+cool,
+warm
+
+

@@ -3,6 +3,10 @@ Switch1,open,turn on,power on
 Switch1,close,turn off,power off
 Fanspeed-I,fan speed,fan speed
 Luminance-I,brightness,brightness
+ColorTemperature-I,color temperature,color temperatures
 Rotation-I,rotation
 Temperature-I,temperature
-Timer-I,timer
+Timer,timer
+Color-I,color
+Special-I,special
+Place-I,place

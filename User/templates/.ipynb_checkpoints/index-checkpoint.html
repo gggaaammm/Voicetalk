@@ -17,14 +17,14 @@
       //****************************************************************************************  
       var recognitionTitle = {"en-US":"Recognition Result","cmn-Hant-TW":"辨識結果"} 
       var recognitionBox = document.getElementById("recognitionBox"); // 辨識結果  "HTML元件"
-      var final_transcript = '';                                      // 最終的辨識訊息 "JS變數"        
+      var final_transcript = '';       
       var responseTitle = {"en-US":"System Response","cmn-Hant-TW":"系統回覆"}  
       var responseBox =   document.getElementById("responseBox");     //系統回覆
       var startStopButton; // 「開始/停止」按鈕
       var infoBox = document.getElementById("infoBox"); // 提示使用者的訊息
       var startMessage = {"en-US":"Tap to start","cmn-Hant-TW":"按此開始"}  
       var stopMessage = {"en-US":"Tap to stop","cmn-Hant-TW":"按此結束"}  
-      var selectlangBox = document.getElementById("selectlangBox"); // 語言選擇的下拉式選單
+      var selectLanguageList = document.getElementById("selectLanguageList"); // 語言選擇的下拉式選單
       
 
       
@@ -41,7 +41,7 @@
       function selectLanguage(event){
           if(recognizing){recognition.stop();} //如果正在辨識, 就停止
           
-          language = selectlangBox.options[selectlangBox.selectedIndex].value; // 取得被選擇的語言
+          language = selectLanguageList.options[selectLanguageList.selectedIndex].value; // 取得被選擇的語言
           
           $("#responseBox").val(""); //清空 系統回應
           $("#recognitionBox").val(""); //清空 HTML的辨識結果 “可視的元件”
@@ -50,21 +50,21 @@
           recognition.lang = language;   //辨識API切換至當前語言
           $("#recognitionTitle").html(recognitionTitle[language]) // 辨識欄位的標題切換至當前語言
           $("#responseTitle").html(responseTitle[language])       // 回應欄位的標題切換至當前語言
-          $("#infobox").html(startMessage[language])              // 提示使用者的訊息切換至當前語言
-          
+          infoBox.innerText = startMessage[language]              // 提示使用者的訊息切換至當前語言
+      }    
         
         
-      // ===== startButton(event)  =================
+      // ===== startstopButton(event)  =================
       // This function is triggered when button on GUI is clicked
       // 1. get the language value from the dropdown list
       // 2. if system is recognizing, the button means stop, so stop the recognition
       // 3. if system is not recognizing, the button means start, so start the rocognition  
-      function startButton(event) {
+      function startstopButton(event) {
         infoBox = document.getElementById("infoBox"); // 取得訊息控制項 infoBox
         recognitionBox = document.getElementById("recognitionBox"); // 取得最終的辨識訊息控制項 recognitionBox
         startStopButton = document.getElementById("startStopButton"); // 取得「辨識/停止」這個按鈕控制項
-        selectlangBox = document.getElementById("selectlangBox");
-        language = selectlangBox.options[selectlangBox.selectedIndex].value;
+        selectLanguageList = document.getElementById("selectLanguageList");
+        language = selectLanguageList.options[selectLanguageList.selectedIndex].value;
         if (recognizing) { // 如果正在辨識，則停止。
           recognition.stop();
         } else { // 否則就開始辨識
@@ -72,6 +72,7 @@
           final_transcript = ''; // 最終的辨識訊息變數
           recognition.lang = language //設定當前語言
           recognition.start(); // 開始辨識
+          $("#responseBox").val("");
         }
       }
 
@@ -81,30 +82,18 @@
       } else {
         var recognition = new webkitSpeechRecognition(); // 建立語音辨識物件 webkitSpeechRecognition
         recognition.continuous = true;                   // 設定連續辨識模式
-        recognition.interimResults = true;               // 設定輸出持續產生結果。
         
 
         recognition.onstart = function() { // 開始辨識
           recognizing = true; // 設定為辨識中
-//           infoBox.innerText =  stopMessage[language]
-          if(language == "en-US"){
-              infoBox.innerText = "Tap to stop";  // 顯示訊息為「辨識中」...
-          }else{
-              infoBox.innerText = "按此停止";  // 顯示訊息為「辨識中」...
-          }
+          infoBox.innerText =  stopMessage[language] // 提示使用者點選按鈕停止
           startStopButton.src="{{ url_for('static', filename='images/start.gif') }}";
         };
 
         recognition.onend = function() { // 辨識完成
           recognizing = false; // 設定為「非辨識中」
-//           infoBox.innerText = startMessage[language]  
-           if(language == "en-US"){
-               infoBox.innerText = "Tap to start";  // 顯示訊息為
-           }else{
-               infoBox.innerText = "按此開始"; 
-           }
+          infoBox.innerText = startMessage[language]  // 提示使用者點選按鈕停止
           startStopButton.src="{{ url_for('static', filename='images/stop.jpg') }}";
-
         };
 
         recognition.onresult = function(event) { // 辨識有任何結果時
@@ -112,15 +101,11 @@
             if (event.results[i].isFinal) { // 如果是最終結果
                 final_transcript = event.results[i][0].transcript; // 將其加入最終結果中
                 console.log("i:" + i + event.results[i][0].transcript);
-            } else { // 否則
-              interim_transcript += event.results[i][0].transcript; // 將其加入中間結果中
-            }
+            } 
           }
-          if (final_transcript.trim().length > 0) // 如果有最終辨識文字
+          if (final_transcript.trim().length > 0){ // 如果有最終辨識文字
               recognitionBox.value = final_transcript; // 顯示最終辨識文字到HTML
-        
-            
-            
+
             // portocol: send input to backend and get the input
 
             $.getJSON({
@@ -133,26 +118,21 @@
                         if(data.valid<0){
                             renderhtml = data.response
                             switch(data.valid){
-                                case -1: renderhtml = "Too many tokens in token A/D/F/V"; break;
-                                case -2: renderhtml = "No device D found in the sentence"; break;
-                                case -3: renderhtml = "No device feature F found in the sentence"; break;
-                                case -4: renderhtml = "No value V found in the sentence"; break;
-                                case -5: renderhtml = "The number of value is not equal to the number of unit"; break;
-                                case -6: 
-                                    renderhtml = data.name +" does not support "+data.feature; break;
-                                case -7: 
-                                    renderhtml = "the value V is out of the range"; 
-                                    // if some of the A exceed the range
-                                    if(data.tokenlist[0] != ''){
-                                        renderhtml = data.tokenlist[1]+"does not support value"+data.tokenlist[3]
-                                    }
-                                    break;
-                                case -8: renderhtml = "the unit U is not supported by device feature F of the device D"; break;
+                                case -1: renderhtml = "The number of device/device feature should be one, not multiple."; break;
+                                case -2: renderhtml = "No device found in the sentence."; break;
+                                case -3: renderhtml = "No device feature found in the sentence"; break;
+                                case -4: renderhtml = "Device "+data.name +" does not support "+ data.feature; break;
+                                case -5: renderhtml = "The value"+data.value+" in sentence cause error"; break;
                             }
                         }
                         else{
-//                             renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+" "+data.tokenlist[2]+" "+data.tokenlist[3]
-                            renderhtml = data.response+data.name+" "+data.feature+" "+data.value
+                            if(data.valid == 1){
+                                renderhtml = data.response+data.name+" is set to "+data.feature
+                            }
+                            else{
+                                renderhtml = data.response+data.name+"'s "+data.feature+" is set to "+data.value
+                            }
+                            
                         }
                     }
                     else if(language == "cmn-Hant-TW"){
@@ -161,24 +141,17 @@
                         if(data.valid<0){
                             renderhtml = data.response+data.valid
                             switch(data.valid){
-                                case -1: renderhtml = "A/D/F/V token數量過多"; break;
+                                case -1: renderhtml = "句子中的電器/電器功能的數量僅能為一個"; break;
                                 case -2: renderhtml = "句子中未包含電器"; break;
                                 case -3: renderhtml = "句子中未包含電器功能"; break;
-                                case -4: renderhtml = "電器功能需要給予數值"; break;
-                                case -5: renderhtml = "單位個數錯誤"; break;
-                                case -6: renderhtml = data.name+" 不支援 "+data.feature; break;
-                                case -7: 
-                                    renderhtml = "不支援的數值: "+ data.tokenlist[3]; 
-                                    // if some of the A exceed the range
-                                    if(data.tokenlist[0] != ''){
-                                        renderhtml = data.tokenlist[1]+"不支援的數值"+data.tokenlist[3]
-                                    }
-                                    break;
-                                case -8: renderhtml = "此電器的功能不支援該單位"; break;
+                                case -4: renderhtml = data.name+" 不支援 "+data.feature; break;
+                                case -5: renderhtml = "句子中的數值"+data.value+"有誤"; break;
+                                case -6: renderhtml = "句子中的數值"+data.value+"超出範圍"; break;
+                                
                             }
                         }
                         else{
-                            if(data.value == ""){
+                            if(data.valid == 1){
                                 renderhtml = data.response+data.name+"即將"+data.feature
                             }
                             else{
@@ -192,12 +165,14 @@
                     
 
                     console.log(renderhtml)
-                    $("#responseBox").val(renderhtml);
+                    $("#responseBox").val( renderhtml);
                 },
                 error: function(){
                     //alert("fail")
                 }
             });
+              
+          }   
              
             //
             
@@ -219,10 +194,10 @@
           <input id="recognitionBox" class="form-control" type="text" size="60" value=""/>
             <br>
             <br>
-          <form method="post">
+          <!--form method="post">
             <input type="text" name="user">
             <input type="submit" name="send" value="文字送出">
-          </form>
+          </form-->
         </div>
         <div class="col-sm">
             <label id="responseTitle" for="recognitionBox">系統回覆:</label>
@@ -241,7 +216,7 @@
         <br-->
         <div class="col-sm">
         
-          <img id="startStopButton" style="width:110px; height:110px;" onclick="startButton(event)" src="{{ url_for('static', filename='images/start.gif') }}"/>
+          <img id="startStopButton" style="width:110px; height:110px;" onclick="startstopButton(event)" src="{{ url_for('static', filename='images/start.gif') }}"/>
             
           <br>
           <p id="infoBox">按此開始</p>
@@ -249,7 +224,7 @@
           
         </div>
           <form method="post" >
-              <select id = "selectlangBox" name="lang" onchange="selectLanguage(event)" >
+              <select id = "selectLanguageList" name="lang" onchange="selectLanguage(event)" >
                     <option value="cmn-Hant-TW">中文</option>
                     <option value="en-US">English</option>
                 </select>
@@ -262,7 +237,7 @@
     
 
     <script type="text/javascript">
-        window.onload = startButton(event);
+        window.onload = startstopButton(event);
         window.onload = selectLanguage(event);
     </script>
       
