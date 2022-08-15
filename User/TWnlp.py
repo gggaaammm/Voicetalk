@@ -36,6 +36,7 @@ print("loading time: ", end-start)
 # no parameter, no return value is needed
 
 def readDB():
+    # TODO: read DB will read the data from VoiceTalk Table
     #create the list of alias to match
     path = r"dict/zhTW/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))

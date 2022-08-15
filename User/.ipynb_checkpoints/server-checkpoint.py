@@ -151,6 +151,7 @@ def ProcessSentence():
 
 
 def sendIot(device_queries):
+    # sendIot will be change: write into files(or share memory)
     if(isinstance(device_queries[0], list)):
         print("[F] rework:", device_queries)
         for device_query in device_queries:
