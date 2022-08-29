@@ -191,7 +191,7 @@ def sendDevicetalk(device_queries):
             IDF = device_query[5]
             df = pd.read_csv("cmd/command.csv")
             cmd = {'IDF':IDF, 'A':'', 'D':D, 'F':F, 'V':V}
-            if(valid):
+            if(valid>0):
                 df.append(cmd, ignore_index=True)
                 df.to_csv("cmd/command.csv")
 
