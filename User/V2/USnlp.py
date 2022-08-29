@@ -368,7 +368,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     stringV = tokenlist[3]
     rule = tokenlist[4]
     print("that is IDF:", IDF)
-    device_queries = [[0]*5]*1   # create a device query as return type of function
+    device_queries = [[0]*6]*1   # create a device query as return type of function
 
     
     df = pd.read_csv('VoiceTalkTable.csv')
@@ -380,7 +380,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
             valueV  = Rule1Check(IDF,F)
             device_queries = [A,D,F,valueV,rule,IDF]
         if(A!= ""):
-            device_queries = [[0]*5]*len(IDF)
+            device_queries = [[0]*6]*len(IDF)
             for idx,idf in enumerate(IDF):
                 valueV = Rule1Check(idf,F)
                 #the device should be add
@@ -422,7 +422,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
             
         # next, we handle A
         elif(A != ''):
-            device_queries = [[0]*5]*len(IDF)
+            device_queries = [[0]*6]*len(IDF)
             for idx,idf in enumerate(IDF):
                 print("[RULE2-A]:", idf)
                 select_df = df.loc[(df['IDF'] == idf)]

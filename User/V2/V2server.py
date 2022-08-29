@@ -163,7 +163,8 @@ def ProcessSentence():
 
 
 
-
+#sendDevicetalk should write to shared memory(command.csv)
+#command csv should be very light, only contains IDF and returned Value
 def sendDevicetalk(device_queries):
     # senf IOT will write to shared memory
     if(isinstance(device_queries[0], list)):
