@@ -178,15 +178,26 @@ def sendDevicetalk(device_queries):
             
             
     else:
-        print("only 1 query", device_queries)
+        print("only 1 query", device_queries, len(device_queries))
         device_query = device_queries
         D = device_query[1]
         F = device_query[2]
         V = device_query[3]
         valid = device_query[4]
-        if(len(device_query)<5):
+     
+        if(len(device_queries) <6):
             print("command error")
-        pd.read_csv("cmd/command.csv")
+        else:
+            IDF = device_query[5]
+            df = pd.read_csv("cmd/command.csv")
+            cmd = {'IDF':IDF, 'A':'', 'D':D, 'F':F, 'V':V}
+            if(valid):
+                df.append(cmd, ignore_index=True)
+                df.to_csv("cmd/command.csv")
+
+
+
+        
         
 
                     
