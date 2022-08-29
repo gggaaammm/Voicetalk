@@ -1,0 +1,7 @@
+IDF,A,D,F,V
+Luminance_I1,light,light 1,brightness,"{'bright': 5, 'medium': 3, 'dark': 1}"
+Luminance_I2,light,light 2,brightness,"{'bright': 10, 'medium': 5, 'dark': 1}"
+Switch_I1,fan,fan 1,"{'open': 1, 'close': 0}",
+Switch_I2,fan,fan 2,"{'open': 1, 'close': 0}",
+Color_I1,light,light 1,color,"{'red': [255,0,0], 'green': [0,255,0], 'blue': [0,0,255]}"
+Time_I1,light,light 2,time,
