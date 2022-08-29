@@ -32,7 +32,7 @@ def initTable():
     # the result should be 
     # Maybe no more alias
     tokenTablePath = 'TokenTable.csv'
-    ruleTablePath = 'RuleTable.csv'
+    ruleTablePath = '../DB/RuleTable.csv'
     
     # read token table
     tokenTable = pd.read_csv(tokenTablePath)
@@ -101,7 +101,7 @@ def initTable():
 
     
     print("initTable success", VoiceTalkTable)
-    VoiceTalkTable.to_csv('VoiceTalkTable.csv')
+    VoiceTalkTable.to_csv('../DB/VoiceTalkTable.csv')
 
 
     
