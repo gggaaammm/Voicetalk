@@ -414,6 +414,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                     # first, we check the dimension is matched
                     if(dimension != len(quantityV)+len(stringV)):
                         print("[quantity]dimension not matched")
+                        valueV = 0
                     else:  #iterate through all dimension
                         valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
             device_queries = [A,D,F,valueV,tokenlist[4],IDF]
