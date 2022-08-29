@@ -128,10 +128,10 @@ def spellCorrection(sentence):
 # 1. read Database
 # 2. match the token(tokenclassifier)
 # 3. detect the quantity(quantityDetect)
-# 4. alias redirection
+# 4. alias redirection(canceled at V2)
 # 5. token counter validation(contain rule lookup)
 # 6. token support check
-# 7. token value check(contain handleValue())
+# 7. token value check(contain Rule1Check, Rule2Check)
 # sentence(string) as input parameter, return value is device_queries
     
 
@@ -147,9 +147,7 @@ def textParse(sentence):
     # ====================   tokenclassifier start===================================
     # user matcher(doc) to classify words to tokens
     # unclassified word will be thrown away
-    
     tokendict, tokenlist = tokenClassifier(sentence)
-
     # ====================   tokenclassifier end ===================================
     
     
@@ -354,85 +352,7 @@ def supportCheck(tokenlist):
     return IDF,tokenlist[4]
 
 
-# ====== Rule1
-def Rule1Check(IDF,F):
-    if(isinstance(IDF, str)):
-        df = pd.read_csv('VoiceTalkTable.csv')
-        select_df = df.loc[(df['IDF']) == IDF]
-        select_F = select_df.iloc[0]['F']
-        try:
-            f_dict = ast.literal_eval(select_F)
-            if isinstance(f_dict, dict):
-                valueV = f_dict[F]
-                print("rule 1 dict find", valueV)
-        except ValueError:
-            print("no dictionary find")
-    else:
-        print("its an A?")
-    return valueV
 
-# ==== Rule2
-def Rule2Check(IDF,quantityV, stringV, tokenlist):
-    print("===========[RULE2-Check]============")
-    print("[IDF]", IDF)
-    print("[quantityV]", quantityV)
-    print("[stringV]", stringV)
-    dimension = findDimension(IDF)
-    paramTable = findParameter(IDF)
-    print("[dimension]", dimension)
-    value_V = []
-    num_id, str_id = 0,0
-    if(dimension>1):
-        param_type = ast.literal_eval(paramTable.iloc[0]['Param_type'])
-        param_unit = ast.literal_eval(paramTable.iloc[0]['Param_unit'])
-        param_minmax = ast.literal_eval(paramTable.iloc[0]['Param_minmax'])
-        print("[type]", param_type, param_unit, param_minmax)
-    else:
-        param_type = [paramTable.iloc[0]['Param_type']]
-        param_unit = [paramTable.iloc[0]['Param_unit']]
-        param_minmax = [paramTable.iloc[0]['Param_minmax']]
-    error_flag = []
-    for dim in range(dimension):
-        print("[param type] at dim",dim , ": ",param_type, type(param_type))
-        if(param_type[dim] == 'string'):
-            value_V.append(stringV[str_id])
-            str_id= str_id+1
-        else:
-            print("[type int] check unit", param_unit[dim], "on ", quantityV[num_id])
-            # check if quantity need unit conversion
-            if(not isPureNumber(quantityV[num_id])):
-                if(param_unit[dim] != "None"):
-                    print("need unit conversion")
-                    quantity = handleUnit(str(quantityV[num_id]), param_unit[dim])   # number + unit
-                    if(quantity is None):
-                        print("[Unit conversion error]")
-                        error_flag.append(-5) # unit conversion error
-
-                    else:
-                        print("[Conversion OK]")
-                        #check min max: IDF, device name
-                        error_flag.append (checkMinMax(param_minmax, quantity._magnitude))
-                        value_V.append(quantity._magnitude)
-                else:
-                    print("[no unit in definition]")
-                    
-            else:
-                print("[pure number]")
-                quantity = handleValue(str(quantityV[num_id]))   # number + unit
-                error_flag.append(checkMinMax(param_minmax, quantity))
-                value_V.append(quantity)
-
-            num_id = num_id+1
-            # check if quantity in range min max
-            
-    print("===========[END: RULE2-Check]============", value_V, "?")
-    #last collect 
-    print("===========[Flag] =======================", error_flag)
-    if(all(flag >0 for flag in error_flag)):
-        tokenlist[4] = 2
-    else:
-        tokenlist[4] = -5
-    return value_V, tokenlist
     
     
 
@@ -530,6 +450,86 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     print("[valueCheck end] :", "device query:",device_queries, "\n tokenlist", tokenlist)    
     return device_queries
 
+
+# ====== Rule1 function for valueCheck
+def Rule1Check(IDF,F):
+    if(isinstance(IDF, str)):
+        df = pd.read_csv('VoiceTalkTable.csv')
+        select_df = df.loc[(df['IDF']) == IDF]
+        select_F = select_df.iloc[0]['F']
+        try:
+            f_dict = ast.literal_eval(select_F)
+            if isinstance(f_dict, dict):
+                valueV = f_dict[F]
+                print("rule 1 dict find", valueV)
+        except ValueError:
+            print("no dictionary find")
+    else:
+        print("its an A?")
+    return valueV
+
+# ==== Rule2 function for valueCheck
+def Rule2Check(IDF,quantityV, stringV, tokenlist):
+    print("===========[RULE2-Check]============")
+    print("[IDF]", IDF)
+    print("[quantityV]", quantityV)
+    print("[stringV]", stringV)
+    dimension = findDimension(IDF)
+    paramTable = findParameter(IDF)
+    print("[dimension]", dimension)
+    value_V = []
+    num_id, str_id = 0,0
+    if(dimension>1):
+        param_type = ast.literal_eval(paramTable.iloc[0]['Param_type'])
+        param_unit = ast.literal_eval(paramTable.iloc[0]['Param_unit'])
+        param_minmax = ast.literal_eval(paramTable.iloc[0]['Param_minmax'])
+        print("[type]", param_type, param_unit, param_minmax)
+    else:
+        param_type = [paramTable.iloc[0]['Param_type']]
+        param_unit = [paramTable.iloc[0]['Param_unit']]
+        param_minmax = [paramTable.iloc[0]['Param_minmax']]
+    error_flag = []
+    for dim in range(dimension):
+        print("[param type] at dim",dim , ": ",param_type, type(param_type))
+        if(param_type[dim] == 'string'):
+            value_V.append(stringV[str_id])
+            str_id= str_id+1
+        else:
+            print("[type int] check unit", param_unit[dim], "on ", quantityV[num_id])
+            # check if quantity need unit conversion
+            if(not isPureNumber(quantityV[num_id])):
+                if(param_unit[dim] != "None"):
+                    print("need unit conversion")
+                    quantity = handleUnit(str(quantityV[num_id]), param_unit[dim])   # number + unit
+                    if(quantity is None):
+                        print("[Unit conversion error]")
+                        error_flag.append(-5) # unit conversion error
+
+                    else:
+                        print("[Conversion OK]")
+                        #check min max: IDF, device name
+                        error_flag.append (checkMinMax(param_minmax, quantity._magnitude))
+                        value_V.append(quantity._magnitude)
+                else:
+                    print("[no unit in definition]")
+                    
+            else:
+                print("[pure number]")
+                quantity = handleValue(str(quantityV[num_id]))   # number + unit
+                error_flag.append(checkMinMax(param_minmax, quantity))
+                value_V.append(quantity)
+
+            num_id = num_id+1
+            # check if quantity in range min max
+            
+    print("===========[END: RULE2-Check]============", value_V, "?")
+    #last collect 
+    print("===========[Flag] =======================", error_flag)
+    if(all(flag >0 for flag in error_flag)):
+        tokenlist[4] = 2
+    else:
+        tokenlist[4] = -5
+    return value_V, tokenlist
 
 # ====== handleValue(quantity) ========
 # check if quantity contains value and number
