@@ -1,0 +1,3 @@
+IDF,A,D,F,V
+Switch_I1,light,light 1,open,1
+Luminance_I1,light,light 1,brightness,12

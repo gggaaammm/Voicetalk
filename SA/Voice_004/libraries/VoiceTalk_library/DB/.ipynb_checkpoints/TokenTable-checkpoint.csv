@@ -1,0 +1,3 @@
+IDF,A,D,F,V
+Luminance_I1,device,device 1,brightness,"{'bright': 5, 'medium': 3, 'dark': 1}"
+Switch_I1,fan,fan 1,"{'open': 1, 'close': 0}",

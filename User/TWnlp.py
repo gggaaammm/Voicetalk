@@ -37,6 +37,7 @@ print("loading time: ", end-start)
 
 def readDB():
     # TODO: read DB will read the data from VoiceTalk Table
+    # 
     #create the list of alias to match
     path = r"dict/zhTW/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
@@ -256,8 +257,6 @@ def readEntity():
     df = pd.read_csv("dict/zhTW/entity.txt")
     return df
 
-
-
 # == handle entity, we need to change chienese entity into english entity
 # for Quantity and Time search for aliasU and redirect to english ver
 # for Cardinal and Ordinal, do nothing
@@ -306,10 +305,6 @@ def aliasRedirection(tokendict, tokenlist):
     tokenlist = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], tokenlist[4]]
     print("[alias Redirect] Result:", tokenlist)
     return tokenlist
-
-
-
-
 
 # ======= tokenValidation(tokenlist)  ========
 # check if the number of token is valid

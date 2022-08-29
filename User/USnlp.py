@@ -28,7 +28,7 @@ matcher = PhraseMatcher(nlp.vocab)
 
 def readDB():
     # TODO change: will read the data from VoiceTalk Table
-    #create the list of alias to match
+    # Maybe no more alias
     path = r"dict/enUS/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
     aliasDict={}                                        # create a dictionary of alias A/D/F/V/U
