@@ -186,13 +186,14 @@ def sendDevicetalk(device_queries):
         valid = device_query[4]
      
         if(len(device_queries) <6):
-            print("command error")
+            print("command not match IDF")
         else:
+            print("command match IDF")
             IDF = device_query[5]
             df = pd.read_csv("cmd/command.csv")
-            cmd = {'IDF':IDF, 'A':'', 'D':D, 'F':F, 'V':V}
             if(valid>0):
-                df.append(cmd, ignore_index=True)
+                print("write file")
+                df.append({'IDF':IDF, 'A':'', 'D':D, 'F':F, 'V':V}, ignore_index=True)
                 df.to_csv("cmd/command.csv", index=False)
 
 
