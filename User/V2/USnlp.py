@@ -414,6 +414,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                     # first, we check the dimension is matched
                     if(dimension != len(quantityV)+len(stringV)):
                         print("[quantity]dimension not matched")
+                        tokenlist[4] = -5
                         valueV = 0
                     else:  #iterate through all dimension
                         valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
@@ -445,6 +446,8 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                         # first, we check the dimension is matched
                         if(dimension != len(quantityV)+len(stringV)):
                             print("[quantity]dimension not matched")
+                            valueV = 0
+                            tokenklist[4] = -5
                         else:  #iterate through all dimension
                             valueV, tokenlist = Rule2Check(idf,quantityV, stringV, tokenlist)
                             print("[RULE2-A:value_V]", valueV)
