@@ -95,7 +95,7 @@ class VoiceTalk:
                 # Push IDF data in daemon thread
                 # self.dan.push(<idf_name:str>, <data:list>) 
                 
-                time.sleep(2)
+                time.sleep(10)
 
             except:
                 pass

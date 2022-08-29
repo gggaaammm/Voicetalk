@@ -48,6 +48,9 @@ def initTable():
                 list_F.extend(keysList)
         except ValueError:
             list_F.append(f)
+        except SyntaxError:
+            list_F.append(f)
+        
     for v in tokenTable['V']:
         try:
             v_dict = ast.literal_eval(v)
@@ -467,7 +470,7 @@ def Rule1Check(IDF,F):
         try:
             f_dict = ast.literal_eval(select_F)
             if isinstance(f_dict, dict):
-                valueV = f_dict[F]
+                valueV = [f_dict[F]]
                 print("rule 1 dict find", valueV)
         except ValueError:
             print("no dictionary find")
