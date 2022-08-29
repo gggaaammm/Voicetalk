@@ -98,6 +98,7 @@ def initTable():
     VoiceTalkTable['Param_unit'] = list_param_unit
     VoiceTalkTable['Param_minmax'] = list_param_minmax
 
+
     
     print("initTable success", VoiceTalkTable)
     VoiceTalkTable.to_csv('VoiceTalkTable.csv')
@@ -259,26 +260,26 @@ def quantityDetect(sentence):
 # return: token
 
 def aliasRedirection(tokendict, tokenlist):
-    print("alisa redirection?")
-    path = r"dict/enUS/alias/" #  path for synonym
-    all_files = glob.glob(os.path.join(path , "*.txt"))
-    for filename in all_files:
-        sublist = []
-        df = pd.read_csv(filename)
-        if(filename[21] == 'V'): # V is a special with a list
-            V_list = list(tokendict[filename[21]])
-            for idx, V_word in enumerate(V_list):
-                for column in df.columns:
-                    df_abs = df.loc[(df[column])== V_word]
-                    if(len(df_abs.index)>0):
-                        V_list[idx] = df_abs.iloc[0][0] 
-            tokendict['V'] = V_list
-        #redirect A,D,F to device_model, device_name, device_feature individually
-        else:
-            for column in df.columns:
-                df_abs = df.loc[(df[column] == tokendict[filename[21]])]
-                if(len(df_abs.index)>0):
-                    tokendict[filename[21]] = df_abs.iloc[0][0]              
+    print("No aliasRedirection for V2")
+    # path = r"dict/enUS/alias/" #  path for synonym
+    # all_files = glob.glob(os.path.join(path , "*.txt"))
+    # for filename in all_files:
+    #     sublist = []
+    #     df = pd.read_csv(filename)
+    #     if(filename[21] == 'V'): # V is a special with a list
+    #         V_list = list(tokendict[filename[21]])
+    #         for idx, V_word in enumerate(V_list):
+    #             for column in df.columns:
+    #                 df_abs = df.loc[(df[column])== V_word]
+    #                 if(len(df_abs.index)>0):
+    #                     V_list[idx] = df_abs.iloc[0][0] 
+    #         tokendict['V'] = V_list
+    #     #redirect A,D,F to device_model, device_name, device_feature individually
+    #     else:
+    #         for column in df.columns:
+    #             df_abs = df.loc[(df[column] == tokendict[filename[21]])]
+    #             if(len(df_abs.index)>0):
+    #                 tokendict[filename[21]] = df_abs.iloc[0][0]              
     tokenlist = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], tokenlist[4]]
     return tokenlist
 
@@ -385,7 +386,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                 #the device should be add
                 select_df = df.loc[(df['IDF'] == idf)]
                 device = select_df.iloc[0]['D']
-                device_queries[idx] = [A,device,F,valueV, rule]
+                device_queries[idx] = [A,device,F,valueV, rule,idf]
         print("[RULE1]device queries:", device_queries)
         
         
