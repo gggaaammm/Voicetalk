@@ -259,6 +259,7 @@ def quantityDetect(sentence):
 # return: token
 
 def aliasRedirection(tokendict, tokenlist):
+    print("alisa redirection?")
     path = r"dict/enUS/alias/" #  path for synonym
     all_files = glob.glob(os.path.join(path , "*.txt"))
     for filename in all_files:
@@ -333,6 +334,7 @@ def supportCheck(tokenlist):
     print("[SUPPORTCHECK]",VoiceTalkTable )
     
     if(D!=''):  #check if D supports F
+        IDF = ''
         select_df = VoiceTalkTable[VoiceTalkTable['F'].str.contains(F)]
 #         print("support check: ", select_df)
         if(len(select_df.index)!=0):
