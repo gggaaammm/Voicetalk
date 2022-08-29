@@ -8,7 +8,7 @@ import DAN, register
 import TWnlp #uncomment later
 import USnlp
 # v2
-# import managesa as SA
+# import managesa as Devicetalk
 
 
 
@@ -21,7 +21,16 @@ import USnlp
 
 # ========iottalk================
 ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
+#  ========= iottalk v2==========
+api_url = 'https://test.iottalk2.tw/csm/'  # default
+device_name = 'Dummy1'
+device_model = 'Dummy_Device'
 
+push_interval = 60
+device_queries = []
+# The input/output device features, please check IoTtalk document.
+idf_list = ['DummySensor-I']
+odf_list = ['DummyControl-O']
 
 #  ==========================
 #ServerURL = 'https://DomainName' #with SSL connection
@@ -61,8 +70,13 @@ def index():
         #get all device query(ies) from the tokenlist
         print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-        print("[ProcessSentence] how long:",len(device_queries))
-        thread = Thread(target=sendIot, args=(device_queries,))
+#         print("[ProcessSentence] how long:",len(device_queries))
+#         thread = Thread(target=sendIot, args=(device_queries,))
+#         thread.daemon = True
+#         thread.start()
+        
+        print("[IOTTALK V2]", device_queries)
+        thread = Thread(target=sendDevicetalk, args=(device_queries,))
         thread.daemon = True
         thread.start()
         
@@ -151,7 +165,7 @@ def ProcessSentence():
 
 
 def sendIot(device_queries):
-    # sendIot will be change: write into files(or share memory)
+    # senf IOT will write to shared memory
     if(isinstance(device_queries[0], list)):
         print("[F] rework:", device_queries)
         for device_query in device_queries:
@@ -173,13 +187,6 @@ def sendIot(device_queries):
 
                 print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
                 print("device feature", F)
-                if(F == 'Luminance-I' or F == 'Fanspeed-I' ):
-                    if(V == 0):
-                        DAN.push("Switch1", 0)
-                    else:
-                        DAN.push('Switch1',1)
-                else:
-                    DAN.push('Switch1',1)
                 if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                     iotvalue = int(V)*10 if int(V)<=10 else 100
                     DAN.push(F, iotvalue)
@@ -207,16 +214,9 @@ def sendIot(device_queries):
             DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
             DAN.device_registration_with_retry(ServerURL, Regaddr)
             #turn on the device
-            
+            DAN.push('Switch1',1)
             
             print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
-            if(F == 'Luminance-I' or F == 'Fanspeed-I' ):
-                if(V == 0):
-                    DAN.push("Switch1", 0)
-                else:
-                    DAN.push('Switch1',1)
-            else:
-                DAN.push('Switch1',1)
             if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
                 iotvalue = int(V)*10 if int(V)<=10 else 100
                 DAN.push(F, iotvalue)
@@ -226,7 +226,90 @@ def sendIot(device_queries):
                 else:
                     DAN.push(F, V)
 
+                    
+                    
 
+def readDeviceTable(D):
+    df = pd.read_csv('dict/DeviceTable.txt')
+    if(D != ""):
+        df = df.loc[df['device_name']== D]
+    return df
+
+
+            
+            
+            
+             
+                    
+def sendDevicetalk(device_queries):
+    if(isinstance(device_queries[0], list)):
+        for device_query in device_queries:
+            D = device_query[1]
+            F = device_query[2]
+            V = device_query[3]
+            valid = device_query[4]
+            if(valid > 0):
+                Table = readDeviceTable(D).iloc[0]
+                regaddr = Table.Regaddr
+                print('id_', Table.Regaddr)
+                print('name', Table.device_name)
+                print('model', Table.device_model)
+                print('idflist', Table.device_feature_list)
+                Devicetalk.dan = Devicetalk.Client()
+                Devicetalk.dan.register(url=api_url, on_signal = None,  on_data=None, name=Table.device_name, 
+                                idf_list=Table.device_feature_list,  odf_list=None, 
+                                id_= Table.Regaddr, profile={'model': Table.device_model,'u_name': 'hscli',})
+                time.sleep(1)
+                if(isinstance(V,list)):
+                    Devicetalk.dan.push(F,*V)
+                else:
+                    Devicetalk.dan.push(F,V)
+    else:
+        device_query = device_queries
+        D = device_query[1]
+        F = device_query[2]
+        V = device_query[3]
+        valid = device_query[4]
+        if(valid > 0):
+            Table = readDeviceTable(D).iloc[0]
+            regaddr = Table.Regaddr
+            print('id_', Table.Regaddr)
+            print('name', Table.device_name)
+            print('model', Table.device_model)
+            print('idflist', Table.device_feature_list)
+            Devicetalk.dan = Devicetalk.Client()
+            Devicetalk.dan.register(url=api_url, on_signal = None,  on_data=None, name=Table.device_name, 
+                            idf_list=Table.device_feature_list,  odf_list=None, 
+                            id_= Table.Regaddr, profile={'model': Table.device_model,'u_name': 'hscli',})
+            time.sleep(1)
+            if(isinstance(V,list)):
+                Devicetalk.dan.push(F,*V)
+            else:
+                Devicetalk.dan.push(F,V)
+        
+        
+        
+        
+    
+    SA.dan3 = SA.Client()
+    SA.dan3.register(url=api_url,on_signal= None, on_data=None, name='Voice99', idf_list=idf_list,  odf_list=None, 
+              id_= 'd3a5dc8e-5816-4141-9765-8baffc7e4499', 
+              profile={'model': device_model,'u_name': 'hscli',})
+    time.sleep(1)
+    SA.dan3.push('DummySensor-I', 9453)
+    
+    
+
+    
+    
+
+
+    
+
+# def DummySensor_I(valid):
+#     print("valid")
+#     if(valid > 0):
+#         return 12
         
 
     

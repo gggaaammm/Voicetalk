@@ -27,6 +27,7 @@ matcher = PhraseMatcher(nlp.vocab)
 # no parameter, no return value is needed
 
 def readDB():
+    # TODO change: will read the data from VoiceTalk Table
     #create the list of alias to match
     path = r"dict/enUS/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
@@ -126,39 +127,6 @@ def textParse(sentence):
     
     # ============================ alias redirection ================================
     # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
-    
-    
-    V_result = []
-    num_V = len(tokendict['V'])+len(quantity)
-    # create an absolute V list
-    d_id = 0
-    q_id = 0
-    for v_id in range(num_V):
-        print(v_id)
-        if(d_id<len(tokendict['V']) and q_id<len(quantity) ):
-            if(sentence.index(tokendict['V'][d_id]) < sentence.index(quantity[q_id])):
-                V_result.append(tokendict['V'][d_id])
-                print(tokendict['V'][d_id])
-                d_id +=1
-            else:
-                V_result.append(quantity[q_id])
-                print(quantity[q_id])
-                q_id +=1
-        elif(d_id == len(tokendict['V'])):
-            V_result.append(quantity[q_id])
-            print(quantity[q_id])
-            q_id +=1
-        elif(q_id == len(quantity)):
-            V_result.append(tokendict['V'][d_id])
-            print(tokendict['V'][d_id])
-            d_id +=1
-             
-    print("[remake V_result? what is this]", V_result)
-#     tokendict['V'] = V_result
-        
-        
-        
-    
     tokenlist = aliasRedirection(tokendict, tokenlist)
 
     #============================ alias redirection end =================================
@@ -170,14 +138,10 @@ def textParse(sentence):
 
     # =========================== number of token validation  =======================================
     # check if number of tokens is enough.
-    # if not enough, token[4] will record error id
-    
+    # if not enough, token[4] will record error id    
     tokenlist[4] = tokenValidation(tokenlist)
-    
     # =========================== number of token validation end =======================================    
-    
-    
-    
+
     #============================ support check =================================
     # if token has correct number, check if A/D support F
     if(tokenlist[4] > 0):                  # if error/rule bit records rules
@@ -808,15 +772,16 @@ def findAlias(feature):
 
 #
 def findDimension(D,F):
-    df = findinfo(D,F)
+    df = pd.read_csv('dict/DevicefeatureTable.csv')
+    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
     dimension = df.iloc[0]['dim']
     return dimension
     
 #
-def findinfo(D,F):
-    df = pd.read_csv('dict/DevicefeatureTable.csv')
-    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    return df
+# def findinfo(D,F):
+#     df = pd.read_csv('dict/DevicefeatureTable.csv')
+#     df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+#     return df
 
 def findDeviceList(A):
     df = pd.read_csv('dict/DeviceTable.txt')

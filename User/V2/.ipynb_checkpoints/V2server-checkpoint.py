@@ -4,11 +4,11 @@ import pandas as pd
 import json
 from threading import Thread
 import time, random, requests
-import DAN, register
-import TWnlp #uncomment later
+# import DAN, register
+# import TWnlp #uncomment later
 import USnlp
 # v2
-# import managesa as SA
+# import managesa as Devicetalk
 
 
 
@@ -21,7 +21,16 @@ import USnlp
 
 # ========iottalk================
 ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
+#  ========= iottalk v2==========
+api_url = 'https://test.iottalk2.tw/csm/'  # default
+device_name = 'Dummy1'
+device_model = 'Dummy_Device'
 
+push_interval = 60
+device_queries = []
+# The input/output device features, please check IoTtalk document.
+idf_list = ['DummySensor-I']
+odf_list = ['DummyControl-O']
 
 #  ==========================
 #ServerURL = 'https://DomainName' #with SSL connection
@@ -46,7 +55,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'zh-TW'
+        language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -54,15 +63,20 @@ def index():
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
 #             value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
         #get all device query(ies) from the tokenlist
         print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-        print("[ProcessSentence] how long:",len(device_queries))
-        thread = Thread(target=sendIot, args=(device_queries,))
+#         print("[ProcessSentence] how long:",len(device_queries))
+#         thread = Thread(target=sendIot, args=(device_queries,))
+#         thread.daemon = True
+#         thread.start()
+        
+        print("[IOTTALK V2]", device_queries)
+        thread = Thread(target=sendDevicetalk, args=(device_queries,))
         thread.daemon = True
         thread.start()
         
@@ -107,7 +121,7 @@ def ProcessSentence():
     if(language == 'en-US'): #English
         name, feature,value, device_queries = USnlp.textParse(sentence) #spacy function
     else:  # chinese
-        name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
+#         name, feature,value, device_queries = TWnlp.textParse(sentence) #spacy function
         print("chinese not yet")
     
     #get all device query(ies) from the tokenlist
@@ -150,8 +164,8 @@ def ProcessSentence():
 
 
 
-def sendIot(device_queries):
-    # sendIot will be change: write into files(or share memory)
+def sendDevicetalk(device_queries):
+    # senf IOT will write to shared memory
     if(isinstance(device_queries[0], list)):
         print("[F] rework:", device_queries)
         for device_query in device_queries:
@@ -160,35 +174,6 @@ def sendIot(device_queries):
             F = device_query[2]
             V = device_query[3]
             valid = device_query[4]
-            if(valid>0):
-                df = pd.read_csv('dict/DeviceTable.txt')
-                df = df.loc[df['device_name'] == D]
-                Regaddr = df.iloc[0]['Regaddr']
-                DAN.profile['d_name']= D
-                DAN.profile['dm_name'] = df.iloc[0]['device_model']
-                DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
-                DAN.device_registration_with_retry(ServerURL, Regaddr)
-                #turn on the device
-                DAN.push('Switch1',1)
-
-                print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
-                print("device feature", F)
-                if(F == 'Luminance-I' or F == 'Fanspeed-I' ):
-                    if(V == 0):
-                        DAN.push("Switch1", 0)
-                    else:
-                        DAN.push('Switch1',1)
-                else:
-                    DAN.push('Switch1',1)
-                if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
-                    iotvalue = int(V)*10 if int(V)<=10 else 100
-                    DAN.push(F, iotvalue)
-                else:
-                    if(isinstance(V,list)):
-                        DAN.push(F,*V)
-                    else:
-                        DAN.push(F, V)
-
             
             
     else:
@@ -198,33 +183,12 @@ def sendIot(device_queries):
         F = device_query[2]
         V = device_query[3]
         valid = device_query[4]
-        if(valid>0):         
-            df = pd.read_csv('dict/DeviceTable.txt')
-            df = df.loc[df['device_name'] == D]
-            Regaddr = df.iloc[0]['Regaddr']
-            DAN.profile['d_name']= D
-            DAN.profile['dm_name'] = df.iloc[0]['device_model']
-            DAN.profile['df_list'] = eval(df.iloc[0]['device_feature_list'])
-            DAN.device_registration_with_retry(ServerURL, Regaddr)
-            #turn on the device
-            
-            
-            print("\ndevice name: ",D,"\ndevice model: ", df.iloc[0]['device_model'], "\ntype V", type(V), V)
-            if(F == 'Luminance-I' or F == 'Fanspeed-I' ):
-                if(V == 0):
-                    DAN.push("Switch1", 0)
-                else:
-                    DAN.push('Switch1',1)
-            else:
-                DAN.push('Switch1',1)
-            if(F == 'Luminance-I' or F == 'ColorTemperature-I'):
-                iotvalue = int(V)*10 if int(V)<=10 else 100
-                DAN.push(F, iotvalue)
-            else:
-                if(isinstance(V,list)):
-                    DAN.push(F,*V)
-                else:
-                    DAN.push(F, V)
+        IDF = device_query[5]
+        pd.read_csv("cmd/command.csv")
+        
+
+                    
+
 
 
         

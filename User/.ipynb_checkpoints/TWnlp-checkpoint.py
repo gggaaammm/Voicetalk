@@ -36,6 +36,7 @@ print("loading time: ", end-start)
 # no parameter, no return value is needed
 
 def readDB():
+    # TODO: read DB will read the data from VoiceTalk Table
     #create the list of alias to match
     path = r"dict/zhTW/alias/"                          #  path for alias
     all_files = glob.glob(os.path.join(path , "*.txt"))
@@ -265,7 +266,7 @@ def handleEntity(Type, Context):
     #Context might contain number(s)+unit(s)
     #extract all units
     #change all unit to english ver
-    print("entity is", Context)
+    print("[Entity Detection]", Context)
     if(Type == 'QUANTITY' or Type == 'TIME'):# get all the units in loop
         df = readEntity()
         for n in re.findall(r'[\u4e00-\u9fff]+', Context):
