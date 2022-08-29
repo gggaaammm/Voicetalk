@@ -183,7 +183,8 @@ def sendDevicetalk(device_queries):
         F = device_query[2]
         V = device_query[3]
         valid = device_query[4]
-        IDF = device_query[5]
+        if(len(device_query)<5):
+            print("command error")
         pd.read_csv("cmd/command.csv")
         
 
