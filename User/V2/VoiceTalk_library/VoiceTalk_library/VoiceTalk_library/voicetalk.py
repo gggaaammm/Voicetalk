@@ -3,6 +3,7 @@ import random
 import threading
 import time
 import os
+import ast
 # from libraries.VoiceTalk_library.DB import DataBase
 import pandas as pd
 # database = DataBase()
@@ -46,7 +47,8 @@ class VoiceTalk:
         i = df[(df.IDF == name) ].index
         print("i is:", i, type(i))
         select_df = df.loc[(df['IDF'] == name)]
-        self.data = select_df['V'].iloc[0].item() 
+        raw_data = select_df['V'].iloc[0]
+        self.data = ast.literal_eval(raw_data)
         # print("select df", select_df, type(select_df))
         # print("self data: ", self.data, "!", type(self.data))
         df = df.drop(i)

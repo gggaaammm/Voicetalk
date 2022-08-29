@@ -31,7 +31,7 @@ def initTable():
     # a predefine rule table and a saved token table
     # the result should be 
     # Maybe no more alias
-    tokenTablePath = 'TokenTable.csv'
+    tokenTablePath = '../DB/TokenTable.csv'
     ruleTablePath = '../DB/RuleTable.csv'
     
     # read token table
@@ -408,7 +408,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
             if(v_dict is not None):
                 if(len(stringV)!=0):
                     if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
-                        valueV = v_dict[stringV[0]]
+                        valueV = [v_dict[stringV[0]]]
                 else: # if not exist in dictionary, we do care about the dimension
                     # for each quantity V, we do quantity calculation and min max check
                     # first, we check the dimension is matched
@@ -440,7 +440,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                 if(v_dict is not None):
                     if(len(stringV)!=0):
                         if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
-                            valueV = v_dict[stringV[0]]
+                            valueV = [v_dict[stringV[0]]]
                     else: # if not exist in dictionary, we do care about the dimension
                         # for each quantity V, we do quantity calculation and min max check
                         # first, we check the dimension is matched
@@ -461,7 +461,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
 # ====== Rule1 function for valueCheck
 def Rule1Check(IDF,F):
     if(isinstance(IDF, str)):
-        df = pd.read_csv('VoiceTalkTable.csv')
+        df = pd.read_csv('../DB/VoiceTalkTable.csv')
         select_df = df.loc[(df['IDF']) == IDF]
         select_F = select_df.iloc[0]['F']
         try:
@@ -608,7 +608,7 @@ def findAlias(feature):
 
 #
 def findDimension(IDF):
-    df = pd.read_csv('VoiceTalkTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
     df = df.loc[(df['IDF'] == IDF)]
     dimension = df.iloc[0]['Param_dim']
     return dimension
@@ -616,14 +616,14 @@ def findDimension(IDF):
 
 
 def findDeviceList(A):
-    df = pd.read_csv('VoiceTalkTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
     df = df.loc[df['A'] == A]
     device_list =  list(df['D'])
     return device_list
 
 
 def readDeviceTable(A,D):
-    df = pd.read_csv('VoiceTalkTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
     if(D != ""):
         df = df.loc[df['D']== D]
     elif(A != ""):
@@ -631,7 +631,7 @@ def readDeviceTable(A,D):
     return df
 
 def findParameter(IDF):
-    df = pd.read_csv('VoiceTalkTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
     df = df.loc[(df['IDF'] == IDF) ]
     df = df[['IDF','V','Param_unit','Param_type', 'Param_minmax', 'Param_dim']]
     return df
