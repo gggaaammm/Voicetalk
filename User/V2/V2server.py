@@ -194,6 +194,7 @@ def sendDevicetalk(device_queries):
             if(valid>0):
                 print("write file")
                 df.append({'IDF':IDF, 'A':'', 'D':D, 'F':F, 'V':V}, ignore_index=True)
+                print("new df", df)
                 df.to_csv("cmd/command.csv", index=False)
 
 
