@@ -100,9 +100,6 @@ def initTable():
     VoiceTalkTable['Param_type'] = list_param_type
     VoiceTalkTable['Param_unit'] = list_param_unit
     VoiceTalkTable['Param_minmax'] = list_param_minmax
-
-
-    
     print("initTable success", VoiceTalkTable)
     VoiceTalkTable.to_csv('../DB/VoiceTalkTable.csv')
 
@@ -162,13 +159,9 @@ def textParse(sentence):
     sentence = sentence.replace(tokendict['D'], "")
 #     sentence = sentence.replace(tokendict['F'], "")
 
-
-    
     
     quantity = quantityDetect(sentence)
     print("[quantity]", quantity)
-
-
     sentence_feature = tokendict['F']     # save feature name before alias redirect
     sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
     sentence_value = tokendict['V']+quantity  # save device name before alias redirect
@@ -603,11 +596,11 @@ def checkMinMax(param_minmax, V):
         return 2 #return 2 as rule 2
 
 
-#
-def findAlias(feature):
-    df = pd.read_csv('dict/enUS/alias/aliasF.txt')
-    df = df.loc[ (df['alias1']==feature) | (df['alias2']==feature) | (df['alias3']==feature) ]
-    return df.iloc[0]['alias1']                               
+# #
+# def findAlias(feature):
+#     df = pd.read_csv('dict/enUS/alias/aliasF.txt')
+#     df = df.loc[ (df['alias1']==feature) | (df['alias2']==feature) | (df['alias3']==feature) ]
+#     return df.iloc[0]['alias1']                               
 
 #
 def findDimension(IDF):
@@ -648,21 +641,21 @@ def isPureNumber(quantity):
         return False
     
 
-def saveLog(sentence, tokenlist):
-    print('save log')
-    connection = sqlite3.connect("db/log.db")
-    crsr = connection.cursor()
-    # SQL command to insert the data in the table
-    sql_command = """CREATE TABLE IF NOT EXISTS log ( 
-    sentence TEXT,  
-    result CHAR(1)
-    );"""
-    crsr.execute(sql_command)
+# def saveLog(sentence, tokenlist):
+#     print('save log')
+#     connection = sqlite3.connect("db/log.db")
+#     crsr = connection.cursor()
+#     # SQL command to insert the data in the table
+#     sql_command = """CREATE TABLE IF NOT EXISTS log ( 
+#     sentence TEXT,  
+#     result CHAR(1)
+#     );"""
+#     crsr.execute(sql_command)
 
     
-    crsr.execute(f'INSERT INTO log VALUES ( "{sentence}", "{tokenlist[4]}")')
+#     crsr.execute(f'INSERT INTO log VALUES ( "{sentence}", "{tokenlist[4]}")')
 
-    connection.commit()
-    connection.close()
+#     connection.commit()
+#     connection.close()
     
 
