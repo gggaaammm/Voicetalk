@@ -374,7 +374,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     device_queries = [[0]*6]*1   # create a device query as return type of function
 
     
-    df = pd.read_csv('VoiceTalkTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
 
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
@@ -535,7 +535,7 @@ def Rule2Check(IDF,quantityV, stringV, tokenlist):
     print("===========[END: RULE2-Check]============", value_V, "?")
     #last collect 
     print("===========[Flag] =======================", error_flag)
-    if(all(flag >0 for flag in error_flag)):
+    if(all(flag >0 for flag in error_flag)): #examine if one error appeared in a
         tokenlist[4] = 2
     else:
         tokenlist[4] = -5
