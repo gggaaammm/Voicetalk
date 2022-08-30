@@ -243,7 +243,7 @@ def textParse(sentence):
     #============================ support check =================================
     # if token has correct number, check if A/D support F
     if(tokenlist[4] > 0):                  # if error/rule bit records rules
-        tokenlist[4] = supportCheck(tokenlist) # support check
+        IDF, tokenlist[4] = supportCheck(tokenlist) # support check
     else:                              # if error/rule bit records errors
         print("[error]not enough token!") # break
     
@@ -251,7 +251,7 @@ def textParse(sentence):
     #============================ Value check =================================
     # if token has correct number and A/D support F, check if V is valid
     if(tokenlist[4] > 0): 
-        device_queries = valueCheck(tokenlist, sentence_feature, quantity) # value check and get device queries
+        device_queries = valueCheck(tokenlist, sentence_feature, quantity,IDF) # value check and get device queries
     else: # <0 because not support
         device_queries = tokenlist
 
@@ -331,25 +331,25 @@ def handleEntity(Type, Context):
 # === aliasRedirection(tokendict, tokenlist)
 
 def aliasRedirection(tokendict, tokenlist):
-    path = r"dict/zhTW/alias/" #  path for synonym
-    all_files = glob.glob(os.path.join(path , "*.txt"))
-    for filename in all_files:
-        sublist = []
-        df = pd.read_csv(filename)
-        if(filename[21] == 'V'): # V is a special with a list
-            V_list = list(tokendict[filename[21]])
-            for idx, V_word in enumerate(V_list):
-                for column in df.columns:
-                    df_abs = df.loc[(df[column])== V_word]
-                    if(len(df_abs.index)>0):
-                        V_list[idx] = df_abs.iloc[0][0] 
-            tokendict['V'] = V_list
-        #redirect A,D,F to device_model, device_name, device_feature individually
-        else:
-            for column in df.columns:
-                df_abs = df.loc[(df[column] == tokendict[filename[21]])]
-                if(len(df_abs.index)>0):
-                    tokendict[filename[21]] = df_abs.iloc[0][0]              
+    # path = r"dict/zhTW/alias/" #  path for synonym
+    # all_files = glob.glob(os.path.join(path , "*.txt"))
+    # for filename in all_files:
+    #     sublist = []
+    #     df = pd.read_csv(filename)
+    #     if(filename[21] == 'V'): # V is a special with a list
+    #         V_list = list(tokendict[filename[21]])
+    #         for idx, V_word in enumerate(V_list):
+    #             for column in df.columns:
+    #                 df_abs = df.loc[(df[column])== V_word]
+    #                 if(len(df_abs.index)>0):
+    #                     V_list[idx] = df_abs.iloc[0][0] 
+    #         tokendict['V'] = V_list
+    #     #redirect A,D,F to device_model, device_name, device_feature individually
+    #     else:
+    #         for column in df.columns:
+    #             df_abs = df.loc[(df[column] == tokendict[filename[21]])]
+    #             if(len(df_abs.index)>0):
+    #                 tokendict[filename[21]] = df_abs.iloc[0][0]              
     tokenlist = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], tokenlist[4]]
     print("[alias Redirect] Result:", tokenlist)
     return tokenlist
@@ -377,11 +377,10 @@ def tokenValidation(tokenlist):
 # return: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
     
 def ruleLookup(feature): #check rule by feature
-    # rulelookup will read DevicefeatureTable.txt
-    print("token list check rule: ", feature)
-    df = pd.read_csv('dict/DevicefeatureTable.csv')
-    df = df.loc[(df['device_feature']==feature)]
-    rule = df.iloc[0]['rule']
+    # rulelookup will read VoiceTalkTable
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = df[df['F'].str.contains(feature)]
+    rule = df.iloc[0]['Rule']
     if(rule == 1):
         return 1
     elif(rule == 2):
@@ -399,212 +398,211 @@ def supportCheck(tokenlist):
     A = tokenlist[0]
     D = tokenlist[1]
     F = tokenlist[2]
+    rule = tokenlist[4]
     # read device info in DeviceTable.txt
-    df = pd.read_csv('dict/DeviceTable.txt')
-    DeviceTable = readDeviceTable(A,D)
+    VoiceTalkTable = readDeviceTable(A,D)
+    print("[SUPPORTCHECK]",VoiceTalkTable )
     
     if(D!=''):  #check if D supports F
-        print("spotlight Device table check",DeviceTable )
-        feature_list = ast.literal_eval(DeviceTable.iloc[0]['device_feature_list'])
-        if(F not in feature_list):
-            tokenlist[4] = -4   #error message#4: Device not support such feature
+        IDF = ''
+        select_df = VoiceTalkTable[VoiceTalkTable['F'].str.contains(F)]
+#         print("support check: ", select_df)
+        if(len(select_df.index)!=0):
+            print("IDF to push", select_df.iloc[0]['IDF'])
+            IDF = select_df.iloc[0]['IDF']
+        else:
+            tokenlist[4] = -4   #error message #4: Device not support such feature
             
-    if(A!=''): #check if A all support F
-        allsupport,d_id = 1,0
-        while (d_id < len(DeviceTable.index)):
-            feature_list = ast.literal_eval(DeviceTable.iloc[d_id]['device_feature_list'])
-            if(F not in feature_list):
-                allsupport = 0
-                break
-            d_id = d_id+1
-
-        if(allsupport == 0):
-            tokenlist[4] = -4 #error message #4: Device not support such feature
+    if(A!=''): #do not check if all support
+        select_df = VoiceTalkTable[VoiceTalkTable['F'].str.contains(F)]
+#         print("[support check]", select_df)
+        IDF = []
+        for i  in range(len(select_df.index)):  # check if all select device has contain F?
+            print("each IDF in A:", select_df.iloc[i]['IDF'])
+            IDF.append(select_df.iloc[i]['IDF'])
             
-    return tokenlist[4]
+    return IDF,tokenlist[4]
 
 
 # ======== valueCheck(tokenlist, feature) ============
 
-def valueCheck(tokenlist, feature, quantityV): #issue give value
-    
+def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     A = tokenlist[0]
     D = tokenlist[1]
     F = tokenlist[2]
     stringV = tokenlist[3]
     rule = tokenlist[4]
+    print("that is IDF:", IDF)
+    device_queries = [[0]*6]*1   # create a device query as return type of function
+
     
-    device_queries = [[0]*5]*1   # create a device query as return type of function
-    print("[valueCheck] begin: ", tokenlist, feature, quantityV)
-    
-    df = pd.read_csv('dict/ParameterTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
 
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
-        df2 = pd.read_csv('dict/zhTW/alias/aliasF.txt')
-        df2 = df2.loc[ (df2['alias1']==feature) | (df2['alias2']==feature) | (df2['alias3']==feature) |  (df2['alias3']==feature) | (df2['alias4']==feature)]
-        feature = df2.iloc[0]['alias1']
-        #feature change to absolute device feature('open'/'close')
+        # for rule 1, get the value into Token V
+        if(D!= ""):
+            valueV  = Rule1Check(IDF,F)
+            device_queries = [A,D,F,valueV,rule,IDF]
+        if(A!= ""):
+            device_queries = [[0]*6]*len(IDF)
+            for idx,idf in enumerate(IDF):
+                valueV = Rule1Check(idf,F)
+                #the device should be add
+                select_df = df.loc[(df['IDF'] == idf)]
+                device = select_df.iloc[0]['D']
+                device_queries[idx] = [A,device,F,valueV, rule,idf]
+        print("[RULE1]device queries:", device_queries)
         
-        #require table of dictionary
-        df = df.loc[(df['device_feature'] == F)]
-        tokenlist[3] = ast.literal_eval(df.iloc[0]['param_dict'])[feature]
-        
-        if(D != ""):
-            device_queries = [A,D,F,tokenlist[3], rule]
-        if(A != ""):
-            df_A = pd.read_csv('dict/DeviceTable.txt')   # read DeviceTable.txt
-            df_A = df_A.loc[(df_A['device_model'] == A)] # access all the dataframe which device_model equals to A
-            device_list =  list(df_A['device_name'])     # get the device name list which device_model is A
-            device_queries = [[0]*5]*len(device_list)    # create a query for each device in 1 device model
-            
-            for idx, device in enumerate(device_list):
-                device_queries[idx] = [A,device,F,tokenlist[3], rule]
         
         
     elif(rule ==2):
         # 1. a string(do nothing and pass)
-        # 2. a number(check if exceed min/max)
+        # 2. a number(check if exceed min/max) 
         # 3. a quantity(check if unit support and check exceed min/max)
-        print("rule 2 not done")  
-        if(D != ""):
-            dimension = findDimension(D,F)
-            paramTable = readParameterTable(D,F)
-            V, keylist = [],[]
-            num_id,str_id,key_id = 0,0,0
-            for p_id in paramTable.index:
-                if(paramTable['type'][p_id] == 'string'):
-                    try:
-                        V.append(stringV[str_id])
-                        str_id+=1
-                    except IndexError:
+        if(D != ''):  #access the device info(which D and F are fitted)
+            dimension = findDimension(IDF)
+            paramTable = findParameter(IDF)
+            select_V = paramTable.iloc[0]['V']
+            print("[RULE-2] V_Table", select_V)
+            v_dict = None
+            try:
+                v_dict = ast.literal_eval(select_V)
+            except ValueError:
+                print("[ValueError]: ")
+            if(v_dict is not None):
+                if(len(stringV)!=0):
+                    if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
+                        valueV = [v_dict[stringV[0]]]
+                else: # if not exist in dictionary, we do care about the dimension
+                    # for each quantity V, we do quantity calculation and min max check
+                    # first, we check the dimension is matched
+                    if(dimension != len(quantityV)+len(stringV)):
+                        print("[quantity]dimension not matched")
                         tokenlist[4] = -5
-                elif(paramTable['type'][p_id] == 'int' or paramTable['type'][p_id] == 'float'):
-                    value_find = 0           # 1. check out if stringV represent value in dictionary
-                    for keyword in stringV:
-                        print("keyword is", keyword)
-                        if keyword in paramTable['param_dict'][p_id]:
-                            V.append(ast.literal_eval(paramTable['param_dict'][p_id])[keyword])
-                            key_id +=1
-                            value_find =1
-                            if(keyword not in keylist):
-                                keylist.append(keyword)
-                    if(value_find == 0): # if not find
-                        try:
-                            unit = paramTable['unit'][p_id]       # no unit defined in parameterTable
-                            if(pd.isna(unit)):
-                                print("quantity length", quantityV[num_id])
-                                # we want to check if pure number
-                                if(isPureNumber(quantityV[num_id])):  # pure number
-                                    tokenlist[4] = checkMinMax(D,F,float(quantityV[num_id]), p_id)
-                                    V.append(handleValue(quantityV[num_id]))
-                                else:                             # number+unit
-                                    tokenlist[4] = -5
-                                    print("parameter unit undefined")
-                            elif(not pd.isna(unit)):              # unit defined in parameterTable
-                                if(isPureNumber(quantityV[num_id])):
-                                    tokenlist[4] = checkMinMax(D,F,float(quantityV[num_id]), p_id)
-                                    V.append(handleValue(quantityV[num_id]))   # pure number
-                                else:
-                                    quantity = handleUnit(str(quantityV[num_id]), unit)   # number + unit
-                                    if(quantity is None):
-                                        print("handle unit error")
-                                        tokenlist[4] = -5
-                                    else:
-                                        tokenlist[4] = checkMinMax(D,F,quantity._magnitude, p_id)
-                                        V.append(quantity._magnitude)
-                            num_id += 1
-                        except IndexError:
-                            tokenlist[4] = -5
-                            print("index out of bounds")
-                    #in for loop , we check the last index
-                    if(p_id == paramTable.index[-1]):
-                        print("[param length]", len(paramTable.index))
-                        print("[check num id]", str_id, 'length of str list',  len(stringV))
-                        print("[check str id]", num_id, 'length of quan list', len(quantityV))
-                        print("[check key id]", key_id, 'length of keylist', len(keylist))
-
-                        if(key_id+len(stringV)-len(keylist)+len(quantityV) != len(paramTable.index)):
-                            print("[error]: param length error")
-                            tokenlist[4] = -5
-                        # the equalty check:
-                        # if num_id+len(strinV)+len(quantityV) has exceed the parameter length
-                        # for last element, we detect if stringV and quantityV has ended 
-                if(dimension == 1 & len(V) == 1):
-                    device_queries = [A,D,F,V[0], tokenlist[4]]
-                else:
-                    device_queries = [A,D,F,V, tokenlist[4]]
-         # next, we handle A
-        elif(A != ''):
-            df_A = pd.read_csv('dict/DeviceTable.txt')   # read DeviceTable.txt
-            df_A = df_A.loc[(df_A['device_model'] == A)] # access all the dataframe which device_model equals to A
-            device_list =  list(df_A['device_name'])     # get the device name list which device_model is A
-            device_queries = [[0]*5]*len(device_list)    # create a query for each device in 1 device model
-            print("[value check] list of device:", device_list)
-            for idx, device in enumerate(device_list):
-                print("[A this device]", device)
-                dimension = findDimension(device,F)
-                paramTable = readParameterTable(device,F)
-                print("[A dimension]", dimension)
-                V,keylist = [], []
-                num_id, str_id, key_id = 0,0,0
-                for p_id in paramTable.index:
-                    if(paramTable['type'][p_id] == 'string'):
-                        try:
-                            V.append(stringV[str_id])
-                            str_id +=1
-                        except IndexError:
-                            tokenlist[4] = -5
-                    elif(paramTable['type'][p_id] == 'int' or paramTable['type'][p_id] == 'float'):
-                        value_find = 0
-                        for keyword in stringV:
-                            if keyword in paramTable['param_dict'][p_id]:
-                                V.append(ast.literal_eval(paramTable['param_dict'][p_id])[keyword])
-                                key_id+=1
-                                value_find =1
-                                if(keyword not in keylist):
-                                    keylist.append(keyword)
-                        if(value_find == 0):
-                            try:
-                                unit = paramTable['unit'][p_id]       # no unit defined in parameterTable
-                                if(pd.isna(unit)):
-                                    if(isPureNumber(quantityV[num_id])):  # pure number
-                                        tokenlist[4] = checkMinMax(device,F,float(quantityV[num_id]), p_id)
-                                        V.append(handleValue(quantityV[num_id]))
-                                    else:                             # number+unit
-                                        tokenlist[4] = -5
-                                elif(not pd.isna(unit)):              # unit defined in parameterTable
-                                    if(isPureNumber(quantityV[num_id])):
-                                        tokenlist[4] = checkMinMax(device,F,float(quantityV[num_id]), p_id)
-                                        V.append(handleValue(quantityV[num_id]))   # pure number
-                                    else:
-                                        quantity = handleUnit(str(quantityV[num_id]), unit)   # number + unit
-                                        if(quantity is None):
-                                            tokenlist[4] = -5
-                                        else:
-                                            tokenlist[4] = checkMinMax(device,F,quantity._magnitude, p_id)
-                                            V.append(quantity._magnitude)
-                            except IndexError:
-                                tokenlist[4] = -5
-                                print("index out of bounds")
-
-                    if(p_id == paramTable.index[-1]):
-                        print("[param length]", len(paramTable.index))
-                        print("[check num id]", num_id)
-                        print("[check str id]", str_id)
-                        print("[check key id]", key_id)
-                        
-                        if(key_id+len(stringV)-len(keylist)+len(quantityV) != len(paramTable.index)):
-                            print("[error]: param length error")
-                            tokenlist[4] = -5
-                            
-                if(dimension == 1 & len(V) == 1):
-                    device_queries[idx] = [A, device, F, V[0], tokenlist[4]]
-                else:
-                    device_queries[idx] = [A, device, F, V, tokenlist[4]]
-
+                        valueV = 0
+                    else:  #iterate through all dimension
+                        valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
+            device_queries = [A,D,F,valueV,tokenlist[4],IDF]
+                
+            # check if stringV found in
             
+        # next, we handle A
+        elif(A != ''):
+            device_queries = [[0]*6]*len(IDF)
+            for idx,idf in enumerate(IDF):
+                print("[RULE2-A]:", idf)
+                select_df = df.loc[(df['IDF'] == idf)]
+                device = select_df.iloc[0]['D']
+                dimension = findDimension(idf)
+                paramTable = findParameter(idf)
+                select_V = paramTable.iloc[0]['V']
+                v_dict = None
+                try:
+                    v_dict = ast.literal_eval(select_V)
+                except ValueError:
+                    print("[ValueError]: ")
+                if(v_dict is not None):
+                    if(len(stringV)!=0):
+                        if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
+                            valueV = [v_dict[stringV[0]]]
+                    else: # if not exist in dictionary, we do care about the dimension
+                        # for each quantity V, we do quantity calculation and min max check
+                        # first, we check the dimension is matched
+                        if(dimension != len(quantityV)+len(stringV)):
+                            print("[quantity]dimension not matched")
+                            valueV = 0
+                            tokenklist[4] = -5
+                        else:  #iterate through all dimension
+                            valueV, tokenlist = Rule2Check(idf,quantityV, stringV, tokenlist)
+                            print("[RULE2-A:value_V]", valueV)
+                device_queries[idx] = [A,device,F,valueV,tokenlist[4],idf]
+
+
+    print("[valueCheck end] :", "device query:",device_queries, "\n tokenlist", tokenlist)    
     return device_queries
+
+
+# ====== Rule1 function for valueCheck
+def Rule1Check(IDF,F):
+    if(isinstance(IDF, str)):
+        df = pd.read_csv('../DB/VoiceTalkTable.csv')
+        select_df = df.loc[(df['IDF']) == IDF]
+        select_F = select_df.iloc[0]['F']
+        try:
+            f_dict = ast.literal_eval(select_F)
+            if isinstance(f_dict, dict):
+                valueV = [f_dict[F]]
+                print("rule 1 dict find", valueV)
+        except ValueError:
+            print("no dictionary find")
+    else:
+        print("its an A?")
+    return valueV
+
+# ==== Rule2 function for valueCheck
+def Rule2Check(IDF,quantityV, stringV, tokenlist):
+    print("===========[RULE2-Check]============")
+    print("[IDF]", IDF)
+    print("[quantityV]", quantityV)
+    print("[stringV]", stringV)
+    dimension = findDimension(IDF)
+    paramTable = findParameter(IDF)
+    print("[dimension]", dimension)
+    value_V = []
+    num_id, str_id = 0,0
+    if(dimension>1):
+        param_type = ast.literal_eval(paramTable.iloc[0]['Param_type'])
+        param_unit = ast.literal_eval(paramTable.iloc[0]['Param_unit'])
+        param_minmax = ast.literal_eval(paramTable.iloc[0]['Param_minmax'])
+        print("[type]", param_type, param_unit, param_minmax)
+    else:
+        param_type = [paramTable.iloc[0]['Param_type']]
+        param_unit = [paramTable.iloc[0]['Param_unit']]
+        param_minmax = [paramTable.iloc[0]['Param_minmax']]
+    error_flag = []
+    for dim in range(dimension):
+        print("[param type] at dim",dim , ": ",param_type, type(param_type))
+        if(param_type[dim] == 'string'):
+            value_V.append(stringV[str_id])
+            str_id= str_id+1
+        else:
+            print("[type int] check unit", param_unit[dim], "on ", quantityV[num_id])
+            # check if quantity need unit conversion
+            if(not isPureNumber(quantityV[num_id])):
+                if(param_unit[dim] != "None"):
+                    print("need unit conversion")
+                    quantity = handleUnit(str(quantityV[num_id]), param_unit[dim])   # number + unit
+                    if(quantity is None):
+                        print("[Unit conversion error]")
+                        error_flag.append(-5) # unit conversion error
+
+                    else:
+                        print("[Conversion OK]")
+                        #check min max: IDF, device name
+                        error_flag.append (checkMinMax(param_minmax, quantity._magnitude))
+                        value_V.append(quantity._magnitude)
+                else:
+                    print("[no unit in definition]")
+                    
+            else:
+                print("[pure number]")
+                quantity = handleValue(str(quantityV[num_id]))   # number + unit
+                error_flag.append(checkMinMax(param_minmax, quantity))
+                value_V.append(quantity)
+
+            num_id = num_id+1
+            # check if quantity in range min max
+            
+    print("===========[END: RULE2-Check]============", value_V, "?")
+    #last collect 
+    print("===========[Flag] =======================", error_flag)
+    if(all(flag >0 for flag in error_flag)): #examine if one error appeared in a
+        tokenlist[4] = 2
+    else:
+        tokenlist[4] = -5
+    return value_V, tokenlist
+
 
 
 # ====== handleValue(quantity) ========
@@ -655,41 +653,46 @@ def handleUnit(quantity, unit): # use Pint package for unit hanlding
     
     
 #followings are sub functions of value check
-def checkMinMax(D,F, V,p_id): #check min max only for rule 2, and only in parameterTable use p_id
-    print("[checkminmax]",D,F,V, p_id)
-    df = pd.read_csv('dict/ParameterTable.csv')
-    df_D= df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    print(df_D)
-    if( (float(V) > float(df_D['max'][p_id])) | ( float(V) < float(df_D['min'][p_id])) ): #if value exceed range
-        print("exceed range")
-        return -6    # return -6 as error code: exceed range
+def checkMinMax(param_minmax, V):
+    print("[checkminmax]", param_minmax[0], " for ", V)
+    range_minmax = ast.literal_eval(param_minmax[0])
+    param_min = range_minmax[0]
+    param_max = range_minmax[1]
+    print("min is ", range_minmax[0],"max is " ,range_minmax[1])
+    if( (float(V) >param_max) or (float(V))<param_min):
+        print("[OUT OF Range]")
+        return -5
     else:
-        print("in range")
-        return 2     # return 2 as rule 2
+        print("[In Range]")
+        return 2 #return 2 as rule 2
     
-#
-def findDimension(D,F):
-    df = findinfo(D,F)
-    dimension = df.iloc[0]['dim']
+def findDimension(IDF):
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = df.loc[(df['IDF'] == IDF)]
+    dimension = df.iloc[0]['Param_dim']
     return dimension
     
-#
-def findinfo(D,F):
-    df = pd.read_csv('dict/DevicefeatureTable.txt')
-    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
-    return df
+
+
+def findDeviceList(A):
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = df.loc[df['A'] == A]
+    device_list =  list(df['D'])
+    return device_list
+
 
 def readDeviceTable(A,D):
-    df = pd.read_csv('dict/DeviceTable.txt')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
     if(D != ""):
-        df = df.loc[df['device_name']== D]
+        df = df.loc[df['D']== D]
     elif(A != ""):
-        df = df.loc[df['device_model']== A]
+        df = df.loc[df['A']== A]
     return df
 
-def readParameterTable(D,F):
-    df = pd.read_csv('dict/ParameterTable.csv')
-    df = df.loc[(df['device_name'] == D) & (df['device_feature'] == F)]
+def findParameter(IDF):
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = df.loc[(df['IDF'] == IDF) ]
+    df = df[['IDF','V','Param_unit','Param_type', 'Param_minmax', 'Param_dim']]
     return df
 
 def isPureNumber(quantity):

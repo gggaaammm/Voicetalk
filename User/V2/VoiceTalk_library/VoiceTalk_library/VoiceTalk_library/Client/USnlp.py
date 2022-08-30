@@ -305,7 +305,7 @@ def tokenValidation(tokenlist):
     
 def ruleLookup(feature): #check rule by feature
     # rulelookup will read VoiceTalkTable
-    df = pd.read_csv('VoiceTalkTable.csv')
+    df = pd.read_csv('../DB/VoiceTalkTable.csv')
     df = df[df['F'].str.contains(feature)]
     rule = df.iloc[0]['Rule']
     if(rule == 1):
