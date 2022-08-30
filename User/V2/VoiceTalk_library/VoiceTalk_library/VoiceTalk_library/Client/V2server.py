@@ -5,7 +5,7 @@ import json
 from threading import Thread
 import time, random, requests
 # import DAN, register
-# import TWnlp #uncomment later
+import TWnlp #uncomment later
 import USnlp
 # v2
 # import managesa as Devicetalk
@@ -18,23 +18,6 @@ import USnlp
 # -3 error: no device feature in sentence
 # -4 error: device feature need value
 # -5 error: D not support F
-
-# ========iottalk================
-ServerURL = 'http://140.113.199.246:9999'      #with non-secure connection
-#  ========= iottalk v2==========
-api_url = 'https://test.iottalk2.tw/csm/'  # default
-device_name = 'Dummy1'
-device_model = 'Dummy_Device'
-
-push_interval = 60
-device_queries = []
-# The input/output device features, please check IoTtalk document.
-idf_list = ['DummySensor-I']
-odf_list = ['DummyControl-O']
-
-#  ==========================
-#ServerURL = 'https://DomainName' #with SSL connection
-# for D+F
 
 
 
@@ -55,7 +38,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print(text)
-        language = 'en-US'
+        language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -63,7 +46,7 @@ def index():
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
 #             value,name, feature, device_queries = zhckip.textParse(text,zhckip.ws,zhckip.pos,zhckip.ner) # ckiptagger function
-#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         

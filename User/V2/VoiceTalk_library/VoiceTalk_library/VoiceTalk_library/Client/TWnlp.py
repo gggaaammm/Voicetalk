@@ -35,29 +35,49 @@ print("loading time: ", end-start)
 # matcher() add the nlp() object, and give each key the match id
 # no parameter, no return value is needed
 
-def readDB():
-    # TODO: read DB will read the data from VoiceTalk Table
-    # 
-    #create the list of alias to match
-    path = r"dict/zhTW/alias/"                          #  path for alias
-    all_files = glob.glob(os.path.join(path , "*.txt"))
-    aliasDict={}                                        # create a dictionary of alias A/D/F/V/U
-
-    # read all file at once
-    for filename in all_files:
-        sublist = []
-        df = pd.read_csv(filename)
-        for column in df.columns:
-            sublist = sublist+list(df[column])             # read all elements in one file, stored as list
-        sublist = [x for x in sublist if str(x) != 'nan']  # filter all NAN element in the list
-        aliasDict[filename[21]] = sublist                  # key: filename[21] means A/D/F/V in "dict/enUS/alias/*.txt"
-
-
+def initTable():
+    # TODO change: will read the data from VoiceTalk Table
+    # a predefine rule table and a saved token table
+    # the result should be 
+    # Maybe no more alias
+    tokenTablePath = '../DB/TokenTable.csv'
+    ruleTablePath = '../DB/RuleTable.csv'
+    
+    # read token table
+    tokenTable = pd.read_csv(tokenTablePath)
+    
+    list_A = tokenTable['A'].to_list()
+    list_D = tokenTable['D'].to_list()
+    list_F, list_V = [],[]
+    for f in tokenTable['F']:
+        try:
+            f_dict = ast.literal_eval(f)
+            if isinstance(f_dict, dict):
+                keysList = list(f_dict.keys())
+                list_F.extend(keysList)
+        except ValueError:
+            list_F.append(f)
+        except SyntaxError:
+            list_F.append(f)
+        
+    for v in tokenTable['V']:
+        try:
+            v_dict = ast.literal_eval(v)
+            if isinstance(v_dict, dict):
+                keysList = list(v_dict.keys())
+                list_V.extend(keysList)
+        except ValueError:
+            if(not math.isnan(v)):
+                list_V.append(v)
+    
+    
+    print("init Table", list_A, list_D, list_F, list_V)
+    list_all = list_A+list_D+list_F+list_V
     #obtain doc object for each word in the list and store it in a list
-    A = [nlp(a) for a in aliasDict['A']]
-    D = [nlp(d) for d in aliasDict['D']]
-    F = [nlp(f) for f in aliasDict['F']]
-    V = [nlp(v) for v in aliasDict['V']]
+    A = [nlp(a) for a in list_A]
+    D = [nlp(d) for d in list_D]
+    F = [nlp(f) for f in list_F]
+    V = [nlp(v) for v in list_V]
 
 
     #add the pattern to the matcher
@@ -65,9 +85,37 @@ def readDB():
     matcher.add("D", D)
     matcher.add("F", F)
     matcher.add("V", V)
-
     
-    return aliasDict.values()
+    
+    
+    #2nd part is aggregate 2 table
+    ruleTable = pd.read_csv(ruleTablePath)
+    list_rule, list_param_dim,list_param_unit, list_param_minmax, list_param_type = [],[],[],[],[]
+    for IDF in tokenTable['IDF']:
+        
+        IDF = IDF[:-3]
+        print("IDF: ", IDF)
+        select_df = ruleTable.loc[(ruleTable['IDF'] == IDF)]
+        print("select df:", select_df)
+        list_rule.append( select_df.iloc[0]['Rule'])
+        list_param_dim.append(select_df.iloc[0]['Param_dim'])
+        list_param_type.append(select_df.iloc[0]['Param_type'])
+        list_param_unit.append(select_df.iloc[0]['Param_unit'])
+        list_param_minmax.append(select_df.iloc[0]['Param_minmax'])
+        
+        # for each IDF, search for rule Table and save
+    VoiceTalkTable = tokenTable
+    VoiceTalkTable['Rule'] = list_rule
+    VoiceTalkTable['Param_dim'] = list_param_dim
+    VoiceTalkTable['Param_type'] = list_param_type
+    VoiceTalkTable['Param_unit'] = list_param_unit
+    VoiceTalkTable['Param_minmax'] = list_param_minmax
+    print("initTable success", VoiceTalkTable)
+    VoiceTalkTable.to_csv('../DB/VoiceTalkTable.csv')
+
+    return list_all
+
+
 
 # ========= chinese number redirection(word) ========
 def chinese_numredirection(wordlist):
@@ -111,7 +159,7 @@ def textParse(sentence):
     
     sentence = spellCorrection(sentence)
     
-    alias_list_dict = readDB() # read database
+    alias_list_dict = initTable() # read database
     dict_for_CKIP = {}
     #store keywords in dictionary
     for alias_list in alias_list_dict:
