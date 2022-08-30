@@ -40,7 +40,7 @@ def initTable():
     # a predefine rule table and a saved token table
     # the result should be 
     # Maybe no more alias
-    tokenTablePath = '../DB/TokenTable.csv'
+    tokenTablePath = '../DB/cmnHantTW/TokenTable.csv'
     ruleTablePath = '../DB/RuleTable.csv'
     
     # read token table

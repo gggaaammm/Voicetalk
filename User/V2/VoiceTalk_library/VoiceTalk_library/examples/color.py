@@ -5,7 +5,7 @@ self.D = 'device 1'
 self.F = 'color'
 self.V = {'red':[255,0,0], 'green':[0,255,0], 'blue':[0,0,255]}
 # ***[init_content]***
-voicetalk.update_table(type(self).__name__ ,self.A, self.D, self.F, self.V)
+voicetalk.update_table(type(self).__name__ ,self.A, self.D, self.F, self.V, Language)
 # ***[runs_content]***
 Token = voicetalk.get_info(type(self).__name__)
 if( (Token['A'] == self.A or Token['D'] ==self.D) and Token['F'] == self.F):

@@ -28,13 +28,17 @@ class VoiceTalk:
     def get_random(self):
         return self.data
 
-    def update_table(self,name, A, D, F, V):
-        df = pd.read_csv('libraries/VoiceTalk_library/DB/TokenTable.csv')
+    def update_table(self,name, A, D, F, V, Language):
+        if(language == "en-US"):
+            language_path = 'libraries/VoiceTalk_library/DB/enUS/TokenTable.csv'
+        else:
+            language_path = 'libraries/VoiceTalk_library/DB/cmnHantTW/TokenTable.csv'
+        df = pd.read_csv(language_path)
         result_df = df.loc[(df['IDF'] == name)]
         if(len(result_df.index) == 0):
             print("update new table", name)
             df = df.append({'IDF':name , 'A': A, 'D': D, 'F': F, 'V': V}, ignore_index=True)
-            df.to_csv('libraries/VoiceTalk_library/DB/TokenTable.csv', index=False)
+            df.to_csv(language_path, index=False)
 
 
     
