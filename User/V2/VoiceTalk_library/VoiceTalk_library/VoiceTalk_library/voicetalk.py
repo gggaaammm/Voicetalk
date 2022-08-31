@@ -29,7 +29,7 @@ class VoiceTalk:
         return self.data
 
     def update_table(self,name, A, D, F, V, Language):
-        if(language == "en-US"):
+        if(Language == "en-US"):
             language_path = 'libraries/VoiceTalk_library/DB/enUS/TokenTable.csv'
         else:
             language_path = 'libraries/VoiceTalk_library/DB/cmnHantTW/TokenTable.csv'
