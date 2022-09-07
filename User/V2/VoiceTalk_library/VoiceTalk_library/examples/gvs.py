@@ -6,4 +6,4 @@ Language = 'en-US'
 daemon_list.append(voicetalk)
 
 # ***[gvsro]***
-[0,1,2,4]
+[0,1,4]

@@ -41,7 +41,6 @@ class VoiceTalk:
             df.to_csv(language_path, index=False)
 
 
-    
 
     def get_data(self, name):    # read,  command  change
         # command = database.readCommand()
