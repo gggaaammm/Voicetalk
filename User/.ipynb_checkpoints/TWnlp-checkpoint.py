@@ -112,9 +112,11 @@ def textParse(sentence):
     sentence = spellCorrection(sentence)
     
     alias_list_dict = readDB() # read database
+    print("[alias_list_dict]", alias_list_dict)
     dict_for_CKIP = {}
     #store keywords in dictionary
     for alias_list in alias_list_dict:
+        print("[alias list]", alias_list)
         dict_for_CKIP.update( dict((el,1) for el in alias_list) )
 
     dict_for_CKIP = construct_dictionary(dict_for_CKIP)
