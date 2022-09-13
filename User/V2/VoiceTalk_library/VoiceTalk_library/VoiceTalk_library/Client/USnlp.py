@@ -279,10 +279,10 @@ def aliasRedirection(tokendict, tokenlist):
 # check if the number of token is valid
 # token[3] will record rule if number of each token is enough
 # token[3] will record error if number of each token is not enough
-def tokenValidation(tokenlist):
+def tokenValidation(tokenlist, sentence):
     if( bool(tokenlist[0]!="")): # check if D exist
         if(tokenlist[1]!=""):                        # check if A exist
-            rule = ruleLookup(tokenlist[1])          # lookup rule by A
+            rule = ruleLookup(tokenlist[1], sentence,tokenlist[0])          # lookup rule by A
             tokenlist[3] = rule                      # token[3] record rule
         else:
             tokenlist[3]=-3                       # error message #3: no feature found in sentence 
@@ -293,21 +293,24 @@ def tokenValidation(tokenlist):
 
 
 
-# ======= ruleLookup(feature) =======
-# read the Table: DevicefeatureTable.txt
+# ======= ruleLookup(feature, sentence) =======
+# read the Table: VoicetalkTab;e.csv
 # look up the rule of the device feature and return rule number
 # input parameter: feature(device_feature_name)
 # return value: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
     
-def ruleLookup(action): #check rule by feature
+def ruleLookup(action, sentence, device): #check rule by feature
     # rulelookup will read VoiceTalkTable
+    print("sentence grammar:", sentence)
     df = pd.read_csv('../DB/VoiceTalkTable.csv')
     df = df[df['A'].str.contains(action)]
     rule = df.iloc[0]['Rule']
-    if(rule == 1):
+    if(rule == 1 and sentence.index(action) < sentence.index(device)):
         return 1
-    elif(rule == 2):
+    elif(rule == 2 and sentence.index("to")>sentence.index(action)> sentence.index(device)> sentence.index('set')):
         return 2
+    else:
+        return -6 # grammar not match
 
 # ======== supportCheck(tokenlist) =====
 # read DeviceTable.txt, check if F exist in device_feature_list if 
@@ -327,22 +330,13 @@ def supportCheck(tokenlist):
     
     if(D!=''):  #check if D supports F
         IDF = ''
-        select_df = VoiceTalkTable[VoiceTalkTable['A'].str.contains(F)]
+        select_df = VoiceTalkTable[VoiceTalkTable['A'].str.contains(A)]
 #         print("support check: ", select_df)
         if(len(select_df.index)!=0):
             print("IDF to push", select_df.iloc[0]['IDF'])
             IDF = select_df.iloc[0]['IDF']
         else:
             tokenlist[3] = -4   #error message #4: Device not support such feature
-    
-    #  old v2.1
-#     if(A!=''): #do not check if all support
-#         select_df = VoiceTalkTable[VoiceTalkTable['F'].str.contains(F)]
-# #         print("[support check]", select_df)
-#         IDF = []
-#         for i  in range(len(select_df.index)):  # check if all select device has contain F?
-#             print("each IDF in A:", select_df.iloc[i]['IDF'])
-#             IDF.append(select_df.iloc[i]['IDF'])
             
     return IDF,tokenlist[3]
 
@@ -370,21 +364,13 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
         if(D!= ""):
             valueV  = Rule1Check(IDF,A)
             device_queries = [D,A,valueV,rule,IDF]
-#         if(A!= ""):
-#             device_queries = [[0]*6]*len(IDF)
-#             for idx,idf in enumerate(IDF):
-#                 valueV = Rule1Check(idf,F)
-#                 #the device should be add
-#                 select_df = df.loc[(df['IDF'] == idf)]
-#                 device = select_df.iloc[0]['D']
-#                 device_queries[idx] = [A,device,F,valueV, rule,idf]
         print("[RULE1]device queries:", device_queries)
         
         
         
     elif(rule ==2):
-        # 1. a string(do nothing and pass)
-        # 2. a number(check if exceed min/max) 
+        # 1. a number(check if exceed min/max)
+        # 2. a status(transform into keyword in) 
         # 3. a quantity(check if unit support and check exceed min/max)
         if(D != ''):  #access the device info(which D and F are fitted)
             dimension = findDimension(IDF)
@@ -410,41 +396,6 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                     else:  #iterate through all dimension
                         valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
             device_queries = [D,A,valueV,tokenlist[3],IDF]
-                
-            # check if stringV found in
-            
-        # next, we handle A
-#         elif(A != ''):
-#             device_queries = [[0]*6]*len(IDF)
-#             for idx,idf in enumerate(IDF):
-#                 print("[RULE2-A]:", idf)
-#                 select_df = df.loc[(df['IDF'] == idf)]
-#                 device = select_df.iloc[0]['D']
-#                 dimension = findDimension(idf)
-#                 paramTable = findParameter(idf)
-#                 select_V = paramTable.iloc[0]['V']
-#                 v_dict = None
-#                 try:
-#                     v_dict = ast.literal_eval(select_V)
-#                 except ValueError:
-#                     print("[ValueError]: ")
-#                 if(v_dict is not None):
-#                     if(len(stringV)!=0):
-#                         if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
-#                             valueV = [v_dict[stringV[0]]]
-#                     else: # if not exist in dictionary, we do care about the dimension
-#                         # for each quantity V, we do quantity calculation and min max check
-#                         # first, we check the dimension is matched
-#                         if(dimension != len(quantityV)+len(stringV)):
-#                             print("[quantity]dimension not matched")
-#                             valueV = 0
-#                             tokenklist[4] = -5
-#                         else:  #iterate through all dimension
-#                             valueV, tokenlist = Rule2Check(idf,quantityV, stringV, tokenlist)
-#                             print("[RULE2-A:value_V]", valueV)
-#                 device_queries[idx] = [A,device,F,valueV,tokenlist[4],idf]
-
-
     print("[valueCheck end] :", "device query:",device_queries, "\n tokenlist", tokenlist)    
     return device_queries
 
@@ -591,11 +542,6 @@ def checkMinMax(param_minmax, V):
         return 2 #return 2 as rule 2
 
 
-# #
-# def findAlias(feature):
-#     df = pd.read_csv('dict/enUS/alias/aliasF.txt')
-#     df = df.loc[ (df['alias1']==feature) | (df['alias2']==feature) | (df['alias3']==feature) ]
-#     return df.iloc[0]['alias1']                               
 
 #
 def findDimension(IDF):
@@ -604,15 +550,6 @@ def findDimension(IDF):
     dimension = df.iloc[0]['Param_dim']
     return dimension
     
-
-
-def findDeviceList(A):
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
-    df = df.loc[df['A'] == A]
-    device_list =  list(df['D'])
-    return device_list
-
-
 def readDeviceTable(D):
     df = pd.read_csv('../DB/VoiceTalkTable.csv')
     if(D != ""):
