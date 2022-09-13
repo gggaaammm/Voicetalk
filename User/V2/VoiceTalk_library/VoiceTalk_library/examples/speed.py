@@ -1,6 +1,9 @@
 # ***[import_string]***
 # ***[var_define]***
 # D = Device, A = Action, V = Value
+# self.D = 'device'
+# self.A = 'speed'
+# self.V = {'high':5, 'medium':3, 'low':1}
 self.D = 'device'
 self.A = 'speed'
 self.V = {'high':5, 'medium':3, 'low':1}

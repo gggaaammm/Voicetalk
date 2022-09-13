@@ -1,6 +1,9 @@
 # ***[import_string]***
 # ***[var_define]***
 # D = Device, A = Action, V = Value
+# self.D = 'device'
+# self.A = {'open':1, 'close':0}
+# self.V = None
 self.D = 'device'
 self.A = {'open':1, 'close':0}
 self.V = None

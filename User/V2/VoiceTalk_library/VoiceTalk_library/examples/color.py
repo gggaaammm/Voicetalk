@@ -1,6 +1,9 @@
 # ***[import_string]***
 # ***[var_define]***
 # D = Device, A = Action, V = Value
+# self.D = 'device'
+# self.A = 'color'
+# self.V = {'red':[255,0,0], 'green':[0,255,0], 'blue':[0,0,255]}
 self.D = 'device'
 self.A = 'color'
 self.V = {'red':[255,0,0], 'green':[0,255,0], 'blue':[0,0,255]}

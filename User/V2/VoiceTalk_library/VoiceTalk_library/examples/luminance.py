@@ -1,6 +1,9 @@
 # ***[import_string]***
 # ***[var_define]***
 # D = Device, A = Action, V = Value
+# self.D = 'device'
+# self.A = 'brightness'
+# self.V = {'bright':5, 'medium':3, 'dark':1}
 self.D = 'device'
 self.A = 'brightness'
 self.V = {'bright':5, 'medium':3, 'dark':1}
