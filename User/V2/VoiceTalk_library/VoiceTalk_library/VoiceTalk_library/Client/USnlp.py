@@ -344,7 +344,7 @@ def supportCheck(tokenlist):
 #             print("each IDF in A:", select_df.iloc[i]['IDF'])
 #             IDF.append(select_df.iloc[i]['IDF'])
             
-    return IDF,tokenlist[4]
+    return IDF,tokenlist[3]
 
 
 
@@ -369,7 +369,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
         # for rule 1, get the value into Token V
         if(D!= ""):
             valueV  = Rule1Check(IDF,A)
-            device_queries = [A,D,F,valueV,rule,IDF]
+            device_queries = [D,A,valueV,rule,IDF]
 #         if(A!= ""):
 #             device_queries = [[0]*6]*len(IDF)
 #             for idx,idf in enumerate(IDF):
@@ -409,7 +409,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                         valueV = 0
                     else:  #iterate through all dimension
                         valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
-            device_queries = [A,D,F,valueV,tokenlist[4],IDF]
+            device_queries = [D,A,valueV,tokenlist[3],IDF]
                 
             # check if stringV found in
             

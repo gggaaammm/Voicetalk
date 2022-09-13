@@ -37,7 +37,7 @@ def index():
     response = ''
     if(request.method == 'POST'):
         text = request.values['user']
-        print(text)
+        print("[sentence]:",text)
         language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
@@ -66,15 +66,15 @@ def index():
         
         if(isinstance(device_queries[0], list) == False):
             returnlist = device_queries
-            valid = device_queries[4]    # only 1 device, get valid/rule bits
+            valid = device_queries[3]    # only 1 device, get valid/rule bits
         else:
             for device_query in device_queries:
-                if(device_query[4] < 0):
-                    valid = device_query[4]
+                if(device_query[3] < 0):
+                    valid = device_query[3]
                     returnlist = device_query
                     break
                 else:
-                    valid = device_query[4]
+                    valid = device_query[3]
                     returnlist = device_query
         
         print("[valid]message bit:", valid)
@@ -98,7 +98,7 @@ def ProcessSentence():
     returnlist = []
     sentence = request.args.get('sentence')
     language = request.args.get('language')
-    print("voice sentence: ", sentence) #data should be decoded from bytestrem to utf-8
+    print("[voice sentence]: ", sentence) #data should be decoded from bytestrem to utf-8
     
     if(language == 'en-US'): #English
         name, feature,value, device_queries = USnlp.textParse(sentence) #spacy function
@@ -116,17 +116,17 @@ def ProcessSentence():
     
 
     if(isinstance(device_queries[0], list) == False):
-        valid = device_queries[4]    # only 1 device, get valid/rule bits
+        valid = device_queries[3]    # only 1 device, get valid/rule bits
         returnlist = device_queries  # show the success/error message of device D
     else:
         for device_query in device_queries:
-            if(device_query[4] < 0):
-                valid = device_query[4]
+            if(device_query[3] < 0):
+                valid = device_query[3]
                 returnlist = device_query # show the error message of certiain deivce in A
                 name = device_query[1]
                 break
             else:
-                valid = device_query[4]
+                valid = device_query[3]
                 returnlist = device_query # show the success message of A
             
     
@@ -153,15 +153,15 @@ def sendDevicetalk(device_queries):
         print("[F] rework:", device_queries)
         for device_query in device_queries:
             print("each query:", device_query)
-            D = device_query[1]
-            F = device_query[2]
-            V = device_query[3]
-            valid = device_query[4]
-            if(len(device_query) <6):
+            D = device_query[0]
+            A = device_query[1]
+            V = device_query[2]
+            valid = device_query[3]
+            if(valid <0):
                 print("command not match IDF")
             else:
                 print("command match IDF")
-                IDF = device_query[5]
+                IDF = device_query[4]
                 df = pd.read_csv("../DB/cmd/command.csv")
                 if(valid>0):
                     print("write file", V, 'type: ', type(V))
@@ -174,19 +174,19 @@ def sendDevicetalk(device_queries):
     else:
         print("only 1 query", device_queries, len(device_queries))
         device_query = device_queries
-        D = device_query[1]
-        F = device_query[2]
-        V = device_query[3]
-        valid = device_query[4]
-         if(len(device_query) <6):
+        D = device_query[0]
+        A = device_query[1]
+        V = device_query[2]
+        valid = device_query[3]
+         if(valid< 0):
             print("command not match IDF")
         else:
             print("command match IDF")
-            IDF = device_query[5]
+            IDF = device_query[4]
             df = pd.read_csv("../DB/cmd/command.csv")
             if(valid>0):
                 print("write file", V, 'type: ', type(V))
-                cmd = {'IDF':IDF, 'A':'', 'D':D, 'F':F, 'V':V}
+                cmd = {'IDF':IDF,  'D':D, 'A':A, 'V':V}
                 df = df.append(cmd, ignore_index=True)
                 print("new df", df)
                 df.to_csv("../DB/cmd/command.csv", index=False)
