@@ -155,6 +155,7 @@ def textParse(sentence):
     # ===========================  value handling start=================================
     # check if sentence contains number, before sentence redirecting
     # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
+    origin_sentence = sentence
 #     sentence = sentence.replace(tokendict['A'], "")
     sentence = sentence.replace(tokendict['D'], "")
 #     sentence = sentence.replace(tokendict['F'], "")
@@ -176,7 +177,7 @@ def textParse(sentence):
     # =========================== number of token validation  =======================================
     # check if number of tokens is enough.
     # if not enough, token[4] will record error id    
-    tokenlist[3] = tokenValidation(tokenlist)
+    tokenlist[3] = tokenValidation(tokenlist,origin_sentence)
     # =========================== number of token validation end =======================================    
 
     #============================ support check =================================
