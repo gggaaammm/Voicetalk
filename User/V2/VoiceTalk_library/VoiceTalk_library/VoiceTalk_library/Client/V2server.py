@@ -38,7 +38,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print("[sentence]:",text)
-        language = 'zh-TW'
+        language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
@@ -52,10 +52,6 @@ def index():
         #get all device query(ies) from the tokenlist
         print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-#         print("[ProcessSentence] how long:",len(device_queries))
-#         thread = Thread(target=sendIot, args=(device_queries,))
-#         thread.daemon = True
-#         thread.start()
         
         print("[IOTTALK V2]", device_queries)
         thread = Thread(target=sendDevicetalk, args=(device_queries,))
@@ -110,7 +106,7 @@ def ProcessSentence():
     #get all device query(ies) from the tokenlist
     print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))    
     print("[ProcessSentence] how long:",len(device_queries,))
-    thread = Thread(target=sendIot, args=(device_queries,))
+    thread = Thread(target=sendDevicetalk, args=(device_queries,))
     thread.daemon = True
     thread.start()
     
@@ -191,17 +187,11 @@ def sendDevicetalk(device_queries):
                 print("new df", df)
                 df.to_csv("../DB/cmd/command.csv", index=False)
 
-
-
-        
         
 
 def initDB():
     print("init DB")
 
-
-
-        
 
     
 

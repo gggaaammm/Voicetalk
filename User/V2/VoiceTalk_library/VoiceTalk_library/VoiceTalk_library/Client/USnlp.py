@@ -45,7 +45,7 @@ def initTable():
     for a in tokenTable['A']:
         try:
             a_dict = ast.literal_eval(a)
-            if isinstance(f_dict, dict):
+            if isinstance(a_dict, dict):
                 keysList = list(a_dict.keys())
                 list_A.extend(keysList)
         except ValueError:
@@ -456,9 +456,9 @@ def Rule2Check(IDF,quantityV, stringV, tokenlist):
     #last collect 
     print("===========[Flag] =======================", error_flag)
     if(all(flag >0 for flag in error_flag)): #examine if one error appeared in a
-        tokenlist[4] = 2
+        tokenlist[3] = 2
     else:
-        tokenlist[4] = -5
+        tokenlist[3] = -5
     return value_V, tokenlist
 
 # ====== handleValue(quantity) ========
