@@ -178,7 +178,7 @@ def sendDevicetalk(device_queries):
         A = device_query[1]
         V = device_query[2]
         valid = device_query[3]
-         if(valid< 0):
+        if(valid< 0):
             print("command not match IDF")
         else:
             print("command match IDF")
@@ -197,6 +197,7 @@ def sendDevicetalk(device_queries):
         
 
 def initDB():
+    print("init DB")
 
 
 
