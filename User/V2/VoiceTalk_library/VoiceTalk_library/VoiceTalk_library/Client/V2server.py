@@ -4,11 +4,10 @@ import pandas as pd
 import json
 from threading import Thread
 import time, random, requests
-# import DAN, register
 # import TWnlp #uncomment later
 import USnlp
-# v2
-# import managesa as Devicetalk
+import config
+
 
 
 
@@ -18,11 +17,7 @@ import USnlp
 # -3 error: no device feature in sentence
 # -4 error: device feature need value
 # -5 error: D not support F
-
-
-
-
-
+# -6 error: sentence grammar error(order required)
 
 #==========flask as backend=============
 from flask import Flask, render_template, request, jsonify, url_for
@@ -190,16 +185,45 @@ def sendDevicetalk(device_queries):
         
 
 def initDB():
-    print("init DB")
+    # aggregate 2 table
+    tokenTable = pd.read_csv(config.TokenTablePath)
+    ruleTable = pd.read_csv(config.RuleTablePath)
+    
+    token_duplicated = tokenTable.duplicated(['D','A']).any() 
+    if(token_duplicated):
+        duplicate = tokenTable[tokenTable.duplicated(['D','A'], keep=False)]
+        print("Token has duplicate value:\n", duplicate)
+    else:
+        list_rule, list_param_dim,list_param_unit, list_param_minmax, list_param_type = [],[],[],[],[]
+        for IDF in tokenTable['IDF']:
+            IDF = IDF[:-3]
+            select_df = ruleTable.loc[(ruleTable['IDF'] == IDF)]
+            list_rule.append( select_df.iloc[0]['Rule'])
+            list_param_dim.append(select_df.iloc[0]['Param_dim'])
+            list_param_type.append(select_df.iloc[0]['Param_type'])
+            list_param_unit.append(select_df.iloc[0]['Param_unit'])
+            list_param_minmax.append(select_df.iloc[0]['Param_minmax'])
+            
+            # for each IDF, search for rule Table and save
+        VoiceTalkTable = tokenTable
+        VoiceTalkTable['Rule'] = list_rule
+        VoiceTalkTable['Param_dim'] = list_param_dim
+        VoiceTalkTable['Param_type'] = list_param_type
+        VoiceTalkTable['Param_unit'] = list_param_unit
+        VoiceTalkTable['Param_minmax'] = list_param_minmax
+        print("[OK]Init Table success", VoiceTalkTable)
+        VoiceTalkTable.to_csv(config.VoiceTalkTablePath)
 
-
+    return token_duplicated
     
 
 if __name__ == "__main__":
     #register.registerIottalk()
     #register will be close for debug
-    initDB()
+    token_duplicated = initDB()
         
-    
-    app.run(host='0.0.0.0',debug=True, port=19453)
+    if(token_duplicated):
+        print("[Error]Init VoiceTalk Table error, System Abort")
+    else:
+        app.run(host='0.0.0.0',debug=True, port=config.Port)
     

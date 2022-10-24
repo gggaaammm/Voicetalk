@@ -17,7 +17,7 @@ nlp = spacy.load("en_core_web_sm")
 #initilize the matcher with a shared vocab
 matcher = PhraseMatcher(nlp.vocab)
 
-
+VoiceTalkTablePath = '../DB/VoiceTalkTable.csv'
 
 #======= function readDB() ========
 # in this function, program read files at the path "./dict/enUS/alias/"
@@ -76,32 +76,6 @@ def initTable():
     matcher.add("A", A)
     matcher.add("V", V)
     
-    
-    
-    #2nd part is aggregate 2 table
-    ruleTable = pd.read_csv(ruleTablePath)
-    list_rule, list_param_dim,list_param_unit, list_param_minmax, list_param_type = [],[],[],[],[]
-    for IDF in tokenTable['IDF']:
-        
-        IDF = IDF[:-3]
-        print("IDF: ", IDF)
-        select_df = ruleTable.loc[(ruleTable['IDF'] == IDF)]
-        print("select df:", select_df)
-        list_rule.append( select_df.iloc[0]['Rule'])
-        list_param_dim.append(select_df.iloc[0]['Param_dim'])
-        list_param_type.append(select_df.iloc[0]['Param_type'])
-        list_param_unit.append(select_df.iloc[0]['Param_unit'])
-        list_param_minmax.append(select_df.iloc[0]['Param_minmax'])
-        
-        # for each IDF, search for rule Table and save
-    VoiceTalkTable = tokenTable
-    VoiceTalkTable['Rule'] = list_rule
-    VoiceTalkTable['Param_dim'] = list_param_dim
-    VoiceTalkTable['Param_type'] = list_param_type
-    VoiceTalkTable['Param_unit'] = list_param_unit
-    VoiceTalkTable['Param_minmax'] = list_param_minmax
-    print("initTable success", VoiceTalkTable)
-    VoiceTalkTable.to_csv('../DB/VoiceTalkTable.csv')
 
 
     
@@ -289,8 +263,12 @@ def ruleLookup(action, sentence, device): #check rule by feature
     rule = df.iloc[0]['Rule']
     if(rule == 1 and sentence.index(action) < sentence.index(device)):
         return 1
-    elif(rule == 2 and sentence.index("to")>sentence.index(action)> sentence.index(device)> sentence.index('set')):
-        return 2
+    elif(rule == 2):
+        print("rule 2 has set to")
+        if(sentence.index("to")>sentence.index(action)> sentence.index(device)> sentence.index('set')):
+            return 2
+        else:
+            return -6
     else:
         return -6 # grammar not match
 
@@ -337,9 +315,6 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     print("that is IDF:", IDF)
     device_queries = [[0]*6]*1   # create a device query as return type of function
 
-    
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
-
     if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
         print("rule 1") #give a value for rule 1 in value_keyword list
         # for rule 1, get the value into Token V
@@ -382,10 +357,10 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     return device_queries
 
 
-# ====== Rule1 function for valueCheck
+# ====== Rule1 subfunction for valueCheck
 def Rule1Check(IDF,A):
     if(isinstance(IDF, str)):
-        df = pd.read_csv('../DB/VoiceTalkTable.csv')
+        df = pd.read_csv(VoiceTalkTablePath)
         select_df = df.loc[(df['IDF']) == IDF]
         select_A = select_df.iloc[0]['A']
         try:
@@ -453,9 +428,9 @@ def Rule2Check(IDF,quantityV, stringV, tokenlist):
             num_id = num_id+1
             # check if quantity in range min max
             
-    print("===========[END: RULE2-Check]============", value_V, "?")
+    print("===========[END: RULE2 value-Check]============", value_V, "?")
     #last collect 
-    print("===========[Flag] =======================", error_flag)
+    print("===========[Flag check] =======================", error_flag)
     if(all(flag >0 for flag in error_flag)): #examine if one error appeared in a
         tokenlist[3] = 2
     else:
@@ -527,20 +502,20 @@ def checkMinMax(param_minmax, V):
 
 #
 def findDimension(IDF):
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = pd.read_csv(VoiceTalkTablePath)
     df = df.loc[(df['IDF'] == IDF)]
     dimension = df.iloc[0]['Param_dim']
     return dimension
     
 def readDeviceTable(D):
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = pd.read_csv(VoiceTalkTablePath)
     if(D != ""):
         df = df.loc[df['D']== D]
 
     return df
 
 def findParameter(IDF):
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = pd.read_csv(VoiceTalkTablePath)
     df = df.loc[(df['IDF'] == IDF) ]
     df = df[['IDF','V','Param_unit','Param_type', 'Param_minmax', 'Param_dim']]
     return df
