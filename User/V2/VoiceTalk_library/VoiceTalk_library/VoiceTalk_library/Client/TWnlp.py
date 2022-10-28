@@ -7,7 +7,6 @@ import os
 import sys
 import glob # for reading multi files
 import re # for number finding
-#import the phrase matcher
 from numerizer import numerize
 from spacy.matcher import PhraseMatcher
 from pint import UnitRegistry
@@ -330,26 +329,7 @@ def handleEntity(Type, Context):
     
 # === aliasRedirection(tokendict, tokenlist)
 
-def aliasRedirection(tokendict, tokenlist):
-    # path = r"dict/zhTW/alias/" #  path for synonym
-    # all_files = glob.glob(os.path.join(path , "*.txt"))
-    # for filename in all_files:
-    #     sublist = []
-    #     df = pd.read_csv(filename)
-    #     if(filename[21] == 'V'): # V is a special with a list
-    #         V_list = list(tokendict[filename[21]])
-    #         for idx, V_word in enumerate(V_list):
-    #             for column in df.columns:
-    #                 df_abs = df.loc[(df[column])== V_word]
-    #                 if(len(df_abs.index)>0):
-    #                     V_list[idx] = df_abs.iloc[0][0] 
-    #         tokendict['V'] = V_list
-    #     #redirect A,D,F to device_model, device_name, device_feature individually
-    #     else:
-    #         for column in df.columns:
-    #             df_abs = df.loc[(df[column] == tokendict[filename[21]])]
-    #             if(len(df_abs.index)>0):
-    #                 tokendict[filename[21]] = df_abs.iloc[0][0]              
+def aliasRedirection(tokendict, tokenlist):        
     tokenlist = [tokendict['A'], tokendict['D'], tokendict['F'], tokendict['V'], tokenlist[4]]
     print("[alias Redirect] Result:", tokenlist)
     return tokenlist

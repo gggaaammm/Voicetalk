@@ -27,22 +27,15 @@ VoiceTalkTablePath = '../DB/VoiceTalkTable.csv'
 # no parameter, no return value is needed
 
 def initTable():
-    # TODO change: will read the data from VoiceTalk Table
-    # a predefine rule table and a saved token table
-    # the result should be 
-    # Maybe no more alias
-    tokenTablePath = '../DB/enUS/TokenTable.csv'
-    ruleTablePath = '../DB/RuleTable.csv'
-    
-    # read token table
-    tokenTable = pd.read_csv(tokenTablePath)
-    token_duplicated = tokenTable.duplicated().any() 
+    # read VoiceTalk table
+    VoiceTalkTable = pd.read_csv(VoiceTalkTablePath)
+    token_duplicated = VoiceTalkTable.duplicated().any() 
     if(token_duplicated):
         print("token_duplicated", token_duplicated)
     
-    list_D = tokenTable['D'].to_list()
+    list_D = VoiceTalkTable['D'].to_list()
     list_A, list_V = [],[]
-    for a in tokenTable['A']:
+    for a in VoiceTalkTable['A']:
         try:
             a_dict = ast.literal_eval(a)
             if isinstance(a_dict, dict):
@@ -53,7 +46,7 @@ def initTable():
         except SyntaxError:
             list_A.append(a)
         
-    for v in tokenTable['V']:
+    for v in VoiceTalkTable['V']:
         try:
             v_dict = ast.literal_eval(v)
             if isinstance(v_dict, dict):
@@ -85,7 +78,7 @@ def initTable():
 # 
 
 def spellCorrection(sentence):
-    df = pd.read_csv("dict/enUS/correction/correction.txt")
+    df = pd.read_csv("../DB/enUS/correction.csv")
     wrongwordlist = list(df['wrong'])
     print(wrongwordlist)
     for wrongword in wrongwordlist:
@@ -99,14 +92,13 @@ def spellCorrection(sentence):
 
     
 # ============  function textParse(sentence) ============
-# main function of the spaCy, do the following:
-# 1. read Database
+# main function, do the following:
+# 1. read Database(initTable)
 # 2. match the token(tokenclassifier)
 # 3. detect the quantity(quantityDetect)
-# 4. alias redirection(canceled at V2)
-# 5. token counter validation(contain rule lookup)
-# 6. token support check
-# 7. token value check(contain Rule1Check, Rule2Check)
+# 4. token & rule validation(tokenValidation)
+# 5. token support check
+# 6. token value check(contain Rule1Check, Rule2Check)
 # sentence(string) as input parameter, return value is device_queries
     
 
@@ -128,11 +120,9 @@ def textParse(sentence):
     
     # ===========================  value handling start=================================
     # check if sentence contains number, before sentence redirecting
-    # first remove other tokens(i.e, '1' in sentence: "set fan 1 speed to 3")
+    # first remove other token D(i.e, '1' in sentence: "set fan 1 speed to 3")
     origin_sentence = sentence
-#     sentence = sentence.replace(tokendict['A'], "")
     sentence = sentence.replace(tokendict['D'], "")
-#     sentence = sentence.replace(tokendict['F'], "")
 
     
     quantity = quantityDetect(sentence)
@@ -141,28 +131,19 @@ def textParse(sentence):
     sentence_device_name = tokendict['D']  # save device name before alias redirect
     sentence_value = tokendict['V']+quantity  # save device name before alias redirect
     
-    # ============================ alias redirection ================================
-    # D,A,V alias should be redirect to device_model, device_name, device_feature individually
-    tokenlist = aliasRedirection(tokendict, tokenlist)
-
-    #============================ alias redirection end =================================
 
 
-    # =========================== number of token validation  =======================================
     # check if number of tokens is enough.
     # if not enough, token[4] will record error id    
     tokenlist[3] = tokenValidation(tokenlist,origin_sentence)
-    # =========================== number of token validation end =======================================    
 
-    #============================ support check =================================
-    # if token has correct number, check if D support A
+    # select Target IDF
     if(tokenlist[3] > 0):                  # if error/rule bit records rules
-        IDF,tokenlist[3] = supportCheck(tokenlist) # support check
+        IDF,tokenlist[3] = IDFSelection(tokenlist) # support check
     else:                              # if error/rule bit records errors
-        print("[supportCheck error]not enough token!") # break
+        print("[IDFSelection error]not enough token!") # break
     
     
-    #============================ Value check =================================
     # if token has correct number and D support A, check if V is valid
     if(tokenlist[3] > 0): 
         device_queries = valueCheck(tokenlist, sentence_action, quantity, IDF) # value check and get device queries
@@ -200,18 +181,19 @@ def tokenClassifier(sentence):
             print("another V accepted")
             tokendict[token_id].append(span.text)
         elif(tokendict[token_id] == '' or tokendict[token_id] in span.text):   
-            # if tokendict is undefined or tokendict has same value
-            tokendict[token_id] = span.text     # insert key and value in tokendict
+            tokendict[token_id] = span.text     # insert key and value in tokendict if is undefined or tokendict has same value
         else:
             print("too much element in D token!") # error message #1: too much token
             tokenlist[3] = -1
+    tokenlist = [tokendict['D'], tokendict['A'], tokendict['V'], tokenlist[3]]
     return tokendict, tokenlist    
 
 
 
 # ====== quantityDetect(sentence)
-
-
+# detect if sentence exist quantity
+# input: sentence (string)
+# output: quantity (list)
 def quantityDetect(sentence):
     quantity = []
     value_doc = nlp(sentence)
@@ -221,15 +203,7 @@ def quantityDetect(sentence):
 
 
 
-# ======= aliasRedirection(tokendict, token) =============
-# redirect all the alias(A/D/F/V) to deivce_model, device_name, device_feature, value_name
-# input: tokendict, token
-# return: token
 
-def aliasRedirection(tokendict, tokenlist):
-    print("No aliasRedirection for V2")           
-    tokenlist = [tokendict['D'], tokendict['A'], tokendict['V'], tokenlist[3]]
-    return tokenlist
 
 # ======= tokenValidation(token)  ========
 # check if the number of token is valid
@@ -250,7 +224,7 @@ def tokenValidation(tokenlist, sentence):
 
 
 # ======= ruleLookup(feature, sentence) =======
-# read the Table: VoicetalkTab;e.csv
+# read the Table: VoicetalkTable.csv
 # look up the rule of the device feature and return rule number
 # input parameter: feature(device_feature_name)
 # return value: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
@@ -258,7 +232,7 @@ def tokenValidation(tokenlist, sentence):
 def ruleLookup(action, sentence, device): #check rule by feature
     # rulelookup will read VoiceTalkTable
     print("sentence grammar:", sentence)
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
+    df = pd.read_csv(VoiceTalkTablePath)
     df = df[df['A'].str.contains(action)]
     rule = df.iloc[0]['Rule']
     if(rule == 1 and sentence.index(action) < sentence.index(device)):
@@ -272,21 +246,20 @@ def ruleLookup(action, sentence, device): #check rule by feature
     else:
         return -6 # grammar not match
 
-# ======== supportCheck(tokenlist) =====
-# read DeviceTable.txt, check if F exist in device_feature_list if 
+# ======== IDFSelection(tokenlist) =====
+# read VoiceTalkTable.txt, check if F exist in device_feature_list if 
 # A/D match device_model/device_name
 # if support, pass
 # if not support, record the error bit(tokenlist[4])
 # input parameter: tokenlist
-# return value: tokenlist[4](error/value bit)
-
-def supportCheck(tokenlist):
+# return value:IDF(IDF name), tokenlist[4](error/value bit)
+def IDFSelection(tokenlist):
     D = tokenlist[0]
     A = tokenlist[1]
     rule = tokenlist[3]
     # read device info in DeviceTable.txt
     VoiceTalkTable = readDeviceTable(D)
-    print("[SUPPORTCHECK]",VoiceTalkTable)
+    print("[IDFSelection]",VoiceTalkTable)
     
     if(D!=''):  #check if D supports F
         IDF = ''
@@ -306,6 +279,11 @@ def supportCheck(tokenlist):
     
 
 # ======== valueCheck(tokenlist, feature) ============
+# input param: (tokenlist, feature, quantityV, IDF)
+# param type:  (list, string, )
+# output param
+# param type
+
 
 def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     D = tokenlist[0]
@@ -371,7 +349,7 @@ def Rule1Check(IDF,A):
         except ValueError:
             print("no dictionary find")
     else:
-        print("why?")
+        print("IDF is not string")
     return valueV
 
 # ==== Rule2 function for valueCheck
@@ -465,17 +443,11 @@ def handleUnit(quantity, unit): # use Pint package for unit hanlding
     ureg = UnitRegistry()     # new a unit module
     Q_ = ureg.Quantity        # define a quantity element quantity = (value, unit)
     
-    #(issue)get base unit from iottalk define
-#     ureg.load_definitions('my_def.txt')
-#     ureg.default_system = 'iottalk'
-    
     value = 0 #init value
-    #(issue) When exception, catch the error message(wrong unit cannot be calculated. ex: 3 minute + 20 cm)
     if(len(quantitylist)%2 == 0):
         for q_id in range(0, len(quantitylist),2):
             try:
                 value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to(unit)
-#                 value = value + Q_(int(quantitylist[q_id]), quantitylist[q_id+1]).to_base_units()
             except:
                 print("unit conversion error!")
                 return None
@@ -547,3 +519,11 @@ def isPureNumber(quantity):
 #     connection.close()
     
 
+# ======= aliasRedirection(tokendict, token) =============
+# redirect all the alias(A/D/F/V) to deivce_model, device_name, device_feature, value_name
+# input: tokendict, token
+# return: token
+# def aliasRedirection(tokendict, tokenlist):
+#     print("No aliasRedirection for V2")           
+#     tokenlist = [tokendict['D'], tokendict['A'], tokendict['V'], tokenlist[3]]
+#     return tokenlist
