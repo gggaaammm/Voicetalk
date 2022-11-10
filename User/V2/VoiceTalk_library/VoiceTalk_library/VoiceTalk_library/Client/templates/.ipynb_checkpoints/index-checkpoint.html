@@ -68,11 +68,12 @@
         if (recognizing) { // 如果正在辨識，則停止。
           recognition.stop();
         } else { // 否則就開始辨識
-          recognitionBox.value = ''; // 清除最終的辨識訊息
+          $("#recognitionBox").val(""); //清除最終的辨識訊息
+          $("#responseBox").val("");    //清除系統回覆
           final_transcript = ''; // 最終的辨識訊息變數
           recognition.lang = language //設定當前語言
           recognition.start(); // 開始辨識
-          $("#responseBox").val("");
+          
         }
       }
 
@@ -92,7 +93,7 @@
 
         recognition.onend = function() { // 辨識完成
           recognizing = false; // 設定為「非辨識中」
-          infoBox.innerText = startMessage[language]  // 提示使用者點選按鈕停止
+          infoBox.innerText = startMessage[language]  // 提示使用者點選按鈕開始
           startStopButton.src="{{ url_for('static', filename='images/stop.jpg') }}";
         };
 
@@ -158,8 +159,6 @@
                                 renderhtml = data.response+data.name+"的"+data.feature+"將設定為"+data.value
                             }
                             
-                            
-//                             renderhtml = data.response+data.tokenlist[0]+data.tokenlist[1]+data.tokenlist[2]+data.tokenlist[3]
                         }
                     }
                     

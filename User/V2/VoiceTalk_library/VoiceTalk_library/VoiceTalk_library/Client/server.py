@@ -4,7 +4,7 @@ import pandas as pd
 import json
 from threading import Thread
 import time, random, requests
-# import TWnlp #uncomment later
+import TWnlp #uncomment later
 import USnlp
 import config
 
@@ -33,14 +33,14 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print("[sentence]:",text)
-        language = 'en-US'
+        language = 'zh-TW'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
             #enspacy.readDB()
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
-#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
@@ -104,22 +104,9 @@ def ProcessSentence():
     thread = Thread(target=sendDevicetalk, args=(device_queries,))
     thread.daemon = True
     thread.start()
-    
 
-    if(isinstance(device_queries[0], list) == False):
-        valid = device_queries[3]    # only 1 device, get valid/rule bits
-        returnlist = device_queries  # show the success/error message of device D
-    else:
-        for device_query in device_queries:
-            if(device_query[3] < 0):
-                valid = device_query[3]
-                returnlist = device_query # show the error message of certiain deivce in A
-                name = device_query[1]
-                break
-            else:
-                valid = device_query[3]
-                returnlist = device_query # show the success message of A
-            
+    valid = device_queries[3]    # get valid/rule bits
+    returnlist = device_queries  # show the success/error message of device D
     
     response = '' # init response
     # complete the response context
@@ -127,7 +114,6 @@ def ProcessSentence():
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
     else:
         response = 'OK, ' if language == 'en-US' else '收到，'
-#         if(returnlist[4] == 1): returnlist[3] = ''      # rule 1: no value(token 3) need
             
     print("source from response", response,"\nreturnlist:", returnlist,"\nvalid:", valid, )
     
@@ -185,6 +171,8 @@ def sendDevicetalk(device_queries):
         
 
 def initDB():
+    # itterate through all languages
+    
     # aggregate 2 table
     tokenTable = pd.read_csv(config.TokenTablePath)
     ruleTable = pd.read_csv(config.RuleTablePath)

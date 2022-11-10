@@ -4,11 +4,10 @@ import pandas as pd
 import json
 from threading import Thread
 import time, random, requests
-# import DAN, register
-# import TWnlp #uncomment later
+import TWnlp #uncomment later
 import USnlp
-# v2
-# import managesa as Devicetalk
+import config
+
 
 
 
@@ -18,11 +17,7 @@ import USnlp
 # -3 error: no device feature in sentence
 # -4 error: device feature need value
 # -5 error: D not support F
-
-
-
-
-
+# -6 error: sentence grammar error(order required)
 
 #==========flask as backend=============
 from flask import Flask, render_template, request, jsonify, url_for
@@ -45,17 +40,13 @@ def index():
             #enspacy.readDB()
             name, feature,value, device_queries = USnlp.textParse(text) #spacy function
         else:  # chinese
-#             name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
+            name, feature,value, device_queries = TWnlp.textParse(text) #spacy function
             print("chinese not yet")
         
         
         #get all device query(ies) from the tokenlist
         print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))
         
-#         print("[ProcessSentence] how long:",len(device_queries))
-#         thread = Thread(target=sendIot, args=(device_queries,))
-#         thread.daemon = True
-#         thread.start()
         
         print("[IOTTALK V2]", device_queries)
         thread = Thread(target=sendDevicetalk, args=(device_queries,))
@@ -110,25 +101,12 @@ def ProcessSentence():
     #get all device query(ies) from the tokenlist
     print("[ProcessSentence] is multiple device: ", isinstance(device_queries[0], list))    
     print("[ProcessSentence] how long:",len(device_queries,))
-    thread = Thread(target=sendIot, args=(device_queries,))
+    thread = Thread(target=sendDevicetalk, args=(device_queries,))
     thread.daemon = True
     thread.start()
-    
 
-    if(isinstance(device_queries[0], list) == False):
-        valid = device_queries[3]    # only 1 device, get valid/rule bits
-        returnlist = device_queries  # show the success/error message of device D
-    else:
-        for device_query in device_queries:
-            if(device_query[3] < 0):
-                valid = device_query[3]
-                returnlist = device_query # show the error message of certiain deivce in A
-                name = device_query[1]
-                break
-            else:
-                valid = device_query[3]
-                returnlist = device_query # show the success message of A
-            
+    valid = device_queries[3]    # get valid/rule bits
+    returnlist = device_queries  # show the success/error message of device D
     
     response = '' # init response
     # complete the response context
@@ -136,7 +114,6 @@ def ProcessSentence():
         response =  'I\'m sorry, try again.' if language == 'en-US' else '很抱歉，聽不懂請重講'
     else:
         response = 'OK, ' if language == 'en-US' else '收到，'
-#         if(returnlist[4] == 1): returnlist[3] = ''      # rule 1: no value(token 3) need
             
     print("source from response", response,"\nreturnlist:", returnlist,"\nvalid:", valid, )
     
@@ -178,7 +155,7 @@ def sendDevicetalk(device_queries):
         A = device_query[1]
         V = device_query[2]
         valid = device_query[3]
-         if(valid< 0):
+        if(valid< 0):
             print("command not match IDF")
         else:
             print("command match IDF")
@@ -191,24 +168,50 @@ def sendDevicetalk(device_queries):
                 print("new df", df)
                 df.to_csv("../DB/cmd/command.csv", index=False)
 
-
-
-        
         
 
 def initDB():
+    # itterate through all languages
+    
+    # aggregate 2 table
+    tokenTable = pd.read_csv(config.TokenTablePath)
+    ruleTable = pd.read_csv(config.RuleTablePath)
+    
+    token_duplicated = tokenTable.duplicated(['D','A']).any() 
+    if(token_duplicated):
+        duplicate = tokenTable[tokenTable.duplicated(['D','A'], keep=False)]
+        print("Token has duplicate value:\n", duplicate)
+    else:
+        list_rule, list_param_dim,list_param_unit, list_param_minmax, list_param_type = [],[],[],[],[]
+        for IDF in tokenTable['IDF']:
+            IDF = IDF[:-3]
+            select_df = ruleTable.loc[(ruleTable['IDF'] == IDF)]
+            list_rule.append( select_df.iloc[0]['Rule'])
+            list_param_dim.append(select_df.iloc[0]['Param_dim'])
+            list_param_type.append(select_df.iloc[0]['Param_type'])
+            list_param_unit.append(select_df.iloc[0]['Param_unit'])
+            list_param_minmax.append(select_df.iloc[0]['Param_minmax'])
+            
+            # for each IDF, search for rule Table and save
+        VoiceTalkTable = tokenTable
+        VoiceTalkTable['Rule'] = list_rule
+        VoiceTalkTable['Param_dim'] = list_param_dim
+        VoiceTalkTable['Param_type'] = list_param_type
+        VoiceTalkTable['Param_unit'] = list_param_unit
+        VoiceTalkTable['Param_minmax'] = list_param_minmax
+        print("[OK]Init Table success", VoiceTalkTable)
+        VoiceTalkTable.to_csv(config.VoiceTalkTablePath)
 
-
-
-        
-
+    return token_duplicated
     
 
 if __name__ == "__main__":
     #register.registerIottalk()
     #register will be close for debug
-    initDB()
+    token_duplicated = initDB()
         
-    
-    app.run(host='0.0.0.0',debug=True, port=19453)
+    if(token_duplicated):
+        print("[Error]Init VoiceTalk Table error, System Abort")
+    else:
+        app.run(host='0.0.0.0',debug=True, port=config.Port)
     

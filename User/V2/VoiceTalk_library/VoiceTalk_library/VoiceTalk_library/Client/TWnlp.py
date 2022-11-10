@@ -14,14 +14,15 @@ from pint import UnitRegistry
 nlp = spacy.load("zh_core_web_sm")
 #initilize the matcher with a shared vocab
 matcher = PhraseMatcher(nlp.vocab)
+spellCorrectionPath = '../DB/cmnHantTW/correction/correction.txt'
 # aside from english, chinese need some changes
 
 # 1. a word segmentation before token classify(must)
 from ckiptagger import data_utils, construct_dictionary, WS, POS, NER
 start = time.time()
-ws = WS("./data")   # word segmentation need 4 seconds
-pos = POS("./data")
-ner = NER("./data")
+ws = WS("../../../../../data")   # word segmentation need 4 seconds
+pos = POS("../../../../../data")
+ner = NER("../../../../../data")
 
 end = time.time()
 print("loading time: ", end-start)
@@ -45,19 +46,18 @@ def initTable():
     # read token table
     tokenTable = pd.read_csv(tokenTablePath)
     
-    list_A = tokenTable['A'].to_list()
     list_D = tokenTable['D'].to_list()
-    list_F, list_V = [],[]
-    for f in tokenTable['F']:
+    list_A, list_V = [],[]
+    for a in tokenTable['A']:
         try:
-            f_dict = ast.literal_eval(f)
-            if isinstance(f_dict, dict):
-                keysList = list(f_dict.keys())
-                list_F.extend(keysList)
+            a_dict = ast.literal_eval(a)
+            if isinstance(a_dict, dict):
+                keysList = list(a_dict.keys())
+                list_A.extend(keysList)
         except ValueError:
-            list_F.append(f)
+            list_A.append(a)
         except SyntaxError:
-            list_F.append(f)
+            list_A.append(a)
         
     for v in tokenTable['V']:
         try:
@@ -70,19 +70,17 @@ def initTable():
                 list_V.append(v)
     
     
-    print("init Table", list_A, list_D, list_F, list_V)
-    list_all = list_A+list_D+list_F+list_V
+    print("init Table", list_D, list_A, list_V)
+    list_all = list_D+list_F+list_V
     #obtain doc object for each word in the list and store it in a list
-    A = [nlp(a) for a in list_A]
     D = [nlp(d) for d in list_D]
-    F = [nlp(f) for f in list_F]
+    A = [nlp(a) for a in list_A]
     V = [nlp(v) for v in list_V]
 
 
     #add the pattern to the matcher
-    matcher.add("A", A)
     matcher.add("D", D)
-    matcher.add("F", F)
+    matcher.add("A", A)
     matcher.add("V", V)
     
     
@@ -146,16 +144,12 @@ def spellCorrection(sentence):
 # 1. read Database
 # 2. match the token(tokenclassifier)
 # 3. handle value
-# 4. alias redirection
-# 5. token counter validation(contain rule lookup)
-# 6. token support check
+# 6. IDF selection
 # 7. token value check
 # sentence(string) as input parameter, return value is device_queries
     
 
 def textParse(sentence):
-    # in chinese, do word segmentation before nlp
-    
     sentence = spellCorrection(sentence)
     
     alias_list_dict = initTable() # read database
@@ -168,18 +162,10 @@ def textParse(sentence):
     word_list = ws([sentence], coerce_dictionary=dict_for_CKIP) # wordlist for chinese number detection
 
     
-    # do chinese number redirection before sentence is joined
+
     wordlist = word_list[0]
-    print("old [wordlist]", wordlist)
-#     wordlist = chinese_numredirection(wordlist)
     
-#     print("new [wordlist]", wordlist)
-#     sentence_nozh = ''.join(wordlist)
-#     print("[segmentation]", sentence_nozh)
-    
-    
-    
-    tokendict = {'A':'', 'D':'', 'F':'', 'V':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
+    tokendict = {'D':'', 'A':'', 'V':''}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
     
     # new a list: token
     tokenlist = ['','','','',''] #token[4] store rule/error bits, 
@@ -212,44 +198,38 @@ def textParse(sentence):
     
     quantity = quantityDetect(sentence , dict_for_CKIP)
 
-    
-    
-    sentence_feature = tokendict['F']     # save feature name before alias redirect
-    sentence_device_name = tokendict['D'] if tokendict['D'] != '' else tokendict['A'] # save device name before alias redirect
+    sentence_device_name = tokendict['D']
+    sentence_action = tokendict['A']     # save feature name before alias redirect
     sentence_value = tokendict['V'] + quantity
     
     
     # ============================ alias redirection ================================
-    # A,D,F,V alias should be redirect to device_model, device_name, device_feature individually
+    # D,A,V alias should be redirect to device_model, device_name, device_feature individually
     tokenlist = aliasRedirection(tokendict, tokenlist)
 
     #============================ alias redirection end =================================
 
-    # eliminate A if both AD exist
-    if(tokenlist[0] != '' and tokenlist[1] != ''):
-        tokenlist[0] = ''
-        print('[elimination] list of token after A/D elimination:', tokenlist)
 
     # =========================== number of token validation  =======================================
     # check if number of tokens is enough.
     # if not enough, tokenlist[4] will record error id
       
-    tokenlist[4] = tokenValidation(tokenlist)
+    tokenlist[3] = tokenValidation(tokenlist)
     # =========================== number of token validation end =======================================    
     
     
     
-    #============================ support check =================================
+    #============================ IDF selection =================================
     # if token has correct number, check if A/D support F
-    if(tokenlist[4] > 0):                  # if error/rule bit records rules
-        IDF, tokenlist[4] = supportCheck(tokenlist) # support check
+    if(tokenlist[3] > 0):                  # if error/rule bit records rules
+        IDF, tokenlist[3] = IDFSelection(tokenlist) # support check
     else:                              # if error/rule bit records errors
         print("[error]not enough token!") # break
     
     
     #============================ Value check =================================
     # if token has correct number and A/D support F, check if V is valid
-    if(tokenlist[4] > 0): 
+    if(tokenlist[3] > 0): 
         device_queries = valueCheck(tokenlist, sentence_feature, quantity,IDF) # value check and get device queries
     else: # <0 because not support
         device_queries = tokenlist
@@ -265,22 +245,26 @@ def textParse(sentence):
 # return: tokendict, token
 
 def tokenClassifier(sentence):
-    tokendict = {'A':'', 'D':'', 'F':'', 'V':[]}  # new a dict of token, default key(A/D/F/V) is set with empty string/list
-    tokenlist = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits
+    tokendict = { 'D':'', 'A':'', 'V':[]}  # new a dict of token, default key(D/A/V) is set with empty string 
+    # V is set to a list to accept multiple token
+    tokenlist = ['','','',''] # new a list: token,token[0~3] store D/A/V, token[3] store rule/error bits, 
     doc = nlp(sentence)
     matches = matcher(doc)
     for match_id, start, end in matches:
-        token_id = nlp.vocab.strings[match_id]  # get the token ID, i.e. 'A', 'D', 'F', 'V'
+        token_id = nlp.vocab.strings[match_id]  # get the token ID from matches token, i.e. 'D', 'A', 'V'
         span = doc[start:end]                   # get the object of word insentence
-        print("[token]", token_id, ':', span.text)
+        print("[token]", token_id,": " ,span.text)
+        
         if(token_id == 'V'):
+            print("another V accepted")
             tokendict[token_id].append(span.text)
-        elif(tokendict[token_id] == '' or tokendict[token_id] in span.text):   # if tokendict is undefined
-            tokendict[token_id] = span.text     # insert key and value in tokendict
+        elif(tokendict[token_id] == '' or tokendict[token_id] in span.text):   
+            tokendict[token_id] = span.text     # insert key and value in tokendict if is undefined or tokendict has same value
         else:
-            print("too much element in one token!") # error message #1: too much token
-            tokenlist[4] = -1
-    return tokendict, tokenlist
+            print("too much element in D token!") # error message #1: too much token
+            tokenlist[3] = -1
+    tokenlist = [tokendict['D'], tokendict['A'], tokendict['V'], tokenlist[3]]
+    return tokendict, tokenlist 
     
     
 # ===== quantityDetect =========
@@ -339,16 +323,16 @@ def aliasRedirection(tokendict, tokenlist):
 # token[4] will record rule if number of each token is enough
 # token[4] will record error if number of each token is not enough
 def tokenValidation(tokenlist):
-    if(bool(tokenlist[0]!="") ^ bool(tokenlist[1]!="")): # check either A or D exist
-        if(tokenlist[2]!=""):                        # check if F exist
-            rule = ruleLookup(tokenlist[2])          # lookup rule by F
-            tokenlist[4] = rule                      # token[4] record rule
+    if(bool(tokenlist[0]!="")): # check if D exist
+        if(tokenlist[1]!=""):                        # check if A exist
+            rule = ruleLookup(tokenlist[2])          # lookup rule by A
+            tokenlist[3] = rule                      # token[3] record rule
         else:
-            tokenlist[4]=-3                       # error message #3: no feature found in sentence 
+            tokenlist[3]=-3                       # error message #3: no feature found in sentence 
     else:
-        tokenlist[4]=-2                           # error message #2: no device found in sentence
+        tokenlist[3]=-2                           # error message #2: no device found in sentence
         
-    return tokenlist[4]
+    return tokenlist[3]
     
 # ======= ruleLookup(feature) =======
 # read the Table: DevicefeatureTable.txt
@@ -356,17 +340,24 @@ def tokenValidation(tokenlist):
 # input parameter: feature(device_feature_name)
 # return: rule id, 1 for rule 1, 2 for rule 2, 0 for not found
     
-def ruleLookup(feature): #check rule by feature
+def ruleLookup(action, sentence, device0): #check rule by feature
     # rulelookup will read VoiceTalkTable
-    df = pd.read_csv('../DB/VoiceTalkTable.csv')
-    df = df[df['F'].str.contains(feature)]
+    print("sentence grammar:", sentence)
+    df = pd.read_csv(VoiceTalkTablePath)
+    df = df[df['A'].str.contains(action)]
     rule = df.iloc[0]['Rule']
-    if(rule == 1):
+    if(rule == 1 and sentence.index(action) < sentence.index(device)):
         return 1
     elif(rule == 2):
-        return 2
+        print("rule 2 has set to")
+        if(sentence.index("to")>sentence.index(action)> sentence.index(device)> sentence.index('set')):
+            return 2
+        else:
+            return -6
+    else:
+        return -6 # grammar not match
 
-# ======== supportCheck(tokenlist) =====
+# ======== IDFSelection(tokenlist) =====
 # read DeviceTable.txt, check if F exist in device_feature_list if 
 # A/D match device_model/device_name
 # if support, pass
@@ -374,46 +365,37 @@ def ruleLookup(feature): #check rule by feature
 # input parameter: tokenlist
 # return value: tokenlist[4](error/value bit)
 
-def supportCheck(tokenlist):
-    A = tokenlist[0]
-    D = tokenlist[1]
-    F = tokenlist[2]
-    rule = tokenlist[4]
+def IDFSelection(tokenlist):
+    D = tokenlist[0]
+    A = tokenlist[1]
+    V = tokenlist[2]
+    rule = tokenlist[3]
     # read device info in DeviceTable.txt
     VoiceTalkTable = readDeviceTable(A,D)
-    print("[SUPPORTCHECK]",VoiceTalkTable )
+    print("[IDFSelection]",VoiceTalkTable )
     
-    if(D!=''):  #check if D supports F
+    if(D!=''):  #check if D supports A
         IDF = ''
-        select_df = VoiceTalkTable[VoiceTalkTable['F'].str.contains(F)]
-#         print("support check: ", select_df)
+        select_df = VoiceTalkTable[VoiceTalkTable['A'].str.contains(A)]
         if(len(select_df.index)!=0):
             print("IDF to push", select_df.iloc[0]['IDF'])
             IDF = select_df.iloc[0]['IDF']
         else:
-            tokenlist[4] = -4   #error message #4: Device not support such feature
+            tokenlist[3] = -4   #error message #4: Device not support such feature
+
             
-    if(A!=''): #do not check if all support
-        select_df = VoiceTalkTable[VoiceTalkTable['F'].str.contains(F)]
-#         print("[support check]", select_df)
-        IDF = []
-        for i  in range(len(select_df.index)):  # check if all select device has contain F?
-            print("each IDF in A:", select_df.iloc[i]['IDF'])
-            IDF.append(select_df.iloc[i]['IDF'])
-            
-    return IDF,tokenlist[4]
+    return IDF,tokenlist[3]
 
 
 # ======== valueCheck(tokenlist, feature) ============
 
 def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
-    A = tokenlist[0]
-    D = tokenlist[1]
-    F = tokenlist[2]
-    stringV = tokenlist[3]
-    rule = tokenlist[4]
+    D = tokenlist[0]
+    A = tokenlist[1]
+    stringV = tokenlist[2]
+    rule = tokenlist[3]
     print("that is IDF:", IDF)
-    device_queries = [[0]*6]*1   # create a device query as return type of function
+    device_queries = [[0]*5]*1   # create a device query as return type of function
 
     
     df = pd.read_csv('../DB/VoiceTalkTable.csv')
@@ -423,15 +405,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
         # for rule 1, get the value into Token V
         if(D!= ""):
             valueV  = Rule1Check(IDF,F)
-            device_queries = [A,D,F,valueV,rule,IDF]
-        if(A!= ""):
-            device_queries = [[0]*6]*len(IDF)
-            for idx,idf in enumerate(IDF):
-                valueV = Rule1Check(idf,F)
-                #the device should be add
-                select_df = df.loc[(df['IDF'] == idf)]
-                device = select_df.iloc[0]['D']
-                device_queries[idx] = [A,device,F,valueV, rule,idf]
+            device_queries = [D,A,valueV,rule,IDF]
         print("[RULE1]device queries:", device_queries)
         
         
@@ -464,40 +438,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                     else:  #iterate through all dimension
                         valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
             device_queries = [A,D,F,valueV,tokenlist[4],IDF]
-                
             # check if stringV found in
-            
-        # next, we handle A
-        elif(A != ''):
-            device_queries = [[0]*6]*len(IDF)
-            for idx,idf in enumerate(IDF):
-                print("[RULE2-A]:", idf)
-                select_df = df.loc[(df['IDF'] == idf)]
-                device = select_df.iloc[0]['D']
-                dimension = findDimension(idf)
-                paramTable = findParameter(idf)
-                select_V = paramTable.iloc[0]['V']
-                v_dict = None
-                try:
-                    v_dict = ast.literal_eval(select_V)
-                except ValueError:
-                    print("[ValueError]: ")
-                if(v_dict is not None):
-                    if(len(stringV)!=0):
-                        if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
-                            valueV = [v_dict[stringV[0]]]
-                    else: # if not exist in dictionary, we do care about the dimension
-                        # for each quantity V, we do quantity calculation and min max check
-                        # first, we check the dimension is matched
-                        if(dimension != len(quantityV)+len(stringV)):
-                            print("[quantity]dimension not matched")
-                            valueV = 0
-                            tokenklist[4] = -5
-                        else:  #iterate through all dimension
-                            valueV, tokenlist = Rule2Check(idf,quantityV, stringV, tokenlist)
-                            print("[RULE2-A:value_V]", valueV)
-                device_queries[idx] = [A,device,F,valueV,tokenlist[4],idf]
-
 
     print("[valueCheck end] :", "device query:",device_queries, "\n tokenlist", tokenlist)    
     return device_queries
@@ -578,9 +519,9 @@ def Rule2Check(IDF,quantityV, stringV, tokenlist):
     #last collect 
     print("===========[Flag] =======================", error_flag)
     if(all(flag >0 for flag in error_flag)): #examine if one error appeared in a
-        tokenlist[4] = 2
+        tokenlist[3] = 2
     else:
-        tokenlist[4] = -5
+        tokenlist[3] = -5
     return value_V, tokenlist
 
 
@@ -682,21 +623,21 @@ def isPureNumber(quantity):
     else:
         return False
 
-def saveLog(sentence, tokenlist):
-    print('save log')
-    connection = sqlite3.connect("db/log.db")
-    crsr = connection.cursor()
-    # SQL command to insert the data in the table
-    sql_command = """CREATE TABLE IF NOT EXISTS log ( 
-    sentence TEXT,  
-    result CHAR(1)
-    );"""
-    crsr.execute(sql_command)
+# def saveLog(sentence, tokenlist):
+#     print('save log')
+#     connection = sqlite3.connect("db/log.db")
+#     crsr = connection.cursor()
+#     # SQL command to insert the data in the table
+#     sql_command = """CREATE TABLE IF NOT EXISTS log ( 
+#     sentence TEXT,  
+#     result CHAR(1)
+#     );"""
+#     crsr.execute(sql_command)
 
     
-    crsr.execute(f'INSERT INTO log VALUES ( "{sentence}", "{tokenlist[4]}")')
+#     crsr.execute(f'INSERT INTO log VALUES ( "{sentence}", "{tokenlist[4]}")')
 
-    connection.commit()
-    connection.close()
+#     connection.commit()
+#     connection.close()
     
 

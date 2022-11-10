@@ -58,6 +58,7 @@ def initTable():
     
     
     print("init Table",  list_D, list_A, list_V)
+    
     #obtain doc object for each word in the list and store it in a list
     D = [nlp(d) for d in list_D]
     A = [nlp(a) for a in list_A]
@@ -107,7 +108,7 @@ def textParse(sentence):
 #     sentence = spellCorrection(sentence)
     initTable() # read database
     tokendict = {'D':'', 'A':'', 'V':[]}  # new a dict: token dict, default key(A/D/F/V/U) is set with empty string
-    tokenlist = ['','','','',''] # new a list: token,token[0~3] store A/D/F/V token[4] store rule/error bits, 
+    tokenlist = ['','','',''] # new a list: token,token[0~2] store D/A/V token[3] store rule/error bits, 
     device_queries = [[0]*5]*1 # init a device query(ies) which will send to devicetalk at the end of function
     
     
@@ -134,7 +135,7 @@ def textParse(sentence):
 
 
     # check if number of tokens is enough.
-    # if not enough, token[4] will record error id    
+    # if not enough, token[3] will record error id    
     tokenlist[3] = tokenValidation(tokenlist,origin_sentence)
 
     # select Target IDF
@@ -181,7 +182,7 @@ def tokenClassifier(sentence):
             print("another V accepted")
             tokendict[token_id].append(span.text)
         elif(tokendict[token_id] == '' or tokendict[token_id] in span.text):   
-            tokendict[token_id] = span.text     # insert key and value in tokendict if is undefined or tokendict has same value
+            tokendict[token_id] = span.text     # insert key and value if undefined or tokendict has same value
         else:
             print("too much element in D token!") # error message #1: too much token
             tokenlist[3] = -1
@@ -200,9 +201,6 @@ def quantityDetect(sentence):
     if(len(value_doc._.numerize())>0): # if V is recognized as numeric strings, save it as a string of quantity
         quantity = list(value_doc._.numerize().values())
     return quantity
-
-
-
 
 
 # ======= tokenValidation(token)  ========
@@ -247,9 +245,8 @@ def ruleLookup(action, sentence, device): #check rule by feature
         return -6 # grammar not match
 
 # ======== IDFSelection(tokenlist) =====
-# read VoiceTalkTable.txt, check if F exist in device_feature_list if 
-# A/D match device_model/device_name
-# if support, pass
+# read VoiceTalkTable.txt, check if A exist 
+# if support, return the IDF name
 # if not support, record the error bit(tokenlist[4])
 # input parameter: tokenlist
 # return value:IDF(IDF name), tokenlist[4](error/value bit)
@@ -261,10 +258,9 @@ def IDFSelection(tokenlist):
     VoiceTalkTable = readDeviceTable(D)
     print("[IDFSelection]",VoiceTalkTable)
     
-    if(D!=''):  #check if D supports F
+    if(D!=''):  #check if D supports A
         IDF = ''
         select_df = VoiceTalkTable[VoiceTalkTable['A'].str.contains(A)]
-#         print("support check: ", select_df)
         if(len(select_df.index)!=0):
             print("IDF to push", select_df.iloc[0]['IDF'])
             IDF = select_df.iloc[0]['IDF']
@@ -274,34 +270,22 @@ def IDFSelection(tokenlist):
     return IDF,tokenlist[3]
 
 
-
-    
-    
-
 # ======== valueCheck(tokenlist, feature) ============
-# input param: (tokenlist, feature, quantityV, IDF)
-# param type:  (list, string, )
-# output param
-# param type
-
+# input: tokenlist(list), feature(string), quantityV(string), IDF(string)
+# output: device_queries(list)
 
 def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
     D = tokenlist[0]
     A = tokenlist[1]
     stringV = tokenlist[2]
     rule = tokenlist[3]
-    print("that is IDF:", IDF)
     device_queries = [[0]*6]*1   # create a device query as return type of function
 
-    if(rule == 1):      #(issue): Used for value_dict in devicefaturetable.txt
-        print("rule 1") #give a value for rule 1 in value_keyword list
-        # for rule 1, get the value into Token V
+    if(rule == 1):
         if(D!= ""):
             valueV  = Rule1Check(IDF,A)
             device_queries = [D,A,valueV,rule,IDF]
         print("[RULE1]device queries:", device_queries)
-        
-        
         
     elif(rule ==2):
         # 1. a number(check if exceed min/max)
@@ -316,7 +300,7 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
             try:
                 v_dict = ast.literal_eval(select_V)
             except ValueError:
-                print("[ValueError]: ")
+                print("[ValueError]: V table not found")
             if(v_dict is not None):
                 if(len(stringV)!=0):
                     if(stringV[0] in v_dict): # if exist, we dont care about the dimension(because keyword)
@@ -330,12 +314,17 @@ def valueCheck(tokenlist, feature, quantityV,IDF): #issue give value
                         valueV = 0
                     else:  #iterate through all dimension
                         valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
+            elif(v_dict is None):
+                valueV, tokenlist = Rule2Check(IDF,quantityV, stringV, tokenlist)
             device_queries = [D,A,valueV,tokenlist[3],IDF]
     print("[valueCheck end] :", "device query:",device_queries, "\n tokenlist", tokenlist)    
     return device_queries
 
 
 # ====== Rule1 subfunction for valueCheck
+#  input: IDF(string), token A(string)
+#  output: valueV(int)
+
 def Rule1Check(IDF,A):
     if(isinstance(IDF, str)):
         df = pd.read_csv(VoiceTalkTablePath)
@@ -353,6 +342,8 @@ def Rule1Check(IDF,A):
     return valueV
 
 # ==== Rule2 function for valueCheck
+# input: IDF(string), quantityV(string), stringV(string), tokenlist(list)
+# output: 
 def Rule2Check(IDF,quantityV, stringV, tokenlist):
     print("===========[RULE2-Check]============")
     print("[IDF]", IDF)
@@ -367,7 +358,7 @@ def Rule2Check(IDF,quantityV, stringV, tokenlist):
         param_type = ast.literal_eval(paramTable.iloc[0]['Param_type'])
         param_unit = ast.literal_eval(paramTable.iloc[0]['Param_unit'])
         param_minmax = ast.literal_eval(paramTable.iloc[0]['Param_minmax'])
-        print("[type]", param_type, param_unit, param_minmax)
+        print("[multi-dimension]", param_type, param_unit, param_minmax)
     else:
         param_type = [paramTable.iloc[0]['Param_type']]
         param_unit = [paramTable.iloc[0]['Param_unit']]

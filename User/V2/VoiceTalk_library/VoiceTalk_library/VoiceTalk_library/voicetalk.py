@@ -8,15 +8,6 @@ import ast
 import pandas as pd
 # database = DataBase()
 
-#==========flask as backend=============
-# this file will not be seen in Devicetalk
-# only if download
-
-APItext = 0
-# print("startup a server")
-# app.run(host='0.0.0.0',debug=True, port=19453)
-# threading.Thread(target=lambda: app.run(host='0.0.0.0', port=19453, debug=True, use_reloader=False)).start()
-
 
 class VoiceTalk:
     def __init__(self):
@@ -59,7 +50,6 @@ class VoiceTalk:
         return  self.data
     
     def get_info(self, name): # get infomation, should also think of valid value
-        # command = database.readCommand()
         df = pd.read_csv('libraries/VoiceTalk_library/DB/cmd/command.csv')
         result_df = df.loc[(df['IDF'] == name)]
         if(len(result_df.index)!=0):
@@ -96,7 +86,8 @@ class VoiceTalk:
                 
                 print("daemon thread")
                 # Push IDF data in daemon thread
-                # self.dan.push(<idf_name:str>, <data:list>) 
+                # self.dan.push(<idf_name:str>, <data:list>)
+                
                 
                 time.sleep(10)
 
