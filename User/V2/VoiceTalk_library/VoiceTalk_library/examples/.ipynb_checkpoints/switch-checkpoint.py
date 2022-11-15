@@ -11,7 +11,7 @@ self.V = None
 voicetalk.update_table(type(self).__name__ ,self.D, self.A, self.V, Language)
 # ***[runs_content]***
 Token = voicetalk.get_info(type(self).__name__)
-if( Token['D'] == self.D and Token['A'] ==self.A):
+if( Token['D'] == self.D and Token['A'] in self.A):
     value = voicetalk.get_data(type(self).__name__)
     return value
 else:

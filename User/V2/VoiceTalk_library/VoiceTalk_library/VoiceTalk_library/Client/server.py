@@ -4,7 +4,7 @@ import pandas as pd
 import json
 from threading import Thread
 import time, random, requests
-import TWnlp #uncomment later
+# import TWnlp #uncomment later
 import USnlp
 import config
 
@@ -33,7 +33,7 @@ def index():
     if(request.method == 'POST'):
         text = request.values['user']
         print("[sentence]:",text)
-        language = 'zh-TW'
+        language = 'en-US'
         # use text to send for demo
         # add rule to check if chinese or english
         if(language == 'en-US'): #English
